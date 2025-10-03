@@ -7,7 +7,10 @@ import {
   updateCharacter,
   deleteCharacter,
   getCharactersByUserId,
+  getCharactersByUserIdTrash,
+  markExpiredTrashCharactersAsDeleted,
 } from "../models/characterModel.js";
+
 
 // CREATE (tanpa file upload)
 export const createCharacterHandler = async (req, res) => {
@@ -57,12 +60,13 @@ export const saveCharacterHandler = async (req, res) => {
       "combat_theme"
     );
 
-    // Add random rotation/stamp values
     const mergedData = {
       ...parsed,
       rotation_stamp: parseFloat((Math.random() * 60 - 30).toFixed(1)),
       rotation_sticker: parseFloat((Math.random() * 60 - 30).toFixed(1)),
       stamp_type: Math.floor(Math.random() * 40) + 1,
+      record_staus: "active",
+      deleted_at: null,
     };
 
     const newCharacter = {
@@ -84,8 +88,6 @@ export const saveCharacterHandler = async (req, res) => {
   }
 };
 
-
-
 // GET ALL
 export const getCharactersHandler = async (req, res) => {
   const { data, error } = await getAllCharacters();
@@ -93,10 +95,21 @@ export const getCharactersHandler = async (req, res) => {
   res.json(data);
 };
 
-// GET ALL BY USER
+// GET ALL BY USER Record
 export const getCharactersUserHandler = async (req, res) => {
   const { data, error } = await getCharactersByUserId(req.userId);
   if (error) return res.status(400).json({ error: error.message });
+  const activeCharacters = data.filter(
+    (character) => character.record_status === "active"
+  );
+
+  res.json(activeCharacters);
+};
+
+export const getCharactersUserTrash = async (req, res) => {
+  const { data, error } = await getCharactersByUserIdTrash(req.userId);
+  if (error) return res.status(400).json({ error: error.message });
+
   res.json(data);
 };
 
@@ -112,6 +125,72 @@ export const updateCharacterHandler = async (req, res) => {
   const { data, error } = await updateCharacter(req.params.id, req.body);
   if (error) return res.status(400).json({ error: error.message });
   res.json(data);
+};
+
+export const moveCharacterToTrash = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const updateData = {
+      record_status: "trash",
+      deleted_at: new Date().toISOString(),
+    };
+
+    const { data, error } = await updateCharacter(id, updateData);
+
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    res.json({
+      message: "Character moved to trash successfully",
+      character: data[0],
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const restoreCharacterFromTrash = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const updateData = {
+      record_status: "active",
+      deleted_at: null,
+    };
+
+    const { data, error } = await updateCharacter(id, updateData);
+
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    res.json({
+      message: "Character restore successfully",
+      character: data[0],
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const deleteExpiredTrashCharacters = async (req, res) => {
+  try {
+    const userId = req.userId;
+    if (!userId) return res.status(400).json({ error: "User ID not found" });
+
+    const { data, error } = await markExpiredTrashCharactersAsDeleted(userId);
+
+    if (error) return res.status(400).json({ error: error.message });
+
+    res.json({
+      message: "Expired trash characters deleted successfully",
+      characters: data,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // DELETE

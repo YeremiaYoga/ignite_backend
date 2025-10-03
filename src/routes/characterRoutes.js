@@ -7,7 +7,11 @@ import {
   updateCharacterHandler,
   deleteCharacterHandler,
   getCharactersUserHandler,
-  saveCharacterHandler, // <== tambahkan
+  saveCharacterHandler,
+  getCharactersUserTrash,
+  moveCharacterToTrash,
+  restoreCharacterFromTrash,
+  deleteExpiredTrashCharacters,
 } from "../controllers/characterController.js";
 import { requireAuth } from "../middlewares/auth.js";
 
@@ -29,6 +33,10 @@ router.post(
 
 router.get("/", getCharactersHandler);
 router.get("/user", getCharactersUserHandler);
+router.get("/trash", getCharactersUserTrash);
+router.put("/:id/trash", moveCharacterToTrash);
+router.put("/:id/restore", restoreCharacterFromTrash);
+router.get("/trash/expired", deleteExpiredTrashCharacters);
 router.get("/:id", getCharacterHandler);
 router.put("/:id", updateCharacterHandler);
 router.delete("/:id", deleteCharacterHandler);

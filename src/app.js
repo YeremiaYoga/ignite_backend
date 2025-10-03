@@ -10,7 +10,10 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(
   cors({
-    origin: process.env.NEXT_PUBLIC_APP_ORIGIN,
+    origin: [
+      process.env.NEXT_PUBLIC_APP_ORIGIN_1,
+      process.env.NEXT_PUBLIC_APP_ORIGIN_2,
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],

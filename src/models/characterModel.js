@@ -10,12 +10,22 @@ export const getAllCharacters = async () => {
   return await supabase.from("characters").select("*");
 };
 
-// GET ALL BY USER ID
 export const getCharactersByUserId = async (userId) => {
-  return await supabase.from("characters").select("*").eq("user_id", userId);
+  return await supabase
+    .from("characters")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("record_status", "active");
 };
 
-// GET BY ID
+export const getCharactersByUserIdTrash = async (userId) => {
+  return await supabase
+    .from("characters")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("record_status", "trash");
+};
+
 export const getCharacterById = async (id) => {
   return await supabase.from("characters").select("*").eq("id", id).single();
 };
@@ -32,4 +42,35 @@ export const updateCharacter = async (id, updateData) => {
 // DELETE
 export const deleteCharacter = async (id) => {
   return await supabase.from("characters").delete().eq("id", id);
+};
+
+export const markExpiredTrashCharactersAsDeleted = async (userId) => {
+  try {
+    const fiveDaysAgo = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000);
+
+    const { data: expiredChars, error: fetchError } = await supabase
+      .from("characters")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("record_status", "trash")
+      .lte("deleted_at", fiveDaysAgo.toISOString());
+
+    if (fetchError) return { data: null, error: fetchError };
+
+    const updatedChars = [];
+    for (const char of expiredChars) {
+      const { data, error } = await supabase
+        .from("characters")
+        .update({ record_status: "deleted", deleted_at: null })
+        .eq("id", char.id)
+        .select();
+
+      if (error) return { data: null, error };
+      updatedChars.push(...data);
+    }
+
+    return { data: updatedChars, error: null };
+  } catch (err) {
+    return { data: null, error: err };
+  }
 };

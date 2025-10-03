@@ -1,36 +1,30 @@
-
 import multer from "multer";
 import path from "path";
 import fs from "fs";
 
-
-
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
+    const uuid = req.body.uuid || "default";
 
-    const characterName = req.body.name || "default";
-
-  
     const uploadPath = path.join(
       process.cwd(),
       "public",
       "assets",
       "characters",
-      characterName
+      uuid
     );
 
     if (!fs.existsSync(uploadPath)) {
       fs.mkdirSync(uploadPath, { recursive: true });
     }
 
-    cb(null, uploadPath); 
+    cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
-
-    let filename = file.originalname; 
+    let filename = file.originalname;
 
     if (file.fieldname === "token_art") {
-      filename = "token_image" + path.extname(file.originalname); 
+      filename = "token_image" + path.extname(file.originalname);
     } else if (file.fieldname === "art") {
       filename = "character_art" + path.extname(file.originalname);
     } else if (file.fieldname === "main_theme_ogg") {
