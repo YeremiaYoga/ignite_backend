@@ -1,4 +1,8 @@
-import { upsertUser, getUserByClerkId } from "../models/userModel.js";
+import {
+  upsertUser,
+  getUserByClerkId,
+  updateUserById,
+} from "../models/userModel.js";
 
 // Login / Sync user
 export const loginUser = async (req, res) => {
@@ -26,15 +30,40 @@ export const loginUser = async (req, res) => {
   }
 };
 
-
 export const getUser = async (req, res) => {
   try {
     const { clerkId } = req.params;
-    const { data, error } = await getUserByClerkId(clerkId);
-    if (error) return res.status(404).json({ error: error.message });
+    const user = await getUserByClerkId(clerkId);
 
-    return res.json({ user: data });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    return res.json({ user });
   } catch (err) {
+    console.error("❌ getUser:", err.message);
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+
+export const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { username } = req.body;
+
+    console.log("🟢 PATCH /users:", { id, username }); 
+
+    const { data, error } = await updateUserById(id, { username });
+
+    if (error) {
+      console.error("❌ updateUser error:", error.message);
+      return res.status(400).json({ error: error.message });
+    }
+
+    return res.json({ success: true, user: data });
+  } catch (err) {
+    console.error("❌ updateUser exception:", err.message);
     return res.status(500).json({ error: err.message });
   }
 };
