@@ -46,13 +46,12 @@ export const getUser = async (req, res) => {
   }
 };
 
-
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
     const { username } = req.body;
 
-    console.log("🟢 PATCH /users:", { id, username }); 
+    console.log("🟢 PATCH /users:", { id, username });
 
     const { data, error } = await updateUserById(id, { username });
 

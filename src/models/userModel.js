@@ -1,6 +1,6 @@
 import supabase from "../utils/db.js";
 
-export const upsertUser = async ({ clerkId, email, username }) => {
+export const upsertUser = async ({ clerkId, email, name }) => {
   const { data, error } = await supabase
     .from("users")
     .upsert(
@@ -8,7 +8,7 @@ export const upsertUser = async ({ clerkId, email, username }) => {
         {
           clerk_id: clerkId,
           email,
-          name: username,
+          name: name,
         },
       ],
       { onConflict: "clerk_id" }
