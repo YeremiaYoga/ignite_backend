@@ -53,3 +53,21 @@ export const updateUserById = async (id, payload) => {
 
   return { data, error };
 };
+
+// === JWT-BASED AUTH ADDITIONS ===
+
+export const getUserByEmail = async (email) => {
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("email", email)
+    .single();
+
+  if (error) {
+    console.error("❌ getUserByEmail error:", error.message);
+    throw error;
+  }
+
+  return data;
+};
+
