@@ -20,7 +20,7 @@ export const createIncumbency = async (body) => {
     {
       name: body.name,
       version: body.version,
-      image: body.img,
+      image: body.image,
       alignment_good: body.good,
       alignment_neutral: body.neutral,
       alignment_evil: body.evil,
@@ -45,7 +45,7 @@ export const updateIncumbency = async (id, body) => {
     .update({
       name: body.name,
       version: body.version,
-      image: body.img,
+      image: body.image,
       alignment_good: body.good,
       alignment_neutral: body.neutral,
       alignment_evil: body.evil,
