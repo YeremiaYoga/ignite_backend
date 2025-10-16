@@ -27,7 +27,10 @@ app.use(
 app.use("/users", userRoutes);
 app.use("/characters", characterRoutes);
 app.use("/assets", express.static(path.join(process.cwd(), "public/assets")));
+
 app.use("/api/assets", assetRoutes);
 app.use("/api/incumbency", incumbencyRoutes);
+
+
 
 export default app;
