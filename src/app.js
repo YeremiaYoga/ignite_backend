@@ -5,6 +5,7 @@ import userRoutes from "./routes/userRoutes.js";
 import characterRoutes from "./routes/characterRoutes.js";
 import assetRoutes from "./routes/assetsRoutes.js";
 import incumbencyRoutes from "./routes/incumbencyRoutes.js";
+import raceRoutes from "./routes/raceRoutes.js";
 import path from "path";
 const app = express();
 
@@ -30,6 +31,7 @@ app.use("/assets", express.static(path.join(process.cwd(), "public/assets")));
 
 app.use("/api/assets", assetRoutes);
 app.use("/api/incumbency", incumbencyRoutes);
+app.use("/api/races", raceRoutes);
 
 
 
