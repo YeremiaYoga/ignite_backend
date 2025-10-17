@@ -70,3 +70,14 @@ export const updateIncumbency = async (id, body) => {
 export const deleteIncumbency = async (id) => {
   return await supabase.from("incumbency").delete().eq("id", id);
 };
+
+export async function getIncumbencyByName(name) {
+  const decoded = name.replace(/_/g, " ");
+  const { data, error } = await supabase
+    .from("incumbency")
+    .select("*")
+    .ilike("name", decoded);
+
+  if (error) throw new Error(error.message);
+  return data;
+}
