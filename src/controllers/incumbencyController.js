@@ -5,6 +5,7 @@ import {
   createIncumbency,
   updateIncumbency,
   deleteIncumbency,
+  getIncumbencyByName,
 } from "../models/incumbencyModel.js";
 
 export const getAll = async (req, res) => {
@@ -38,4 +39,19 @@ export const remove = async (req, res) => {
   const { error } = await deleteIncumbency(id);
   if (error) return res.status(500).json({ error: error.message });
   res.json({ success: true });
+};
+
+export const getByName = async (req, res) => {
+  try {
+    const { name } = req.params;
+    const data = await getIncumbencyByName(name);
+
+    if (!data || data.length === 0)
+      return res.status(404).json({ error: "Not found" });
+
+    res.json(data);
+  } catch (err) {
+    console.error("❌ getByName error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
 };
