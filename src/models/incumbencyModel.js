@@ -9,40 +9,54 @@ export const getAllIncumbency = async () => {
     .order("created_at", { ascending: false });
 };
 
-// === GET BY ID ===
+/* === GET BY ID === */
 export const getIncumbencyById = async (id) => {
   return await supabase.from("incumbency").select("*").eq("id", id).single();
 };
 
-// === CREATE ===
+/* === CREATE === */
 export const createIncumbency = async (body) => {
-  return await supabase.from("incumbency").insert([
-    {
-      name: body.name,
-      version: body.version,
-      image: body.image,
-      alignment_good: body.good,
-      alignment_neutral: body.neutral,
-      alignment_evil: body.evil,
-      alignment_unknown: body.unknown,
-      role: body.role,
-      hp_scale: body.hp_scale,
-      cv_minimum: body.cv_minimum,
-      cv_flat_cost: body.cv_flat_cost,
-      cv_percent_cost: body.cv_percent_cost,
-      ac_calc: body.ac_calc,
-      initiative_bonus: body.intivative_bonus,
-      description: body.description,
-      abilities: body.abilities,
-    },
-  ]).select().single();
+  const key =
+    body.key || body.name?.toLowerCase().replace(/\s+/g, "_") || null;
+
+  return await supabase
+    .from("incumbency")
+    .insert([
+      {
+        key,
+        name: body.name,
+        version: body.version,
+        image: body.image,
+        alignment_good: body.good,
+        alignment_neutral: body.neutral,
+        alignment_evil: body.evil,
+        alignment_unknown: body.unknown,
+        role: body.role,
+        hp_scale: body.hp_scale,
+        cv_minimum: body.cv_minimum,
+        cv_flat_cost: body.cv_flat_cost,
+        cv_percent_cost: body.cv_percent_cost,
+        ac_calc: body.ac_calc,
+        initiative_bonus: body.intivative_bonus,
+        description: body.description,
+        abilities: body.abilities,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    ])
+    .select()
+    .single();
 };
 
-// === UPDATE ===
+
 export const updateIncumbency = async (id, body) => {
+  const key =
+    body.key || body.name?.toLowerCase().replace(/\s+/g, "_") || null;
+
   return await supabase
     .from("incumbency")
     .update({
+      key,
       name: body.name,
       version: body.version,
       image: body.image,
@@ -66,12 +80,12 @@ export const updateIncumbency = async (id, body) => {
     .single();
 };
 
-// === DELETE ===
 export const deleteIncumbency = async (id) => {
   return await supabase.from("incumbency").delete().eq("id", id);
 };
 
-export async function getIncumbencyByName(name) {
+
+export const getIncumbencyByName = async (name) => {
   const decoded = name.replace(/_/g, " ");
   const { data, error } = await supabase
     .from("incumbency")
@@ -80,7 +94,8 @@ export async function getIncumbencyByName(name) {
 
   if (error) throw new Error(error.message);
   return data;
-}
+};
+
 
 export const getIncumbencyByKey = async (key) => {
   return await supabase
