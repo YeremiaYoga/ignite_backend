@@ -81,3 +81,11 @@ export async function getIncumbencyByName(name) {
   if (error) throw new Error(error.message);
   return data;
 }
+
+export const getIncumbencyByKey = async (key) => {
+  return await supabase
+    .from("incumbency")
+    .select("*")
+    .eq("key", key)
+    .order("version", { ascending: true });
+};

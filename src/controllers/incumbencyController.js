@@ -6,6 +6,7 @@ import {
   updateIncumbency,
   deleteIncumbency,
   getIncumbencyByName,
+  getIncumbencyByKey
 } from "../models/incumbencyModel.js";
 
 export const getAll = async (req, res) => {
@@ -53,5 +54,24 @@ export const getByName = async (req, res) => {
   } catch (err) {
     console.error("❌ getByName error:", err.message);
     res.status(500).json({ error: err.message });
+  }
+};
+
+export const getByKey = async (req, res) => {
+  try {
+    const { key } = req.params;
+    const normalizedKey = key.toLowerCase().replace(/\s+/g, "_");
+
+    const { data, error } = await getIncumbencyByKey(normalizedKey);
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      return res.status(404).json({ error: "Not found" });
+    }
+
+    res.status(200).json(data);
+  } catch (err) {
+    console.error("❌ getByKey error:", err.message);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
