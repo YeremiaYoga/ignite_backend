@@ -12,8 +12,12 @@ export const getRaceById = async (id) => {
   return await supabase.from("races").select("*").eq("id", id).single();
 };
 
-export const getRaceByName = async (name) => {
-  return await supabase.from("races").select("*").ilike("name", name);
+export const getRaceByKey = async (key) => {
+  return await supabase
+    .from("races")
+    .select("*")
+    .eq("key", key)
+    .limit(1); 
 };
 
 export const createRace = async (data) => {

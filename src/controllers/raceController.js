@@ -2,7 +2,7 @@
 import {
   getAllRaces,
   getRaceById,
-  getRaceByName,
+  getRaceByKey,
   createRace,
   updateRace,
   deleteRace,
@@ -32,19 +32,23 @@ export const getById = async (req, res) => {
   }
 };
 
-export const getByName = async (req, res) => {
+export const getByKey = async (req, res) => {
   try {
-    const { name } = req.params;
-    const decoded = name.replace(/_/g, " ");
-    const { data, error } = await getRaceByName(decoded);
+    const { key } = req.params;
+    const normalizedKey = key.toLowerCase().replace(/[-\s]/g, "_");
+    const { data, error } = await getRaceByKey(normalizedKey);
     if (error) throw error;
-    if (!data || data.length === 0) return res.status(404).json({ error: "Not found" });
-    res.json(data);
+    if (!data || data.length === 0) {
+      return res.status(404).json({ error: "Race not found" });
+    }
+
+    res.json(Array.isArray(data) ? data[0] : data);
   } catch (err) {
-    console.error("❌ getByName Race error:", err.message);
-    res.status(500).json({ error: err.message });
+    console.error("❌ getByKey Race error:", err.message);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 export const create = async (req, res) => {
   try {

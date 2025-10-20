@@ -3,7 +3,7 @@ import express from "express";
 import {
   getAll,
   getById,
-  getByName,
+  getByKey,
   create,
   update,
   remove,
@@ -13,7 +13,7 @@ const router = express.Router();
 
 router.get("/", getAll);
 router.get("/:id", getById);
-router.get("/name/:name", getByName);
+router.get("/key/:key", getByKey);
 router.post("/", create);
 router.patch("/:id", update);
 router.delete("/:id", remove);

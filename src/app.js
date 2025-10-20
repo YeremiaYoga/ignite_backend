@@ -18,6 +18,7 @@ app.use(
       process.env.NEXT_PUBLIC_APP_ORIGIN_1,
       process.env.NEXT_PUBLIC_APP_ORIGIN_2,
       process.env.NEXT_PUBLIC_APP_ORIGIN_3,
+      process.env.NEXT_PUBLIC_APP_ORIGIN_4,
     ],
     credentials: true,
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
@@ -34,7 +35,5 @@ app.use("/api/assets", assetRoutes);
 app.use("/api/incumbency", incumbencyRoutes);
 app.use("/api/races", raceRoutes);
 app.use("/api/backgrounds", backgroundRoutes);
-
-
 
 export default app;
