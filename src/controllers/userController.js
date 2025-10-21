@@ -4,7 +4,6 @@ import {
   updateUserById,
 } from "../models/userModel.js";
 
-// Login / Sync user
 export const loginUser = async (req, res) => {
   try {
     const { clerkId, email, username } = req.body;

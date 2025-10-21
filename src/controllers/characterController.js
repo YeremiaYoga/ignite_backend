@@ -12,7 +12,7 @@ import {
 } from "../models/characterModel.js";
 
 
-// CREATE (tanpa file upload)
+
 export const createCharacterHandler = async (req, res) => {
   const characterData = { ...req.body, user_id: req.userId };
   const { data, error } = await createCharacter(characterData);
@@ -20,7 +20,6 @@ export const createCharacterHandler = async (req, res) => {
   res.status(201).json(data);
 };
 
-// CREATE + UPLOAD FILES
 export const saveCharacterHandler = async (req, res) => {
   try {
     const { data } = req.body;
@@ -88,14 +87,14 @@ export const saveCharacterHandler = async (req, res) => {
   }
 };
 
-// GET ALL
+
 export const getCharactersHandler = async (req, res) => {
   const { data, error } = await getAllCharacters();
   if (error) return res.status(400).json({ error: error.message });
   res.json(data);
 };
 
-// GET ALL BY USER Record
+
 export const getCharactersUserHandler = async (req, res) => {
   const { data, error } = await getCharactersByUserId(req.userId);
   if (error) return res.status(400).json({ error: error.message });
@@ -113,14 +112,14 @@ export const getCharactersUserTrash = async (req, res) => {
   res.json(data);
 };
 
-// GET ONE
+
 export const getCharacterHandler = async (req, res) => {
   const { data, error } = await getCharacterById(req.params.id);
   if (error) return res.status(400).json({ error: error.message });
   res.json(data);
 };
 
-// UPDATE
+
 export const updateCharacterHandler = async (req, res) => {
   const { data, error } = await updateCharacter(req.params.id, req.body);
   if (error) return res.status(400).json({ error: error.message });
@@ -193,7 +192,6 @@ export const deleteExpiredTrashCharacters = async (req, res) => {
   }
 };
 
-// DELETE
 export const deleteCharacterHandler = async (req, res) => {
   const { error } = await deleteCharacter(req.params.id);
   if (error) return res.status(400).json({ error: error.message });

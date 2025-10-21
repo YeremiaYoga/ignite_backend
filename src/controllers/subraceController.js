@@ -6,7 +6,7 @@ import {
   removeSubrace,
 } from "../models/subraceModel.js";
 
-// Ambil semua subraces
+
 export const getAll = async (req, res) => {
   try {
     const { data, error } = await getAllSubraces();
@@ -23,7 +23,6 @@ export const getByRaceId = async (req, res) => {
   try {
     const { raceId } = req.params;
 
-    // validasi sederhana
     if (!raceId) {
       return res.status(400).json({ error: "Missing raceId parameter" });
     }
@@ -46,7 +45,7 @@ export const getByRaceId = async (req, res) => {
 
 
 
-// Tambah baru
+
 export const create = async (req, res) => {
   try {
     const { data, error } = await createSubrace(req.body);
@@ -58,7 +57,7 @@ export const create = async (req, res) => {
   }
 };
 
-// Update
+
 export const update = async (req, res) => {
   try {
     const { id } = req.params;
@@ -71,7 +70,7 @@ export const update = async (req, res) => {
   }
 };
 
-// Hapus
+
 export const remove = async (req, res) => {
   try {
     const { id } = req.params;

@@ -1,4 +1,4 @@
-// src/controllers/incumbencyController.js
+
 import {
   getAllIncumbency,
   getIncumbencyById,
