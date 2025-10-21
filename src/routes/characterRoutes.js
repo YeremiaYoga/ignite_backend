@@ -13,11 +13,8 @@ import {
   restoreCharacterFromTrash,
   deleteExpiredTrashCharacters,
 } from "../controllers/characterController.js";
-import { requireAuth } from "../middlewares/auth.js";
 
 const router = express.Router();
-
-router.use(requireAuth);
 
 router.post("/", createCharacterHandler);
 router.post(
@@ -30,6 +27,8 @@ router.post(
   ]),
   saveCharacterHandler
 );
+
+// router.post("/save", saveCharacterHandler);
 
 router.get("/", getCharactersHandler);
 router.get("/user", getCharactersUserHandler);
