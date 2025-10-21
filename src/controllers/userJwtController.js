@@ -5,7 +5,6 @@ import { getUserByEmail } from "../models/userModel.js";
 const ACCESS_SECRET = process.env.JWT_SECRET;
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 
-/* === LOGIN JWT (Access + Refresh Token) === */
 export const loginUserJWT = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -20,20 +19,19 @@ export const loginUserJWT = async (req, res) => {
     if (!validPassword)
       return res.status(401).json({ error: "Invalid credentials" });
 
-    // === BUAT TOKEN ===
     const accessToken = jwt.sign(
       { id: user.id, email: user.email, username: user.name, role: user.role },
       ACCESS_SECRET,
-      { expiresIn: "15m" } // access token hidup 15 menit
+      { expiresIn: "15m" }
     );
 
     const refreshToken = jwt.sign(
       { id: user.id, email: user.email },
       REFRESH_SECRET,
-      { expiresIn: "7d" } // refresh token hidup 7 hari
+      { expiresIn: "7d" } 
     );
 
-    // === SIMPAN DI COOKIE ===
+
     res.cookie("access_token", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -64,7 +62,6 @@ export const loginUserJWT = async (req, res) => {
   }
 };
 
-/* === REFRESH ACCESS TOKEN === */
 export const refreshAccessToken = async (req, res) => {
   try {
     const refreshToken = req.cookies.refresh_token;
@@ -93,7 +90,6 @@ export const refreshAccessToken = async (req, res) => {
   }
 };
 
-/* === LOGOUT === */
 export const logoutUser = async (req, res) => {
   res.clearCookie("access_token");
   res.clearCookie("refresh_token");
