@@ -15,10 +15,11 @@ import {
 } from "../controllers/characterController.js";
 
 const router = express.Router();
-
+import { requireAuth } from "../middlewares/auth.js";
 router.post("/", createCharacterHandler);
 router.post(
   "/save",
+  requireAuth,
   upload.fields([
     { name: "art", maxCount: 1 },
     { name: "token_art", maxCount: 1 },

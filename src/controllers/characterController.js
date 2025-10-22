@@ -32,6 +32,8 @@ export const saveCharacterHandler = async (req, res) => {
       }
     }
 
+    const API_URL = process.env.PUBLIC_API_URL;
+
     let artPath = null;
     let tokenArtPath = null;
     let mainThemePath = null;
@@ -52,7 +54,7 @@ export const saveCharacterHandler = async (req, res) => {
         const ext = path.extname(file.originalname);
         const newPath = path.join(baseDir, `${fieldName}${ext}`);
         fs.renameSync(file.path, newPath);
-        return `/assets/characters/${characterName}/${fieldName}${ext}`;
+        return `${API_URL}/assets/characters/${characterName}/${fieldName}${ext}`;
       };
 
       artPath = saveFile(req.files["art"]?.[0], "art");
@@ -89,7 +91,6 @@ export const saveCharacterHandler = async (req, res) => {
       main_theme_ogg: mainThemePath,
       combat_theme_ogg: combatThemePath,
     };
-    console.log(newCharacter);
 
     const { data: created, error } = await createCharacter(newCharacter);
     if (error) return res.status(400).json({ error: error.message });
