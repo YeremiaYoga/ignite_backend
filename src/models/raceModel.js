@@ -5,7 +5,7 @@ export const getAllRaces = async () => {
   return await supabase
     .from("races")
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: true });
 };
 
 export const getRaceById = async (id) => {
@@ -13,11 +13,7 @@ export const getRaceById = async (id) => {
 };
 
 export const getRaceByKey = async (key) => {
-  return await supabase
-    .from("races")
-    .select("*")
-    .eq("key", key)
-    .limit(1); 
+  return await supabase.from("races").select("*").eq("key", key).limit(1);
 };
 
 export const createRace = async (data) => {
