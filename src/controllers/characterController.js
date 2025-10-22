@@ -26,7 +26,13 @@ export const saveCharacterHandler = async (req, res) => {
     const characterName = parsed.name || "default";
 
     if (parsed) {
-      const uuidFields = ["race_id", "subrace_id", "background_id", "user_id"];
+      const uuidFields = [
+        "race_id",
+        "subrace_id",
+        "background_id",
+        "user_id",
+        "incumbency_id",
+      ];
       for (const field of uuidFields) {
         if (parsed[field] === "") parsed[field] = null;
       }
@@ -39,6 +45,7 @@ export const saveCharacterHandler = async (req, res) => {
     let mainThemePath = null;
     let combatThemePath = null;
 
+    // === Simpan file kalau ada ===
     if (req.files && Object.keys(req.files).length > 0) {
       const baseDir = path.join(
         process.cwd(),
@@ -60,12 +67,10 @@ export const saveCharacterHandler = async (req, res) => {
       artPath = saveFile(req.files["art"]?.[0], "art");
       tokenArtPath = saveFile(req.files["token_art"]?.[0], "token_art");
       mainThemePath = saveFile(req.files["main_theme_ogg"]?.[0], "main_theme");
-      combatThemePath = saveFile(
-        req.files["combat_theme_ogg"]?.[0],
-        "combat_theme"
-      );
+      combatThemePath = saveFile(req.files["combat_theme_ogg"]?.[0], "combat_theme");
     }
 
+    // === Bersihkan field tidak perlu ===
     delete parsed.creator_email;
     delete parsed.creator_name;
     delete parsed.usedSkillPoints;
@@ -73,6 +78,11 @@ export const saveCharacterHandler = async (req, res) => {
     delete parsed.token_art;
     delete parsed.height_unit;
     delete parsed.weight_unit;
+
+    // === Tambahan info owner dari JWT ===
+    const userId = req.userId || null;
+    const ownerName = req.user?.username || "Unknown User";
+    const ownerEmail = req.user?.email || null;
 
     const mergedData = {
       ...parsed,
@@ -85,7 +95,8 @@ export const saveCharacterHandler = async (req, res) => {
 
     const newCharacter = {
       ...mergedData,
-      user_id: req.userId || null,
+      user_id: userId,
+      creator_name: ownerName,
       art_image: artPath,
       token_image: tokenArtPath,
       main_theme_ogg: mainThemePath,
@@ -101,6 +112,7 @@ export const saveCharacterHandler = async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 };
+
 
 export const getCharactersHandler = async (req, res) => {
   const { data, error } = await getAllCharacters();
