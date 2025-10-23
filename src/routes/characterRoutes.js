@@ -1,5 +1,6 @@
 import express from "express";
-import upload from "../middlewares/upload.js";
+import multer from "multer";
+import { verifyUserFullAuth } from "../middlewares/verifyUserFullAuth.js";
 import {
   createCharacterHandler,
   getCharactersHandler,
@@ -15,11 +16,17 @@ import {
 } from "../controllers/characterController.js";
 
 const router = express.Router();
-import { requireAuth } from "../middlewares/auth.js";
+
+// ✅ gunakan memory storage agar file langsung bisa dikirim ke Media API
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+// === ROUTES ===
 router.post("/", createCharacterHandler);
+
 router.post(
   "/save",
-  requireAuth,
+  verifyUserFullAuth,
   upload.fields([
     { name: "art", maxCount: 1 },
     { name: "token_art", maxCount: 1 },
@@ -28,8 +35,6 @@ router.post(
   ]),
   saveCharacterHandler
 );
-
-// router.post("/save", saveCharacterHandler);
 
 router.get("/", getCharactersHandler);
 router.get("/user", getCharactersUserHandler);

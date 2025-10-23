@@ -10,7 +10,7 @@ import {
   getCharactersByUserIdTrash,
   markExpiredTrashCharactersAsDeleted,
 } from "../models/characterModel.js";
-
+import { Blob } from "buffer";
 export const createCharacterHandler = async (req, res) => {
   const characterData = { ...req.body, user_id: req.userId };
   const { data, error } = await createCharacter(characterData);
@@ -23,54 +23,88 @@ export const saveCharacterHandler = async (req, res) => {
     const parsed =
       typeof req.body.data === "string" ? JSON.parse(req.body.data) : req.body;
 
-    const characterName = parsed.name || "default";
+    const publicId = parsed.public_id;
+    const MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
 
-    if (parsed) {
-      const uuidFields = [
-        "race_id",
-        "subrace_id",
-        "background_id",
-        "user_id",
-        "incumbency_id",
-      ];
-      for (const field of uuidFields) {
-        if (parsed[field] === "") parsed[field] = null;
-      }
+    const uuidFields = [
+      "race_id",
+      "subrace_id",
+      "background_id",
+      "user_id",
+      "incumbency_id",
+    ];
+    for (const field of uuidFields) {
+      if (parsed[field] === "") parsed[field] = null;
     }
 
-    const API_URL = process.env.PUBLIC_API_URL;
+    const uploadToMedia = async (file, type) => {
+      if (!file || !file.buffer) {
+        console.log(`⚠️ Skip ${type}: tidak ada file`);
+        return null;
+      }
+
+      try {
+        const blob = new Blob([file.buffer], { type: file.mimetype });
+
+        const formData = new FormData();
+        formData.append("path", "characters");
+        formData.append("folder_name", publicId);
+        formData.append("file", blob, file.originalname);
+
+        const token =
+          req.cookies?.access_token ||
+          req.user?.jwt?.token ||
+          req.headers.authorization?.split(" ")[1];
+
+        const resUpload = await fetch(`${MEDIA_URL}/upload`, {
+          method: "POST",
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+          body: formData,
+        });
+
+        if (!resUpload.ok) {
+          const msg = await resUpload.text();
+          console.error(`❌ Upload ${type} gagal:`, msg);
+          return null;
+        }
+
+        const result = await resUpload.json();
+        const fileUrl =
+          result.fullUrl ||
+          result.data?.fullUrl ||
+          result.url ||
+          result.data?.url;
+        console.log(`✅ ${type} uploaded:`, fileUrl);
+        return fileUrl;
+      } catch (err) {
+        console.error(`💥 Upload ${type} error:`, err);
+        return null;
+      }
+    };
 
     let artPath = null;
     let tokenArtPath = null;
     let mainThemePath = null;
     let combatThemePath = null;
 
-    // === Simpan file kalau ada ===
-    if (req.files && Object.keys(req.files).length > 0) {
-      const baseDir = path.join(
-        process.cwd(),
-        "public/assets/characters",
-        characterName
+    if (req.files) {
+      artPath = await uploadToMedia(req.files["art"]?.[0], "art");
+      tokenArtPath = await uploadToMedia(
+        req.files["token_art"]?.[0],
+        "token_art"
       );
-      if (!fs.existsSync(baseDir)) {
-        fs.mkdirSync(baseDir, { recursive: true });
-      }
-
-      const saveFile = (file, fieldName) => {
-        if (!file) return null;
-        const ext = path.extname(file.originalname);
-        const newPath = path.join(baseDir, `${fieldName}${ext}`);
-        fs.renameSync(file.path, newPath);
-        return `${API_URL}/assets/characters/${characterName}/${fieldName}${ext}`;
-      };
-
-      artPath = saveFile(req.files["art"]?.[0], "art");
-      tokenArtPath = saveFile(req.files["token_art"]?.[0], "token_art");
-      mainThemePath = saveFile(req.files["main_theme_ogg"]?.[0], "main_theme");
-      combatThemePath = saveFile(req.files["combat_theme_ogg"]?.[0], "combat_theme");
+      mainThemePath = await uploadToMedia(
+        req.files["main_theme_ogg"]?.[0],
+        "main_theme"
+      );
+      combatThemePath = await uploadToMedia(
+        req.files["combat_theme_ogg"]?.[0],
+        "combat_theme"
+      );
     }
 
-    // === Bersihkan field tidak perlu ===
     delete parsed.creator_email;
     delete parsed.creator_name;
     delete parsed.usedSkillPoints;
@@ -79,10 +113,8 @@ export const saveCharacterHandler = async (req, res) => {
     delete parsed.height_unit;
     delete parsed.weight_unit;
 
-    // === Tambahan info owner dari JWT ===
     const userId = req.userId || null;
     const ownerName = req.user?.username || "Unknown User";
-    const ownerEmail = req.user?.email || null;
 
     const mergedData = {
       ...parsed,
@@ -108,11 +140,10 @@ export const saveCharacterHandler = async (req, res) => {
 
     res.json({ success: true, character: created });
   } catch (err) {
-    console.error("❌ saveCharacterHandler error:", err);
+    console.error("💥 saveCharacterHandler error:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 };
-
 
 export const getCharactersHandler = async (req, res) => {
   const { data, error } = await getAllCharacters();
