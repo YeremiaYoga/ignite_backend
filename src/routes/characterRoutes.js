@@ -43,7 +43,17 @@ router.put("/:id/trash", moveCharacterToTrash);
 router.put("/:id/restore", restoreCharacterFromTrash);
 router.get("/trash/expired", deleteExpiredTrashCharacters);
 router.get("/:id", getCharacterHandler);
-router.put("/:id", updateCharacterHandler);
+router.put(
+  "/:id",
+  verifyUserFullAuth,
+  upload.fields([
+    { name: "art", maxCount: 1 },
+    { name: "token_art", maxCount: 1 },
+    { name: "main_theme_ogg", maxCount: 1 },
+    { name: "combat_theme_ogg", maxCount: 1 },
+  ]),
+  updateCharacterHandler
+);
 router.delete("/:id", deleteCharacterHandler);
 
 export default router;
