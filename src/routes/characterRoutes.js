@@ -37,7 +37,7 @@ router.post(
 );
 
 router.get("/", getCharactersHandler);
-router.get("/user", getCharactersUserHandler);
+router.get("/user", verifyUserFullAuth, getCharactersUserHandler);
 router.get("/trash", getCharactersUserTrash);
 router.put("/:id/trash", moveCharacterToTrash);
 router.put("/:id/restore", restoreCharacterFromTrash);

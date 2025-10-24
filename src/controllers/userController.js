@@ -3,7 +3,10 @@ import {
   getUserByClerkId,
   updateUserById,
 } from "../models/userModel.js";
+import jwt from "jsonwebtoken";
 
+const ACCESS_SECRET = process.env.JWT_SECRET;
+const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 export const loginUser = async (req, res) => {
   try {
     const { clerkId, email, username } = req.body;
@@ -12,19 +15,59 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const { data, error } = await upsertUser({ clerkId, email, username });
-    if (error) return res.status(500).json({ error: error.message });
-
-    const user = Array.isArray(data) ? data[0] : data;
-
-    res.cookie("userId", user.id, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+    const { error: upsertError } = await upsertUser({
+      clerkId,
+      email,
+      username,
+      role: "user",
     });
 
-    return res.json({ success: true, user });
+    if (upsertError) {
+      console.error("❌ upsertUser error:", upsertError.message);
+      return res.status(500).json({ error: upsertError.message });
+    }
+
+    const user = await getUserByClerkId(clerkId);
+
+    if (!user.role) {
+      await updateUserById(user.id, { role: "user" });
+      user.role = "user";
+    }
+
+    const accessToken = jwt.sign(
+      { id: user.id, email: user.email, username: user.name, role: user.role },
+      ACCESS_SECRET,
+      { expiresIn: "8h" }
+    );
+
+    const refreshToken = jwt.sign(
+      { id: user.id, email: user.email },
+      REFRESH_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.cookie("access_token", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 9 * 60 * 60 * 1000,
+    });
+
+    res.cookie("refresh_token", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.json({
+      success: true,
+      message: "Login successful",
+      user,
+      token,
+    });
   } catch (err) {
+    console.error("💥 loginUser error:", err.message);
     return res.status(500).json({ error: err.message });
   }
 };
