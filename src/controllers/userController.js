@@ -35,36 +35,26 @@ export const loginUser = async (req, res) => {
     }
 
     const accessToken = jwt.sign(
-      { id: user.id, email: user.email, username: user.name, role: user.role },
+      {
+        id: user.id,
+        email: user.email,
+        username: user.name,
+        role: user.role,
+      },
       ACCESS_SECRET,
       { expiresIn: "8h" }
     );
 
-    const refreshToken = jwt.sign(
-      { id: user.id, email: user.email },
-      REFRESH_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    res.cookie("ignite_access_token", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 9 * 60 * 60 * 1000,
-    });
-
-    res.cookie("ignite_refresh_token", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
     return res.json({
       success: true,
       message: "Login successful",
-      user,
-      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.name,
+        role: user.role,
+      },
+      token: accessToken,
     });
   } catch (err) {
     console.error("💥 loginUser error:", err.message);

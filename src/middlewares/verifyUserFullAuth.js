@@ -2,50 +2,59 @@ import jwt from "jsonwebtoken";
 import supabase from "../utils/db.js";
 
 export const verifyUserFullAuth = async (req, res, next) => {
+  console.log("🧩 [Auth] Verifying user from Authorization header...");
+
   try {
-    console.log("🧩 [Auth] Starting verifyUserFullAuth...");
-
-    const token =
-      req.cookies?.access_token || req.headers.authorization?.split(" ")[1];
-
-    if (!token) {
-      console.warn("⚠️ [Auth] No access token found.");
-      return res.status(401).json({ error: "Missing access token" });
+    // === 1. Ambil token dari header
+    const authHeader = req.headers.authorization;
+    console.log(authHeader);
+    if (!authHeader) {
+      return res.status(401).json({ error: "Missing Authorization header" });
     }
 
+    console.log(authHeader);
+    // Format: "Bearer eyJhbGciOiJIUzI1NiIs..."
+    const token = authHeader.split(" ")[1];
+    if (!token) {
+      return res
+        .status(401)
+        .json({ error: "Malformed token (missing Bearer)" });
+    }
+
+    // === 2. Verifikasi JWT
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
-      console.log("✅ [Auth] JWT verified:", decoded.email);
+      console.log("✅ [Auth] Token valid:", decoded.email);
     } catch (err) {
       console.warn("❌ [Auth] Invalid JWT:", err.message);
-      return res.status(401).json({ error: "Invalid or expired JWT" });
+      return res
+        .status(401)
+        .json({ error: "Invalid or expired token", message: err.message });
     }
 
-    console.log("🔍 [Auth] Checking Supabase for user:", decoded.email);
+    // === 3. (Opsional) Cek user di Supabase
     const { data, error } = await supabase
       .from("users")
-      .select("id, email, username")
+      .select("id, email, username, role")
       .eq("email", decoded.email)
       .single();
 
     if (error || !data) {
-      console.warn("❌ [Auth] User not found in Supabase:", error?.message);
+      console.warn("❌ [Auth] User not found:", error?.message);
       return res.status(401).json({ error: "User not found in Supabase" });
     }
 
-    console.log("✅ [Auth] User verified in Supabase:", data.email);
-
+    // === 4. Simpan user di req untuk route berikutnya
     req.user = {
       id: data.id,
       email: data.email,
-      username: data.username || "Unknown User",
+      username: data.username,
+      role: data.role,
       jwt: decoded,
     };
 
-    req.userId = data.id;
-
-    console.log("🚀 [Auth] Verification passed. Proceeding...");
+    console.log("🚀 [Auth] Auth success for", data.email);
     next();
   } catch (err) {
     console.error("🔥 [Auth] verifyUserFullAuth error:", err);
