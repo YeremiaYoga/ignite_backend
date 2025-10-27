@@ -5,7 +5,7 @@ import { getUserByEmail } from "../models/userModel.js";
 const ACCESS_SECRET = process.env.JWT_SECRET;
 
 /**
- * 🔐 LOGIN USER — Generate only access_token
+ * 🔐 LOGIN USER — Generate JWT dan kirim ke frontend
  */
 export const loginUserJWT = async (req, res) => {
   try {
@@ -21,7 +21,7 @@ export const loginUserJWT = async (req, res) => {
     if (!validPassword)
       return res.status(401).json({ error: "Invalid credentials" });
 
-    // === Buat token ===
+    // ✅ Generate JWT
     const accessToken = jwt.sign(
       {
         id: user.id,
@@ -30,23 +30,14 @@ export const loginUserJWT = async (req, res) => {
         role: user.role,
       },
       ACCESS_SECRET,
-      { expiresIn: "8h" } // sesi login 8 jam
+      { expiresIn: "8h" }
     );
 
-    const isProd = process.env.NODE_ENV === "production";
-
-    // === Simpan di cookie ===
-    res.cookie("access_token", accessToken, {
-      httpOnly: true,
-      secure: isProd,                // true untuk HTTPS
-      sameSite: isProd ? "none" : "lax",
-      path: "/",
-      maxAge: 8 * 60 * 60 * 1000,    // 8 jam
-    });
-
+    // ✅ Kirim token ke frontend untuk disimpan di localStorage
     return res.json({
       success: true,
       message: "Login successful",
+      token: accessToken,
       user: {
         id: user.id,
         email: user.email,
@@ -56,19 +47,21 @@ export const loginUserJWT = async (req, res) => {
     });
   } catch (err) {
     console.error("❌ loginUserJWT error:", err.message);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
 /**
- * ✅ VERIFY TOKEN MIDDLEWARE — Untuk proteksi route
+ * ✅ VERIFY TOKEN — Middleware untuk proteksi route
  */
 export const verifyAccessToken = (req, res, next) => {
   try {
-    const token =
-      req.cookies?.access_token || req.headers.authorization?.split(" ")[1];
+    const authHeader = req.headers.authorization;
+    if (!authHeader)
+      return res.status(401).json({ error: "No Authorization header" });
 
-    if (!token) return res.status(401).json({ error: "Missing access token" });
+    const token = authHeader.split(" ")[1];
+    if (!token) return res.status(401).json({ error: "Missing token" });
 
     const decoded = jwt.verify(token, ACCESS_SECRET);
     req.user = decoded;
@@ -80,13 +73,9 @@ export const verifyAccessToken = (req, res, next) => {
 };
 
 /**
- * 🚪 LOGOUT — Hapus cookie token
+ * 🚪 LOGOUT — Hapus token di sisi frontend (tidak perlu dari server)
  */
 export const logoutUser = async (req, res) => {
-  res.clearCookie("access_token", {
-    path: "/",
-    httpOnly: true,
-    sameSite: "lax",
-  });
+  // Gak perlu hapus cookie, tinggal hapus token di localStorage frontend
   return res.json({ success: true, message: "Logged out successfully" });
 };
