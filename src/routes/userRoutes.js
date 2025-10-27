@@ -6,7 +6,7 @@ import {
 } from "../controllers/userController.js";
 import {
   loginUserJWT,
-  refreshAccessToken,
+  verifyAccessToken,
   logoutUser,
 } from "../controllers/userJwtController.js";
 
@@ -19,7 +19,9 @@ router.patch("/:id", updateUser); // update user Clerk
 
 // === JWT AUTH ===
 router.post("/jwt-login", loginUserJWT);
-router.post("/refresh", refreshAccessToken);
+router.get("/verify", verifyAccessToken, (req, res) => {
+  res.json({ success: true, user: req.user });
+});
 router.post("/logout", logoutUser);
 
 export default router;
