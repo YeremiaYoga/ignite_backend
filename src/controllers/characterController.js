@@ -12,7 +12,6 @@ import {
 } from "../models/characterModel.js";
 import { Blob } from "buffer";
 
-
 export const createCharacterHandler = async (req, res) => {
   const characterData = { ...req.body, user_id: req.userId };
   const { data, error } = await createCharacter(characterData);
