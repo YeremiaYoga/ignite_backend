@@ -46,14 +46,14 @@ export const loginUser = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    res.cookie("access_token", accessToken, {
+    res.cookie("ignite_access_token", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       maxAge: 9 * 60 * 60 * 1000,
     });
 
-    res.cookie("refresh_token", refreshToken, {
+    res.cookie("ignite_refresh_token", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
