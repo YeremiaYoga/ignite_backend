@@ -64,7 +64,7 @@ export const getUserByEmail = async (email) => {
     .from("users")
     .select("*")
     .eq("email", email)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error("❌ getUserByEmail error:", error.message);
