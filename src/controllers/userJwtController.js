@@ -31,17 +31,19 @@ export const loginUserJWT = async (req, res) => {
       { expiresIn: "7d" }
     );
 
+    const isProd = process.env.NODE_ENV === "production";
+
     res.cookie("access_token", accessToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
       maxAge: 9 * 60 * 60 * 1000,
     });
 
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -74,15 +76,16 @@ export const refreshAccessToken = async (req, res) => {
       ACCESS_SECRET,
       { expiresIn: "15m" }
     );
-
+    const isProd = process.env.NODE_ENV === "production";
     res.cookie("access_token", newAccessToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
       maxAge: 8 * 60 * 60 * 1000,
+      path: "/", // <--- penting! supaya cookie bisa dipakai di semua route
     });
+    return res.status(200).json({ success: true, message: "Token refreshed" });
 
-    return res.json({ success: true });
   } catch (err) {
     console.error("❌ refreshAccessToken error:", err.message);
     return res.status(401).json({ error: "Invalid or expired refresh token" });
