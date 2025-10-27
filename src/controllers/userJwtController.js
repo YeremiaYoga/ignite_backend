@@ -33,14 +33,14 @@ export const loginUserJWT = async (req, res) => {
 
     res.cookie("access_token", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       sameSite: "none",
       maxAge: 9 * 60 * 60 * 1000,
     });
 
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
@@ -77,8 +77,8 @@ export const refreshAccessToken = async (req, res) => {
 
     res.cookie("access_token", newAccessToken, {
       httpOnly: true,
+      secure: true,
       sameSite: "none",
-      secure: process.env.NODE_ENV === "production",
       maxAge: 8 * 60 * 60 * 1000,
     });
 
