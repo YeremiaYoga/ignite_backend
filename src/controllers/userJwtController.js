@@ -28,21 +28,22 @@ export const loginUserJWT = async (req, res) => {
     const refreshToken = jwt.sign(
       { id: user.id, email: user.email },
       REFRESH_SECRET,
-      { expiresIn: "7d" } 
+      { expiresIn: "7d" }
     );
-
 
     res.cookie("access_token", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "lax",
+      secure: false,
       maxAge: 9 * 60 * 60 * 1000,
     });
 
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "lax",
+      secure: false,
       maxAge: 9 * 24 * 60 * 60 * 1000,
     });
 
