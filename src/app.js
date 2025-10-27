@@ -20,6 +20,7 @@ app.use(
       process.env.NEXT_PUBLIC_APP_ORIGIN_2,
       process.env.NEXT_PUBLIC_APP_ORIGIN_3,
       process.env.NEXT_PUBLIC_APP_ORIGIN_4,
+      process.env.NEXT_PUBLIC_APP_ORIGIN_5,
     ],
     credentials: true,
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
