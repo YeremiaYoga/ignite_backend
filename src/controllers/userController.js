@@ -52,18 +52,10 @@ export const loginUser = async (req, res) => {
       { expiresIn: "9h" }
     );
 
-    // 🌐 Mode otomatis (Local vs Hosting)
-    const isLocal =
-      process.env.NODE_ENV !== "production" ||
-      (req.headers.origin &&
-        (req.headers.origin.includes("localhost") ||
-          req.headers.origin.includes("127.0.0.1")));
-
-    // 🍪 Set cookie untuk IGNITE
     res.cookie("ignite_access_token", accessToken, {
       httpOnly: true,
-      secure: !isLocal, // hanya HTTPS saat di hosting
-      sameSite: isLocal ? "lax" : "none", // agar lintas domain bisa
+      secure: true,
+      sameSite: "none",
       maxAge: 9 * 60 * 60 * 1000, // 9 jam
     });
 
