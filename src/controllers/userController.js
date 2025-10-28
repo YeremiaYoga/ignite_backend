@@ -5,7 +5,6 @@ import {
 } from "../models/userModel.js";
 import jwt from "jsonwebtoken";
 
-const ACCESS_SECRET = process.env.JWT_SECRET_USER;
 export const loginUser = async (req, res) => {
   try {
     const { clerkId, email, username } = req.body;
@@ -14,7 +13,6 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // 🔄 Upsert user ke Supabase
     const { error: upsertError } = await upsertUser({
       clerkId,
       email,
@@ -27,19 +25,16 @@ export const loginUser = async (req, res) => {
       return res.status(500).json({ error: upsertError.message });
     }
 
-    // 🔍 Ambil data user dari Supabase
     const user = await getUserByClerkId(clerkId);
     if (!user) {
       return res.status(404).json({ error: "User not found after upsert" });
     }
 
-    // 🚧 Pastikan role ada
     if (!user.role) {
       await updateUserById(user.id, { role: "user" });
       user.role = "user";
     }
 
-    // ✅ Generate JWT untuk IGNITE
     const accessToken = jwt.sign(
       {
         id: user.id,
@@ -56,12 +51,9 @@ export const loginUser = async (req, res) => {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      maxAge: 9 * 60 * 60 * 1000, // 9 jam
+      maxAge: 9 * 60 * 60 * 1000,
     });
 
- 
-
-    // ✅ Kirim response tanpa token (token di cookie)
     return res.json({
       success: true,
       message: "Login successful",
