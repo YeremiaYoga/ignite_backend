@@ -59,11 +59,7 @@ export const loginUser = async (req, res) => {
       maxAge: 9 * 60 * 60 * 1000, // 9 jam
     });
 
-    console.log(
-      `✅ [Login] ${user.email} logged in (mode: ${
-        isLocal ? "local" : "production"
-      })`
-    );
+ 
 
     // ✅ Kirim response tanpa token (token di cookie)
     return res.json({
