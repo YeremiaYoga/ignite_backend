@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { verifyUserFullAuth } from "../middlewares/verifyUserFullAuth.js";
+import { verifyUserIgnite } from "../middlewares/verifyUserIgnite.js";
 import {
   createCharacterHandler,
   getCharactersHandler,
@@ -13,6 +13,7 @@ import {
   moveCharacterToTrash,
   restoreCharacterFromTrash,
   deleteExpiredTrashCharacters,
+
 } from "../controllers/characterController.js";
 
 const router = express.Router();
@@ -26,7 +27,7 @@ router.post("/", createCharacterHandler);
 
 router.post(
   "/save",
-  verifyUserFullAuth,
+  verifyUserIgnite,
   upload.fields([
     { name: "art", maxCount: 1 },
     { name: "token_art", maxCount: 1 },
@@ -36,8 +37,9 @@ router.post(
   saveCharacterHandler
 );
 
+
 router.get("/", getCharactersHandler);
-router.get("/user", verifyUserFullAuth, getCharactersUserHandler);
+router.get("/user", verifyUserIgnite, getCharactersUserHandler);
 router.get("/trash", getCharactersUserTrash);
 router.put("/:id/trash", moveCharacterToTrash);
 router.put("/:id/restore", restoreCharacterFromTrash);
@@ -45,7 +47,7 @@ router.get("/trash/expired", deleteExpiredTrashCharacters);
 router.get("/:id", getCharacterHandler);
 router.put(
   "/:id",
-  verifyUserFullAuth,
+  verifyUserIgnite,
   upload.fields([
     { name: "art", maxCount: 1 },
     { name: "token_art", maxCount: 1 },

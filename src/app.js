@@ -8,6 +8,7 @@ import incumbencyRoutes from "./routes/incumbencyRoutes.js";
 import raceRoutes from "./routes/raceRoutes.js";
 import backgroundRoutes from "./routes/backgroundRoutes.js";
 import subraceRoutes from "./routes/subraceRoutes.js";
+import adminCharacterRoutes from "./routes/adminCharacterRoutes.js";
 import path from "path";
 const app = express();
 
@@ -20,7 +21,7 @@ app.use(
       process.env.NEXT_PUBLIC_APP_ORIGIN_2,
       process.env.NEXT_PUBLIC_APP_ORIGIN_3,
       process.env.NEXT_PUBLIC_APP_ORIGIN_4,
-      process.env.NEXT_PUBLIC_APP_ORIGIN_5,
+      process.env.ADMIN_PANEL_ORIGIN_1,
     ],
     credentials: true,
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
@@ -38,6 +39,14 @@ app.use("/api/incumbency", incumbencyRoutes);
 app.use("/api/races", raceRoutes);
 app.use("/api/subraces", subraceRoutes);
 app.use("/api/backgrounds", backgroundRoutes);
+app.use("/admin/character", adminCharacterRoutes);
 
+app.get("/", (req, res) => {
+  res.json({
+    status: "✅ Ignite backend running",
+    time: new Date().toISOString(),
+    adminRoutes: "/admin/character",
+  });
+});
 
 export default app;

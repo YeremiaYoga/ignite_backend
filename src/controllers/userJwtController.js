@@ -2,12 +2,12 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { getUserByEmail } from "../models/userModel.js";
 
-const ACCESS_SECRET = process.env.JWT_SECRET;
+const ACCESS_SECRET = process.env.JWT_SECRET_ADMIN;
 
 /**
  * 🔐 LOGIN USER — Generate JWT dan kirim ke frontend
  */
-export const loginUserJWT = async (req, res) => {
+export const loginAdminJWT = async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -21,22 +21,25 @@ export const loginUserJWT = async (req, res) => {
     if (!validPassword)
       return res.status(401).json({ error: "Invalid credentials" });
 
-    // ✅ Generate JWT
+    if (user.role !== "admin" && user.role !== "superadmin") {
+      return res.status(403).json({ error: "Access denied: Admins only" });
+    }
+
     const accessToken = jwt.sign(
       {
         id: user.id,
         email: user.email,
         username: user.name,
         role: user.role,
+        app: "admin", 
       },
-      ACCESS_SECRET,
+      process.env.JWT_SECRET_ADMIN,
       { expiresIn: "8h" }
     );
 
-    // ✅ Kirim token ke frontend untuk disimpan di localStorage
     return res.json({
       success: true,
-      message: "Login successful",
+      message: "Admin login successful",
       token: accessToken,
       user: {
         id: user.id,
@@ -46,7 +49,7 @@ export const loginUserJWT = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("❌ loginUserJWT error:", err.message);
+    console.error("❌ loginAdminJWT error:", err.message);
     return res.status(500).json({ error: "Internal server error" });
   }
 };

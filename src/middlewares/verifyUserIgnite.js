@@ -7,9 +7,9 @@ import supabase from "../utils/db.js";
  * - Auto-refreshes using refresh token if access token expired
  * - Verifies user exists in Supabase
  */
-export const verifyUserFullAuth = async (req, res, next) => {
+export const verifyUserIgnite = async (req, res, next) => {
   try {
-    console.log("🧩 [Auth] Starting verifyUserFullAuth...");
+    console.log("🧩 [Auth] Starting verifyUserIgnite...");
 
     // === GET TOKEN ===
     const accessToken =
@@ -26,7 +26,7 @@ export const verifyUserFullAuth = async (req, res, next) => {
 
     // === TRY VERIFY ACCESS TOKEN ===
     try {
-      decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
+      decoded = jwt.verify(accessToken, process.env.JWT_SECRET_USER);
       console.log("✅ [Auth] Access token verified:", decoded.email);
     } catch (err) {
       if (err.name === "TokenExpiredError" && refreshToken) {
@@ -50,7 +50,7 @@ export const verifyUserFullAuth = async (req, res, next) => {
               email: refreshDecoded.email,
               id: refreshDecoded.id,
             },
-            process.env.JWT_SECRET,
+            process.env.JWT_SECRET_USER,
             { expiresIn: "9h" }
           );
 
@@ -62,7 +62,7 @@ export const verifyUserFullAuth = async (req, res, next) => {
             maxAge: 9 * 60 * 60 * 1000, // 9 jam
           });
 
-          decoded = jwt.verify(newAccessToken, process.env.JWT_SECRET);
+          decoded = jwt.verify(newAccessToken, process.env.JWT_SECRET_USER);
           console.log("♻️ [Auth] Access token refreshed for:", decoded.email);
         } catch (refreshErr) {
           console.warn("❌ [Auth] Invalid refresh token:", refreshErr.message);
@@ -106,7 +106,7 @@ export const verifyUserFullAuth = async (req, res, next) => {
     console.log("🚀 [Auth] Verification passed. Proceeding...");
     next();
   } catch (err) {
-    console.error("🔥 [Auth] verifyUserFullAuth error:", err);
+    console.error("🔥 [Auth] verifyUserIgnite error:", err);
     res.status(500).json({ error: "Server error verifying user" });
   }
 };

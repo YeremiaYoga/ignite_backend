@@ -2,8 +2,26 @@ import supabase from "../utils/db.js";
 
 // CREATE
 export const createCharacter = async (characterData) => {
-  return await supabase.from("characters").insert([characterData]).select();
+  try {
+    const { data, error } = await supabase
+      .from("characters")
+      .insert([characterData])
+      .select("*")
+      .single();
+
+    if (error) {
+      console.error("❌ Supabase insert error:", error.message);
+      return { data: null, error };
+    }
+
+    console.log("✅ Character created:", data);
+    return { data, error: null };
+  } catch (err) {
+    console.error("💥 createCharacter fatal error:", err);
+    return { data: null, error: err };
+  }
 };
+
 
 // GET ALL
 export const getAllCharacters = async () => {

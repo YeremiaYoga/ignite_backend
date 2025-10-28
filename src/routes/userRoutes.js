@@ -3,9 +3,10 @@ import {
   loginUser,
   getUser,
   updateUser,
+  logoutUserIgnite
 } from "../controllers/userController.js";
 import {
-  loginUserJWT,
+  loginAdminJWT,
   verifyAccessToken,
   logoutUser,
 } from "../controllers/userJwtController.js";
@@ -16,12 +17,13 @@ const router = express.Router();
 router.post("/login", loginUser); // login Clerk
 router.get("/:clerkId", getUser); // get user Clerk
 router.patch("/:id", updateUser); // update user Clerk
+router.post("/logout", logoutUserIgnite);
 
 // === JWT AUTH ===
-router.post("/jwt-login", loginUserJWT);
+router.post("/jwt-login", loginAdminJWT);
 router.get("/verify", verifyAccessToken, (req, res) => {
   res.json({ success: true, user: req.user });
 });
-router.post("/logout", logoutUser);
+// router.post("/logout", logoutUser);
 
 export default router;
