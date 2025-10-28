@@ -17,23 +17,19 @@ import {
 } from "../controllers/characterController.js";
 
 const router = express.Router();
-
-// ✅ gunakan memory storage agar file langsung bisa dikirim ke Media API
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
-
-// === ROUTES ===
 router.post("/", createCharacterHandler);
 
 router.post(
   "/save",
-  verifyUserIgnite,
   upload.fields([
     { name: "art", maxCount: 1 },
     { name: "token_art", maxCount: 1 },
     { name: "main_theme_ogg", maxCount: 1 },
     { name: "combat_theme_ogg", maxCount: 1 },
   ]),
+  verifyUserIgnite,
   saveCharacterHandler
 );
 

@@ -27,8 +27,11 @@ export const loginUser = async (req, res) => {
       return res.status(500).json({ error: upsertError.message });
     }
 
-    // 🔍 Ambil data user
+    // 🔍 Ambil data user dari Supabase
     const user = await getUserByClerkId(clerkId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found after upsert" });
+    }
 
     // 🚧 Pastikan role ada
     if (!user.role) {
@@ -43,21 +46,34 @@ export const loginUser = async (req, res) => {
         email: user.email,
         username: user.name,
         role: user.role,
-        app: "ignite", // penanda untuk middleware
+        app: "ignite",
       },
       process.env.JWT_SECRET_USER,
       { expiresIn: "9h" }
     );
 
-    // ✅ Set cookie HTTP-only
+    // 🌐 Mode otomatis (Local vs Hosting)
+    const isLocal =
+      process.env.NODE_ENV !== "production" ||
+      (req.headers.origin &&
+        (req.headers.origin.includes("localhost") ||
+          req.headers.origin.includes("127.0.0.1")));
+
+    // 🍪 Set cookie untuk IGNITE
     res.cookie("ignite_access_token", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: !isLocal, // hanya HTTPS saat di hosting
+      sameSite: isLocal ? "lax" : "none", // agar lintas domain bisa
       maxAge: 9 * 60 * 60 * 1000, // 9 jam
     });
 
-    // ✅ Response
+    console.log(
+      `✅ [Login] ${user.email} logged in (mode: ${
+        isLocal ? "local" : "production"
+      })`
+    );
+
+    // ✅ Kirim response tanpa token (token di cookie)
     return res.json({
       success: true,
       message: "Login successful",
@@ -69,7 +85,7 @@ export const loginUser = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("💥 loginUser error:", err.message);
+    console.error("💥 loginUser error:", err);
     return res.status(500).json({ error: err.message });
   }
 };
@@ -78,7 +94,6 @@ export const logoutUserIgnite = async (req, res) => {
   res.clearCookie("ignite_access_token");
   return res.json({ success: true, message: "Logged out successfully" });
 };
-
 
 // export const loginUser = async (req, res) => {
 //   try {

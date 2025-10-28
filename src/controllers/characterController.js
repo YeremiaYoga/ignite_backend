@@ -21,12 +21,16 @@ export const createCharacterHandler = async (req, res) => {
 
 export const saveCharacterHandler = async (req, res) => {
   try {
+    console.log("📥 [IGNITE] SaveCharacter invoked (cookie-based)");
+
+    // --- Parse body utama ---
     const parsed =
       typeof req.body.data === "string" ? JSON.parse(req.body.data) : req.body;
 
     const publicId = parsed.public_id;
     const MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
 
+    // --- Normalisasi UUID field kosong ---
     const uuidFields = [
       "race_id",
       "subrace_id",
@@ -38,6 +42,7 @@ export const saveCharacterHandler = async (req, res) => {
       if (parsed[field] === "") parsed[field] = null;
     }
 
+    // --- Upload helper (pakai cookie token) ---
     const uploadToMedia = async (file, type) => {
       if (!file || !file.buffer) {
         console.log(`⚠️ Skip ${type}: tidak ada file`);
@@ -46,17 +51,18 @@ export const saveCharacterHandler = async (req, res) => {
 
       try {
         const blob = new Blob([file.buffer], { type: file.mimetype });
-
         const formData = new FormData();
         formData.append("path", "characters");
         formData.append("folder_name", publicId);
         formData.append("file", blob, file.originalname);
+        console.log(formData);
 
         const token =
-          req.cookies?.access_token ||
+          req.cookies?.ignite_access_token ||
           req.user?.jwt?.token ||
-          req.headers.authorization?.split(" ")[1];
-
+          req.headers.authorization?.split(" ")[1] ||
+          null;
+        console.log(token);
         const resUpload = await fetch(`${MEDIA_URL}/upload`, {
           method: "POST",
           headers: {
@@ -85,6 +91,7 @@ export const saveCharacterHandler = async (req, res) => {
       }
     };
 
+    // --- Upload file media (jika ada) ---
     let artPath = null;
     let tokenArtPath = null;
     let mainThemePath = null;
@@ -106,6 +113,7 @@ export const saveCharacterHandler = async (req, res) => {
       );
     }
 
+    // --- Bersihkan field tidak relevan ---
     delete parsed.creator_email;
     delete parsed.creator_name;
     delete parsed.usedSkillPoints;
@@ -114,30 +122,32 @@ export const saveCharacterHandler = async (req, res) => {
     delete parsed.height_unit;
     delete parsed.weight_unit;
 
-    const userId = req.userId || null;
-    const ownerName = req.user?.username || "Unknown User";
+    // --- Ambil user dari middleware verifyUserIgnite ---
+    const userId = req.user?.id || null;
+    const username = req.user?.username || "Unknown User";
 
-    const mergedData = {
+    // --- Buat objek baru untuk insert ke Supabase ---
+    const newCharacter = {
       ...parsed,
+      user_id: userId,
+      creator_name: username,
       rotation_stamp: parseFloat((Math.random() * 60 - 30).toFixed(1)),
       rotation_sticker: parseFloat((Math.random() * 60 - 30).toFixed(1)),
       stamp_type: Math.floor(Math.random() * 40) + 1,
       record_status: "active",
       deleted_at: null,
-    };
-
-    const newCharacter = {
-      ...mergedData,
-      user_id: userId,
-      creator_name: ownerName,
       art_image: artPath,
       token_image: tokenArtPath,
       main_theme_ogg: mainThemePath,
       combat_theme_ogg: combatThemePath,
     };
 
+    // --- Simpan ke database ---
     const { data: created, error } = await createCharacter(newCharacter);
-    if (error) return res.status(400).json({ error: error.message });
+    if (error) {
+      console.error("❌ Supabase insert error:", error.message);
+      return res.status(400).json({ error: error.message });
+    }
 
     res.json({ success: true, character: created });
   } catch (err) {
