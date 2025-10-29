@@ -5,7 +5,7 @@ import {
   createCharacterHandler,
   getCharactersHandler,
   getCharacterHandler,
-  updateCharacterHandler,
+  updateCharacterByPrivateIdHandler,
   deleteCharacterHandler,
   getCharactersUserHandler,
   saveCharacterHandler,
@@ -13,7 +13,8 @@ import {
   moveCharacterToTrash,
   restoreCharacterFromTrash,
   deleteExpiredTrashCharacters,
-
+  getCharacterByPublicIdHandler,
+  getCharacterByPrivateIdHandler,
 } from "../controllers/characterController.js";
 
 const router = express.Router();
@@ -33,13 +34,13 @@ router.post(
   saveCharacterHandler
 );
 
-
 router.get("/", getCharactersHandler);
 router.get("/user", verifyUserIgnite, getCharactersUserHandler);
-router.get("/trash", getCharactersUserTrash);
+router.get("/trash", verifyUserIgnite, getCharactersUserTrash);
 router.put("/:id/trash", moveCharacterToTrash);
 router.put("/:id/restore", restoreCharacterFromTrash);
-router.get("/trash/expired", deleteExpiredTrashCharacters);
+router.get("/trash/expired", verifyUserIgnite, deleteExpiredTrashCharacters);
+
 router.get("/:id", getCharacterHandler);
 router.put(
   "/:id",
@@ -50,8 +51,11 @@ router.put(
     { name: "main_theme_ogg", maxCount: 1 },
     { name: "combat_theme_ogg", maxCount: 1 },
   ]),
-  updateCharacterHandler
+  updateCharacterByPrivateIdHandler
 );
 router.delete("/:id", deleteCharacterHandler);
+router.get("/public/:id", getCharacterByPublicIdHandler);
+
+router.get("/private/:id", verifyUserIgnite, getCharacterByPrivateIdHandler);
 
 export default router;

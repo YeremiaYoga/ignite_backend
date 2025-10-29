@@ -9,6 +9,9 @@ import {
   getCharactersByUserId,
   getCharactersByUserIdTrash,
   markExpiredTrashCharactersAsDeleted,
+  getCharacterByPublicId,
+  getCharacterByPrivateId,
+  updateCharacterByPrivateId,
 } from "../models/characterModel.js";
 import { Blob } from "buffer";
 
@@ -185,14 +188,18 @@ export const getCharacterHandler = async (req, res) => {
   res.json(data);
 };
 
-export const updateCharacterHandler = async (req, res) => {
+export const updateCharacterByPrivateIdHandler = async (req, res) => {
   try {
-    // Parse body JSON
+    console.log("🛠 [IGNITE] UpdateCharacter by private_id invoked");
+
+    const privateId = req.params.id;
+    const MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
+
+    // --- Parse body JSON
     const parsed =
       typeof req.body.data === "string" ? JSON.parse(req.body.data) : req.body;
 
-    const MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
-
+    // --- Normalize UUID fields ---
     const uuidFields = [
       "race_id",
       "subrace_id",
@@ -200,18 +207,20 @@ export const updateCharacterHandler = async (req, res) => {
       "user_id",
       "incumbency_id",
     ];
-    for (const field of uuidFields) {
+    for (const field of uuidFields)
       if (parsed[field] === "") parsed[field] = null;
-    }
 
-    const { data: existing, error: fetchError } = await getCharacterById(
-      req.params.id
+    // --- Fetch existing character ---
+    const { data: existing, error: fetchError } = await getCharacterByPrivateId(
+      privateId
     );
     if (fetchError || !existing)
       return res.status(404).json({ error: "Character not found" });
 
+    // --- Upload helper ---
     const uploadToMedia = async (file, type) => {
       if (!file || !file.buffer) return null;
+
       try {
         const blob = new Blob([file.buffer], { type: file.mimetype });
         const formData = new FormData();
@@ -220,15 +229,14 @@ export const updateCharacterHandler = async (req, res) => {
         formData.append("file", blob, file.originalname);
 
         const token =
-          req.cookies?.access_token ||
+          req.cookies?.ignite_access_token ||
           req.user?.jwt?.token ||
-          req.headers.authorization?.split(" ")[1];
+          req.headers.authorization?.split(" ")[1] ||
+          null;
 
         const resUpload = await fetch(`${MEDIA_URL}/upload`, {
           method: "POST",
-          headers: {
-            Authorization: token ? `Bearer ${token}` : "",
-          },
+          headers: { Authorization: token ? `Bearer ${token}` : "" },
           body: formData,
         });
 
@@ -244,6 +252,7 @@ export const updateCharacterHandler = async (req, res) => {
           result.data?.fullUrl ||
           result.url ||
           result.data?.url;
+
         console.log(`✅ ${type} uploaded:`, fileUrl);
         return fileUrl;
       } catch (err) {
@@ -252,38 +261,36 @@ export const updateCharacterHandler = async (req, res) => {
       }
     };
 
-    let artPath = existing.art_image;
-    let tokenArtPath = existing.token_image;
-    let mainThemePath = existing.main_theme_ogg;
-    let combatThemePath = existing.combat_theme_ogg;
+    // --- Upload file jika ada ---
+    const files = req.files || {};
+    const artPath =
+      (req.files["art"] && (await uploadToMedia(files["art"][0], "art"))) ||
+      existing.art_image;
+    const tokenArtPath =
+      (req.files["token_art"] &&
+        (await uploadToMedia(files["token_art"][0], "token_art"))) ||
+      existing.token_image;
+    const mainThemePath =
+      (req.files["main_theme_ogg"] &&
+        (await uploadToMedia(files["main_theme_ogg"][0], "main_theme"))) ||
+      existing.main_theme_ogg;
+    const combatThemePath =
+      (req.files["combat_theme_ogg"] &&
+        (await uploadToMedia(files["combat_theme_ogg"][0], "combat_theme"))) ||
+      existing.combat_theme_ogg;
 
-    if (req.files) {
-      if (req.files["art"]?.[0])
-        artPath = await uploadToMedia(req.files["art"][0], "art");
-      if (req.files["token_art"]?.[0])
-        tokenArtPath = await uploadToMedia(
-          req.files["token_art"][0],
-          "token_art"
-        );
-      if (req.files["main_theme_ogg"]?.[0])
-        mainThemePath = await uploadToMedia(
-          req.files["main_theme_ogg"][0],
-          "main_theme"
-        );
-      if (req.files["combat_theme_ogg"]?.[0])
-        combatThemePath = await uploadToMedia(
-          req.files["combat_theme_ogg"][0],
-          "combat_theme"
-        );
-    }
+    // --- Cleanup fields ---
+    [
+      "creator_email",
+      "creator_name",
+      "usedSkillPoints",
+      "art",
+      "token_art",
+      "height_unit",
+      "weight_unit",
+    ].forEach((f) => delete parsed[f]);
 
-    delete parsed.creator_email;
-    delete parsed.creator_name;
-    delete parsed.usedSkillPoints;
-    delete parsed.art;
-    delete parsed.token_art;
-    delete parsed.height_unit;
-    delete parsed.weight_unit;
+    // --- Build updated data ---
     const updatedData = {
       ...existing,
       ...parsed,
@@ -294,13 +301,18 @@ export const updateCharacterHandler = async (req, res) => {
       updated_at: new Date().toISOString(),
     };
 
-    const { data, error } = await updateCharacter(req.params.id, updatedData);
+    // --- Update ke database ---
+    const { data, error } = await updateCharacterByPrivateId(
+      privateId,
+      updatedData
+    );
     if (error) return res.status(400).json({ error: error.message });
 
-    res.json({ success: true, character: data });
+    console.log("✅ Character updated:", data);
+    res.status(200).json(data);
   } catch (err) {
-    console.error("💥 updateCharacterHandler error:", err);
-    res.status(500).json({ success: false, error: err.message });
+    console.error("💥 updateCharacterByPrivateIdHandler error:", err);
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -374,4 +386,50 @@ export const deleteCharacterHandler = async (req, res) => {
   const { error } = await deleteCharacter(req.params.id);
   if (error) return res.status(400).json({ error: error.message });
   res.json({ message: "Character deleted" });
+};
+
+export const getCharacterByPublicIdHandler = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data, error } = await getCharacterByPublicId(id);
+
+    if (error) return res.status(400).json({ error: error.message });
+    if (!data) return res.status(404).json({ error: "Character not found" });
+
+    res.status(200).json({
+      success: true,
+      message: "Character fetched successfully by public ID",
+      data: data,
+    });
+  } catch (err) {
+    console.error("💥 getCharacterByPublicIdHandler error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+export const getCharacterByPrivateIdHandler = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data, error } = await getCharacterByPrivateId(id);
+
+    if (error) return res.status(400).json({ error: error.message });
+    if (!data) return res.status(404).json({ error: "Character not found" });
+
+    // ✅ optional: keamanan, hanya pemilik bisa akses
+    if (req.user?.id && data.user_id !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        error: "You are not authorized to view this character",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Character fetched successfully by private ID",
+      data: data,
+    });
+  } catch (err) {
+    console.error("💥 getCharacterByPrivateIdHandler error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
 };

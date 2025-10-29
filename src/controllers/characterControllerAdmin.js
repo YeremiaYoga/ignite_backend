@@ -49,7 +49,6 @@ export const saveCharacterAdminHandler = async (req, res) => {
         formData.append("folder_name", publicId);
         formData.append("file", blob, file.originalname);
 
-        // 🟢 ambil token dari Authorization (karena admin pakai localStorage)
         const token = req.headers.authorization?.split(" ")[1] || null;
 
         const resUpload = await fetch(`${MEDIA_URL}/upload`, {
@@ -80,7 +79,6 @@ export const saveCharacterAdminHandler = async (req, res) => {
       }
     };
 
-    // --- Upload semua file opsional ---
     let artPath = null;
     let tokenArtPath = null;
     let mainThemePath = null;
@@ -102,7 +100,6 @@ export const saveCharacterAdminHandler = async (req, res) => {
       );
     }
 
-    // --- Bersihkan data tidak penting ---
     delete parsed.creator_email;
     delete parsed.creator_name;
     delete parsed.usedSkillPoints;
@@ -111,14 +108,13 @@ export const saveCharacterAdminHandler = async (req, res) => {
     delete parsed.height_unit;
     delete parsed.weight_unit;
 
-    // --- Role Check ---
+
     if (req.user?.role !== "admin" && req.user?.role !== "superadmin") {
       return res.status(403).json({ error: "Forbidden: Admin access only" });
     }
 
     const adminName = req.user?.username || "Admin Panel";
     const userId = parsed.user_id || req.user?.id || null;
-    // --- Compose final data ---
     const newCharacter = {
       ...parsed,
       rotation_stamp: parseFloat((Math.random() * 60 - 30).toFixed(1)),
