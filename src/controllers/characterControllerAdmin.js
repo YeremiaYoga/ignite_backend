@@ -234,7 +234,6 @@ export const updateCharacterAdminHandler = async (req, res) => {
         combatThemePath = await uploadToMedia(req.files["combat_theme_ogg"][0], "combat_theme", existing.public_id, token);
     }
 
-    // === Bersihkan data tidak relevan ===
     delete parsed.creator_email;
     delete parsed.creator_name;
     delete parsed.usedSkillPoints;
@@ -243,15 +242,15 @@ export const updateCharacterAdminHandler = async (req, res) => {
     delete parsed.height_unit;
     delete parsed.weight_unit;
 
-    // === Role Check ===
+
     if (req.user?.role !== "admin" && req.user?.role !== "superadmin") {
       return res.status(403).json({ error: "Forbidden: Admin access only" });
     }
 
-    // === Tentukan user_id fallback ===
+
     const userId = parsed.user_id || req.userId || existing.user_id || null;
 
-    // === Gabungkan data baru ===
+
     const updatedData = {
       ...existing,
       ...parsed,
@@ -276,9 +275,7 @@ export const updateCharacterAdminHandler = async (req, res) => {
 };
 
 
-/**
- * 🗑️ DELETE CHARACTER (ADMIN)
- */
+
 export const deleteCharacterAdminHandler = async (req, res) => {
   const { error } = await deleteCharacter(req.params.id);
   if (error) return res.status(400).json({ error: error.message });

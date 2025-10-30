@@ -12,13 +12,11 @@ export const loginUser = async (req, res) => {
     if (!clerkId || !email || !username) {
       return res.status(400).json({ error: "Missing required fields" });
     }
-
-    // 🔍 Cek apakah user sudah ada di Supabase
     const existingUser = await getUserByClerkId(clerkId);
 
     let user = existingUser;
 
-    // 🧩 Kalau user belum ada, buat baru lewat upsertUser()
+
     if (!existingUser) {
       console.log("🆕 New user detected, creating...");
 
@@ -37,13 +35,12 @@ export const loginUser = async (req, res) => {
         return res.status(500).json({ error: upsertError.message });
       }
 
-      // ambil ulang user baru
+
       user = await getUserByClerkId(clerkId);
     } else {
       console.log("⚡ Existing user found:", existingUser.email);
     }
 
-    // 🔒 Buat JWT token
     const accessToken = jwt.sign(
       {
         id: user.id,
@@ -56,7 +53,6 @@ export const loginUser = async (req, res) => {
       { expiresIn: "9h" }
     );
 
-    // 🍪 Simpan cookie
     res.cookie("ignite_access_token", accessToken, {
       httpOnly: true,
       secure: true,

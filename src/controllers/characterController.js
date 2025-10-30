@@ -43,15 +43,12 @@ export const saveCharacterHandler = async (req, res) => {
     for (const field of uuidFields)
       if (parsed[field] === "") parsed[field] = null;
 
-    // 🔐 Ambil user dari middleware verifyUserIgnite
     const userId = req.user?.id || null;
     const username = req.user?.username || "Unknown User";
 
     if (!userId) {
       return res.status(401).json({ error: "Unauthorized: user not found" });
     }
-
-    // 🔎 Ambil user info (cek limit karakter)
     const { data: user, error: userError } = await supabase
       .from("users")
       .select("id, character_limit, subscription_plan")
@@ -63,7 +60,6 @@ export const saveCharacterHandler = async (req, res) => {
       return res.status(400).json({ error: "User not found" });
     }
 
-    // 🧮 Hitung jumlah karakter aktif user
     const { count, error: countError } = await supabase
       .from("characters")
       .select("*", { count: "exact", head: true })
@@ -85,7 +81,6 @@ export const saveCharacterHandler = async (req, res) => {
       });
     }
 
-    // --- Upload helper ---
     const uploadToMedia = async (file, type) => {
       if (!file || !file.buffer) return null;
       try {
@@ -127,7 +122,6 @@ export const saveCharacterHandler = async (req, res) => {
       }
     };
 
-    // --- Upload file (jika ada) ---
     let artPath = null;
     let tokenArtPath = null;
     let mainThemePath = null;
@@ -149,7 +143,6 @@ export const saveCharacterHandler = async (req, res) => {
       );
     }
 
-    // --- Bersihkan field tidak relevan ---
     [
       "creator_email",
       "creator_name",
@@ -160,7 +153,6 @@ export const saveCharacterHandler = async (req, res) => {
       "weight_unit",
     ].forEach((f) => delete parsed[f]);
 
-    // --- Buat karakter baru ---
     const newCharacter = {
       ...parsed,
       user_id: userId,
@@ -176,7 +168,6 @@ export const saveCharacterHandler = async (req, res) => {
       combat_theme_ogg: combatThemePath,
     };
 
-    // --- Simpan ke Supabase ---
     const { data: created, error } = await createCharacter(newCharacter);
     if (error) {
       console.error("❌ Supabase insert error:", error.message);

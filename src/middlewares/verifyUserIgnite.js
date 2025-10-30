@@ -1,17 +1,11 @@
 import jwt from "jsonwebtoken";
 import supabase from "../utils/db.js";
 
-/**
- * ✅ verifyUserIgnite (tanpa refresh_token)
- * - Cek token dari cookie atau Authorization header
- * - Verifikasi JWT pakai secret user
- * - Pastikan user valid di Supabase
- */
+
 export const verifyUserIgnite = async (req, res, next) => {
   try {
     console.log("🧩 [Auth] Starting verifyUserIgnite...");
 
-    // === 1️⃣ Ambil token dari cookie atau header ===
     const token =
       req.cookies?.ignite_access_token ||
       req.headers.authorization?.split(" ")[1];
