@@ -13,28 +13,37 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const { error: upsertError } = await upsertUser({
-      clerkId,
-      email,
-      username,
-      role: "user",
-    });
+    // 🔍 Cek apakah user sudah ada di Supabase
+    const existingUser = await getUserByClerkId(clerkId);
 
-    if (upsertError) {
-      console.error("❌ upsertUser error:", upsertError.message);
-      return res.status(500).json({ error: upsertError.message });
+    let user = existingUser;
+
+    // 🧩 Kalau user belum ada, buat baru lewat upsertUser()
+    if (!existingUser) {
+      console.log("🆕 New user detected, creating...");
+
+      const { error: upsertError } = await upsertUser({
+        clerkId,
+        email,
+        username,
+        role: "user",
+        character_limit: 5,
+        subscription_plan: "free",
+        subscription_expiry: null,
+      });
+
+      if (upsertError) {
+        console.error("❌ upsertUser error:", upsertError.message);
+        return res.status(500).json({ error: upsertError.message });
+      }
+
+      // ambil ulang user baru
+      user = await getUserByClerkId(clerkId);
+    } else {
+      console.log("⚡ Existing user found:", existingUser.email);
     }
 
-    const user = await getUserByClerkId(clerkId);
-    if (!user) {
-      return res.status(404).json({ error: "User not found after upsert" });
-    }
-
-    if (!user.role) {
-      await updateUserById(user.id, { role: "user" });
-      user.role = "user";
-    }
-
+    // 🔒 Buat JWT token
     const accessToken = jwt.sign(
       {
         id: user.id,
@@ -47,6 +56,7 @@ export const loginUser = async (req, res) => {
       { expiresIn: "9h" }
     );
 
+    // 🍪 Simpan cookie
     res.cookie("ignite_access_token", accessToken, {
       httpOnly: true,
       secure: true,
@@ -62,6 +72,9 @@ export const loginUser = async (req, res) => {
         email: user.email,
         username: user.name,
         role: user.role,
+        character_limit: user.character_limit,
+        subscription_plan: user.subscription_plan,
+        subscription_expiry: user.subscription_expiry,
       },
     });
   } catch (err) {

@@ -64,7 +64,7 @@ export const deleteCharacter = async (id) => {
 
 export const markExpiredTrashCharactersAsDeleted = async (userId) => {
   try {
-    const fiveDaysAgo = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
     const { data: expiredChars, error: fetchError } = await supabase
       .from("characters")

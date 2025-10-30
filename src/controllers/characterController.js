@@ -14,6 +14,7 @@ import {
   updateCharacterByPrivateId,
 } from "../models/characterModel.js";
 import { Blob } from "buffer";
+import supabase from "../utils/db.js";
 
 export const createCharacterHandler = async (req, res) => {
   const characterData = { ...req.body, user_id: req.userId };
@@ -26,14 +27,12 @@ export const saveCharacterHandler = async (req, res) => {
   try {
     console.log("📥 [IGNITE] SaveCharacter invoked (cookie-based)");
 
-    // --- Parse body utama ---
     const parsed =
       typeof req.body.data === "string" ? JSON.parse(req.body.data) : req.body;
 
     const publicId = parsed.public_id;
     const MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
 
-    // --- Normalisasi UUID field kosong ---
     const uuidFields = [
       "race_id",
       "subrace_id",
@@ -41,36 +40,70 @@ export const saveCharacterHandler = async (req, res) => {
       "user_id",
       "incumbency_id",
     ];
-    for (const field of uuidFields) {
+    for (const field of uuidFields)
       if (parsed[field] === "") parsed[field] = null;
+
+    // 🔐 Ambil user dari middleware verifyUserIgnite
+    const userId = req.user?.id || null;
+    const username = req.user?.username || "Unknown User";
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized: user not found" });
     }
 
-    // --- Upload helper (pakai cookie token) ---
-    const uploadToMedia = async (file, type) => {
-      if (!file || !file.buffer) {
-        console.log(`⚠️ Skip ${type}: tidak ada file`);
-        return null;
-      }
+    // 🔎 Ambil user info (cek limit karakter)
+    const { data: user, error: userError } = await supabase
+      .from("users")
+      .select("id, character_limit, subscription_plan")
+      .eq("id", userId)
+      .single();
 
+    if (userError || !user) {
+      console.error("❌ User fetch error:", userError?.message);
+      return res.status(400).json({ error: "User not found" });
+    }
+
+    // 🧮 Hitung jumlah karakter aktif user
+    const { count, error: countError } = await supabase
+      .from("characters")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId);
+
+    if (countError) {
+      console.error("❌ Count error:", countError.message);
+      return res.status(500).json({ error: "Failed to check character count" });
+    }
+
+    console.log(
+      `👤 User ${userId} has ${count} / ${user.character_limit} characters`
+    );
+
+    if (count >= user.character_limit) {
+      return res.status(403).json({
+        error: `Character limit reached (${user.character_limit}). Upgrade your plan to create more.`,
+        subscription_plan: user.subscription_plan,
+      });
+    }
+
+    // --- Upload helper ---
+    const uploadToMedia = async (file, type) => {
+      if (!file || !file.buffer) return null;
       try {
         const blob = new Blob([file.buffer], { type: file.mimetype });
         const formData = new FormData();
         formData.append("path", "characters");
         formData.append("folder_name", publicId);
         formData.append("file", blob, file.originalname);
-        console.log(formData);
 
         const token =
           req.cookies?.ignite_access_token ||
           req.user?.jwt?.token ||
           req.headers.authorization?.split(" ")[1] ||
           null;
-        console.log(token);
+
         const resUpload = await fetch(`${MEDIA_URL}/upload`, {
           method: "POST",
-          headers: {
-            Authorization: token ? `Bearer ${token}` : "",
-          },
+          headers: { Authorization: token ? `Bearer ${token}` : "" },
           body: formData,
         });
 
@@ -94,7 +127,7 @@ export const saveCharacterHandler = async (req, res) => {
       }
     };
 
-    // --- Upload file media (jika ada) ---
+    // --- Upload file (jika ada) ---
     let artPath = null;
     let tokenArtPath = null;
     let mainThemePath = null;
@@ -117,19 +150,17 @@ export const saveCharacterHandler = async (req, res) => {
     }
 
     // --- Bersihkan field tidak relevan ---
-    delete parsed.creator_email;
-    delete parsed.creator_name;
-    delete parsed.usedSkillPoints;
-    delete parsed.art;
-    delete parsed.token_art;
-    delete parsed.height_unit;
-    delete parsed.weight_unit;
+    [
+      "creator_email",
+      "creator_name",
+      "usedSkillPoints",
+      "art",
+      "token_art",
+      "height_unit",
+      "weight_unit",
+    ].forEach((f) => delete parsed[f]);
 
-    // --- Ambil user dari middleware verifyUserIgnite ---
-    const userId = req.user?.id || null;
-    const username = req.user?.username || "Unknown User";
-
-    // --- Buat objek baru untuk insert ke Supabase ---
+    // --- Buat karakter baru ---
     const newCharacter = {
       ...parsed,
       user_id: userId,
@@ -145,7 +176,7 @@ export const saveCharacterHandler = async (req, res) => {
       combat_theme_ogg: combatThemePath,
     };
 
-    // --- Simpan ke database ---
+    // --- Simpan ke Supabase ---
     const { data: created, error } = await createCharacter(newCharacter);
     if (error) {
       console.error("❌ Supabase insert error:", error.message);
@@ -195,11 +226,9 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
     const privateId = req.params.id;
     const MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
 
-    // --- Parse body JSON
     const parsed =
       typeof req.body.data === "string" ? JSON.parse(req.body.data) : req.body;
 
-    // --- Normalize UUID fields ---
     const uuidFields = [
       "race_id",
       "subrace_id",
@@ -216,6 +245,26 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
     );
     if (fetchError || !existing)
       return res.status(404).json({ error: "Character not found" });
+
+    // --- 🔒 Cek kepemilikan karakter ---
+    const requesterId =
+      req.user?.id || req.user?.user_id || req.userId || parsed.user_id || null;
+
+    if (!requesterId) {
+      return res
+        .status(401)
+        .json({ error: "Unauthorized — missing user identification" });
+    }
+
+    if (existing.user_id !== requesterId) {
+      console.warn(
+        `🚫 Unauthorized update attempt: user ${requesterId} tried to modify ${existing.user_id}`
+      );
+      return res.status(403).json({
+        error:
+          "Forbidden — you are not the owner of this character and cannot modify it.",
+      });
+    }
 
     // --- Upload helper ---
     const uploadToMedia = async (file, type) => {
@@ -288,12 +337,16 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       "token_art",
       "height_unit",
       "weight_unit",
+      "public_id",
+      "private_id", // kunci ID biar tidak berubah
     ].forEach((f) => delete parsed[f]);
 
     // --- Build updated data ---
     const updatedData = {
       ...existing,
       ...parsed,
+      public_id: existing.public_id,
+      private_id: existing.private_id,
       art_image: artPath,
       token_image: tokenArtPath,
       main_theme_ogg: mainThemePath,
@@ -415,7 +468,6 @@ export const getCharacterByPrivateIdHandler = async (req, res) => {
     if (error) return res.status(400).json({ error: error.message });
     if (!data) return res.status(404).json({ error: "Character not found" });
 
-    // ✅ optional: keamanan, hanya pemilik bisa akses
     if (req.user?.id && data.user_id !== req.user.id) {
       return res.status(403).json({
         success: false,
