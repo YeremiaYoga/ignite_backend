@@ -9,6 +9,8 @@ import raceRoutes from "./routes/raceRoutes.js";
 import backgroundRoutes from "./routes/backgroundRoutes.js";
 import subraceRoutes from "./routes/subraceRoutes.js";
 import adminCharacterRoutes from "./routes/adminCharacterRoutes.js";
+import kofiRoutes from "./routes/kofiRoutes.js";
+import featRoutes from "./routes/featRoutes.js";
 import path from "path";
 const app = express();
 
@@ -40,6 +42,7 @@ app.use("/api/races", raceRoutes);
 app.use("/api/subraces", subraceRoutes);
 app.use("/api/backgrounds", backgroundRoutes);
 app.use("/admin/character", adminCharacterRoutes);
+app.use("/api/feats", featRoutes);
 
 app.get("/", (req, res) => {
   res.json({
@@ -48,5 +51,7 @@ app.get("/", (req, res) => {
     adminRoutes: "/admin/character",
   });
 });
+
+app.use("/kofi", kofiRoutes);
 
 export default app;
