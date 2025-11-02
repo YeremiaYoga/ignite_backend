@@ -4,7 +4,7 @@ import {
   updateUserById,
 } from "../models/userModel.js";
 import jwt from "jsonwebtoken";
-
+import supabase from "../utils/db.js";
 export const loginUser = async (req, res) => {
   try {
     const { clerkId, email, username } = req.body;
@@ -12,35 +12,50 @@ export const loginUser = async (req, res) => {
     if (!clerkId || !email || !username) {
       return res.status(400).json({ error: "Missing required fields" });
     }
-    const existingUser = await getUserByClerkId(clerkId);
 
-    let user = existingUser;
+    // 🔍 Coba cari user dulu
+    let user = await getUserByClerkId(clerkId);
 
-
-    if (!existingUser) {
+    // 🆕 Jika belum ada user, buat baru
+    if (!user) {
       console.log("🆕 New user detected, creating...");
 
-      const { error: upsertError } = await upsertUser({
-        clerkId,
-        email,
-        username,
-        role: "user",
-        character_limit: 5,
-        subscription_plan: "free",
-        subscription_expiry: null,
-      });
+      const { data, error: upsertError } = await supabase
+        .from("users")
+        .upsert(
+          [
+            {
+              clerk_id: clerkId,
+              email,
+              name: username,
+              username,
+              role: "user",
+              character_limit: 5,
+              subscription_plan: "free",
+              subscription_expiry: null,
+            },
+          ],
+          { onConflict: "clerk_id" }
+        )
+        .select()
+        .maybeSingle();
 
       if (upsertError) {
         console.error("❌ upsertUser error:", upsertError.message);
         return res.status(500).json({ error: upsertError.message });
       }
 
-
-      user = await getUserByClerkId(clerkId);
+      user = data; // ✅ Assign hasil upsert ke user
     } else {
-      console.log("⚡ Existing user found:", existingUser.email);
+      console.log("⚡ Existing user found:", user.email);
     }
 
+    // ❗ Sekarang user dijamin ada
+    if (!user) {
+      throw new Error("User creation failed — no data returned from Supabase");
+    }
+
+    // 🔐 Buat JWT token
     const accessToken = jwt.sign(
       {
         id: user.id,
@@ -53,6 +68,7 @@ export const loginUser = async (req, res) => {
       { expiresIn: "9h" }
     );
 
+    // 🍪 Kirim cookie
     res.cookie("ignite_access_token", accessToken, {
       httpOnly: true,
       secure: true,
@@ -78,6 +94,8 @@ export const loginUser = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+
+
 
 export const logoutUserIgnite = async (req, res) => {
   res.clearCookie("ignite_access_token");

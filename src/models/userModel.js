@@ -10,13 +10,13 @@ export const upsertUser = async ({ clerkId, email, username, role = "user" }) =>
           email,
           name: username,
           username,
-          role, 
+          role,
         },
       ],
       { onConflict: "clerk_id" }
     )
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error("❌ upsertUser error:", error.message);
@@ -27,20 +27,27 @@ export const upsertUser = async ({ clerkId, email, username, role = "user" }) =>
 };
 
 
+
 export const getUserByClerkId = async (clerkId) => {
   const { data, error } = await supabase
     .from("users")
     .select("*")
     .eq("clerk_id", clerkId)
-    .single();
+    .maybeSingle(); 
 
   if (error) {
     console.error("❌ getUserByClerkId error:", error.message);
     throw error;
   }
 
+  if (!data) {
+    console.log("⚠️ No user found for clerkId:", clerkId);
+    return null;
+  }
+
   return data;
 };
+
 
 export const updateUserById = async (id, payload) => {
   console.log("🧩 updateUserById attempt:", id, payload);
