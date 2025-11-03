@@ -11,6 +11,9 @@ import subraceRoutes from "./routes/subraceRoutes.js";
 import adminCharacterRoutes from "./routes/adminCharacterRoutes.js";
 import kofiRoutes from "./routes/kofiRoutes.js";
 import featRoutes from "./routes/featRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
+
+import backupRoutes from "./routes/backupRoutes.js";
 import path from "path";
 const app = express();
 
@@ -53,5 +56,6 @@ app.get("/", (req, res) => {
 });
 
 app.use("/kofi", kofiRoutes);
-
+app.use("/admin", adminRoutes);
+app.use("/backup", backupRoutes);
 export default app;
