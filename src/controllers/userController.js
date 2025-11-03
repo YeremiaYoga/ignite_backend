@@ -13,7 +13,10 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // 🔍 Coba cari user dulu
+    const PUBLIC_MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
+    const DEFAULT_PROFILE = `${PUBLIC_MEDIA_URL}/profile_picture/Candle.webp`;
+
+    // 🔍 Cek apakah user sudah ada
     let user = await getUserByClerkId(clerkId);
 
     // 🆕 Jika belum ada user, buat baru
@@ -33,6 +36,7 @@ export const loginUser = async (req, res) => {
               character_limit: 5,
               subscription_plan: "free",
               subscription_expiry: null,
+              profile_picture: DEFAULT_PROFILE, // 🖼️ default Candle.webp
             },
           ],
           { onConflict: "clerk_id" }
@@ -45,17 +49,25 @@ export const loginUser = async (req, res) => {
         return res.status(500).json({ error: upsertError.message });
       }
 
-      user = data; // ✅ Assign hasil upsert ke user
+      user = data;
     } else {
       console.log("⚡ Existing user found:", user.email);
+
+      // 🧩 Jika user sudah ada tapi belum punya foto → isi default
+      if (!user.profile_picture) {
+        await supabase
+          .from("users")
+          .update({ profile_picture: DEFAULT_PROFILE })
+          .eq("id", user.id);
+        user.profile_picture = DEFAULT_PROFILE;
+      }
     }
 
-    // ❗ Sekarang user dijamin ada
     if (!user) {
       throw new Error("User creation failed — no data returned from Supabase");
     }
 
-    // 🔐 Buat JWT token
+    // 🔐 Buat JWT
     const accessToken = jwt.sign(
       {
         id: user.id,
@@ -68,7 +80,7 @@ export const loginUser = async (req, res) => {
       { expiresIn: "9h" }
     );
 
-    // 🍪 Kirim cookie
+    // 🍪 Cookie
     res.cookie("ignite_access_token", accessToken, {
       httpOnly: true,
       secure: true,
@@ -87,6 +99,7 @@ export const loginUser = async (req, res) => {
         character_limit: user.character_limit,
         subscription_plan: user.subscription_plan,
         subscription_expiry: user.subscription_expiry,
+        profile_picture: user.profile_picture, // ✅ kirim ke frontend
       },
     });
   } catch (err) {
@@ -182,20 +195,40 @@ export const getUser = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { username } = req.body;
+    const { username, profile_picture } = req.body;
 
-    console.log("🟢 PATCH /users:", { id, username });
+    console.log("🟢 PATCH /users:", { id, username, profile_picture });
 
-    const { data, error } = await updateUserById(id, { username });
+    // 🔐 Pastikan user hanya bisa ubah dirinya sendiri, kecuali admin
+    if (req.user.role !== "admin" && req.user.id !== id) {
+      return res
+        .status(403)
+        .json({ error: "Forbidden: You cannot edit this user" });
+    }
+
+    // 🧩 Siapkan data yang akan di-update
+    const updateData = {};
+    if (username) updateData.username = username.trim();
+    if (profile_picture) updateData.profile_picture = profile_picture;
+
+    // 🚧 Validasi jika tidak ada field dikirim
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: "No fields to update" });
+    }
+
+    // 🪄 Jalankan update ke Supabase
+    const { data, error } = await updateUserById(id, updateData);
 
     if (error) {
       console.error("❌ updateUser error:", error.message);
       return res.status(400).json({ error: error.message });
     }
 
+    console.log("✅ User updated:", data);
     return res.json({ success: true, user: data });
   } catch (err) {
     console.error("❌ updateUser exception:", err.message);
     return res.status(500).json({ error: err.message });
   }
 };
+
