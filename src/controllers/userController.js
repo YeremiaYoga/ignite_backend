@@ -34,8 +34,8 @@ export const loginUser = async (req, res) => {
               username,
               role: "user",
               character_limit: 5,
-              subscription_plan: "free",
-              subscription_expiry: null,
+              tier: "free",
+              tier_expired_at: null,
               profile_picture: DEFAULT_PROFILE, // 🖼️ default Candle.webp
             },
           ],
@@ -97,8 +97,8 @@ export const loginUser = async (req, res) => {
         username: user.name,
         role: user.role,
         character_limit: user.character_limit,
-        subscription_plan: user.subscription_plan,
-        subscription_expiry: user.subscription_expiry,
+        tier: user.tier,
+        tier_expired_at: user.tier_expired_at,
         profile_picture: user.profile_picture, // ✅ kirim ke frontend
       },
     });

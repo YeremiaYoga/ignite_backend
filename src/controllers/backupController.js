@@ -69,18 +69,44 @@ export const manualBackup = async (req, res) => {
  * Jalankan auto backup sesuai jadwal cron
  */
 export const scheduleAutoBackup = () => {
-  if (!backupConfig.enabled) return;
+  console.log("🟢 scheduleAutoBackup() loaded...");
+  console.log("🕒 Server local time:", new Date().toString());
+  console.log(
+    "🕓 Server time (Asia/Jakarta):",
+    new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })
+  );
 
-  cron.schedule(backupConfig.schedule, async () => {
-    const today = new Date().toISOString().split("T")[0];
-    console.log(`🕒 Auto backup started for ${today}`);
+  if (!backupConfig.enabled) {
+    console.log("⚠️ Auto backup disabled in config.");
+    return;
+  }
 
-    for (const table of backupConfig.tables) {
-      await backupSingleTable(table, today);
+  const schedule = backupConfig.schedule;
+  const tables = backupConfig.tables;
+  console.log(`
+🧩 Backup Configuration
+─────────────────────────────
+🕓 Schedule : ${schedule}
+🌏 Timezone : Asia/Jakarta (WIB)
+📦 Tables   : ${tables.join(", ")}
+─────────────────────────────
+`);
+
+  // Jalankan cron job sesuai config
+  cron.schedule(
+    schedule,
+    async () => {
+      const today = new Date().toISOString().split("T")[0];
+      console.log(`🕒 Auto backup started for ${today}`);
+
+      for (const table of tables) {
+        await backupSingleTable(table, today);
+      }
+
+      console.log(`✅ Auto backup finished for ${today}`);
+    },
+    {
+      timezone: "Asia/Jakarta", // 🔥 penting untuk WIB
     }
-
-    console.log(`✅ Auto backup finished for ${today}`);
-  });
-
-  console.log(`🗓️ Auto-backup scheduled: ${backupConfig.schedule}`);
+  );
 };
