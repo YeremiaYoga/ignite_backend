@@ -83,21 +83,24 @@ export const scheduleAutoBackup = () => {
 
   const schedule = backupConfig.schedule;
   const tables = backupConfig.tables;
+  const readableTime = backupConfig.readable_time || "(custom cron)";
+  const tz = "Asia/Jakarta";
+
   console.log(`
 🧩 Backup Configuration
 ─────────────────────────────
-🕓 Schedule : ${schedule}
-🌏 Timezone : Asia/Jakarta (WIB)
+🕓 Schedule : ${readableTime} WIB (${schedule})
+🌏 Timezone : ${tz}
 📦 Tables   : ${tables.join(", ")}
 ─────────────────────────────
 `);
 
-  // Jalankan cron job sesuai config
+  // 🔁 Jalankan cron job sesuai config
   cron.schedule(
     schedule,
     async () => {
       const today = new Date().toISOString().split("T")[0];
-      console.log(`🕒 Auto backup started for ${today}`);
+      console.log(`🚀 Auto backup started for ${today}`);
 
       for (const table of tables) {
         await backupSingleTable(table, today);
@@ -105,8 +108,6 @@ export const scheduleAutoBackup = () => {
 
       console.log(`✅ Auto backup finished for ${today}`);
     },
-    {
-      timezone: "Asia/Jakarta", // 🔥 penting untuk WIB
-    }
+    { timezone: tz }
   );
 };

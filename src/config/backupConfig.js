@@ -1,18 +1,50 @@
+import dotenv from "dotenv";
+dotenv.config();
+
+/**
+ * 🕒 Konversi BACKUP_TIME (HH:mm) → cron format (m H * * *)
+ */
+function convertTimeToCron(timeString) {
+  try {
+    const [hour, minute] = timeString.split(":").map(Number);
+
+    if (
+      isNaN(hour) ||
+      isNaN(minute) ||
+      hour < 0 ||
+      hour > 23 ||
+      minute < 0 ||
+      minute > 59
+    ) {
+      throw new Error("Invalid BACKUP_TIME format. Use HH:mm (e.g. 18:30)");
+    }
+
+    return `${minute} ${hour} * * *`;
+  } catch (err) {
+    console.warn("⚠️ Invalid BACKUP_TIME in .env, fallback to 02:00");
+    return "0 2 * * *"; // fallback default 02:00 WIB
+  }
+}
+
+// 🧩 Ambil dari env
+const BACKUP_TIME = process.env.BACKUP_TIME || "02:00";
+
 export const backupConfig = {
   enabled: true,
 
   tables: [
-    "users",
-    "characters",
     "backgrounds",
+    "characters",
+    "feats",
     "incumbency",
     "kofi_logs",
     "races",
-    "feats",
     "subraces",
+    "users",
     "wayfarers",
-    
   ],
 
-  schedule: "15 10 * * *"
+  // 🔄 Auto convert saat config di-load
+  schedule: convertTimeToCron(BACKUP_TIME),
+  readable_time: BACKUP_TIME, // opsional: biar bisa ditampilkan jam aslinya
 };

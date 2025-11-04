@@ -4,17 +4,31 @@ import {
   updateUserById,
 } from "../models/userModel.js";
 import jwt from "jsonwebtoken";
+
 import supabase from "../utils/db.js";
+
+
 export const loginUser = async (req, res) => {
   try {
     const { clerkId, email, username } = req.body;
-
     if (!clerkId || !email || !username) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
     const PUBLIC_MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
     const DEFAULT_PROFILE = `${PUBLIC_MEDIA_URL}/profile_picture/Candle.webp`;
+
+    // 🔹 Ambil data tier "Free"
+    const { data: freeTier, error: freeError } = await supabase
+      .from("tiers")
+      .select("id, name, character_limit")
+      .eq("slug", "free")
+      .maybeSingle();
+
+    if (freeError || !freeTier) {
+      console.error("❌ Failed to fetch free tier:", freeError?.message);
+      return res.status(500).json({ error: "Free tier not found" });
+    }
 
     // 🔍 Cek apakah user sudah ada
     let user = await getUserByClerkId(clerkId);
@@ -33,8 +47,9 @@ export const loginUser = async (req, res) => {
               name: username,
               username,
               role: "user",
-              character_limit: 5,
-              tier: "free",
+              tier_id: freeTier.id,
+              tier: freeTier.name,
+              character_limit: freeTier.character_limit,
               tier_expired_at: null,
               profile_picture: DEFAULT_PROFILE, // 🖼️ default Candle.webp
             },
@@ -53,7 +68,23 @@ export const loginUser = async (req, res) => {
     } else {
       console.log("⚡ Existing user found:", user.email);
 
-      // 🧩 Jika user sudah ada tapi belum punya foto → isi default
+      // 🧩 Jika belum punya tier, pastikan terhubung ke Free
+      if (!user.tier_id) {
+        await supabase
+          .from("users")
+          .update({
+            tier_id: freeTier.id,
+            tier: freeTier.name,
+            character_limit: freeTier.character_limit,
+            tier_expired_at: null,
+          })
+          .eq("id", user.id);
+        user.tier_id = freeTier.id;
+        user.tier = freeTier.name;
+        user.character_limit = freeTier.character_limit;
+      }
+
+      // 🧩 Jika user belum punya foto profil → isi default
       if (!user.profile_picture) {
         await supabase
           .from("users")
@@ -61,10 +92,6 @@ export const loginUser = async (req, res) => {
           .eq("id", user.id);
         user.profile_picture = DEFAULT_PROFILE;
       }
-    }
-
-    if (!user) {
-      throw new Error("User creation failed — no data returned from Supabase");
     }
 
     // 🔐 Buat JWT
@@ -80,14 +107,15 @@ export const loginUser = async (req, res) => {
       { expiresIn: "9h" }
     );
 
-    // 🍪 Cookie
+    // 🍪 Kirim cookie
     res.cookie("ignite_access_token", accessToken, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      maxAge: 9 * 60 * 60 * 1000,
+      maxAge: 9 * 60 * 60 * 1000, // 9 jam
     });
 
+    // 🎯 Respon ke frontend
     return res.json({
       success: true,
       message: "Login successful",
@@ -96,10 +124,11 @@ export const loginUser = async (req, res) => {
         email: user.email,
         username: user.name,
         role: user.role,
-        character_limit: user.character_limit,
+        tier_id: user.tier_id,
         tier: user.tier,
+        character_limit: user.character_limit,
         tier_expired_at: user.tier_expired_at,
-        profile_picture: user.profile_picture, // ✅ kirim ke frontend
+        profile_picture: user.profile_picture,
       },
     });
   } catch (err) {
@@ -108,73 +137,10 @@ export const loginUser = async (req, res) => {
   }
 };
 
-
-
 export const logoutUserIgnite = async (req, res) => {
   res.clearCookie("ignite_access_token");
   return res.json({ success: true, message: "Logged out successfully" });
 };
-
-// export const loginUser = async (req, res) => {
-//   try {
-//     const { clerkId, email, username } = req.body;
-
-//     if (!clerkId || !email || !username) {
-//       return res.status(400).json({ error: "Missing required fields" });
-//     }
-
-//     // 🔄 Upsert user ke Supabase
-//     const { error: upsertError } = await upsertUser({
-//       clerkId,
-//       email,
-//       username,
-//       role: "user",
-//     });
-
-//     if (upsertError) {
-//       console.error("❌ upsertUser error:", upsertError.message);
-//       return res.status(500).json({ error: upsertError.message });
-//     }
-
-//     // 🔍 Ambil data user
-//     const user = await getUserByClerkId(clerkId);
-
-//     // 🚧 Pastikan role ada
-//     if (!user.role) {
-//       await updateUserById(user.id, { role: "user" });
-//       user.role = "user";
-//     }
-
-//     // ✅ Generate JWT (IGNITE)
-//     const accessToken = jwt.sign(
-//       {
-//         id: user.id,
-//         email: user.email,
-//         username: user.name,
-//         role: user.role,
-//         app: "ignite", // 👈 penting untuk middleware multi-app
-//       },
-//       process.env.JWT_SECRET_USER,
-//       { expiresIn: "8h" }
-//     );
-
-//     // ✅ Kirim response
-//     return res.json({
-//       success: true,
-//       message: "Login successful",
-//       user: {
-//         id: user.id,
-//         email: user.email,
-//         username: user.name,
-//         role: user.role,
-//       },
-//       token: accessToken,
-//     });
-//   } catch (err) {
-//     console.error("💥 loginUser error:", err.message);
-//     return res.status(500).json({ error: err.message });
-//   }
-// };
 
 export const getUser = async (req, res) => {
   try {
@@ -231,4 +197,3 @@ export const updateUser = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
-

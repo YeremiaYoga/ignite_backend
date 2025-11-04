@@ -14,6 +14,8 @@ import featRoutes from "./routes/featRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 
 import backupRoutes from "./routes/backupRoutes.js";
+
+import tierRoutes from "./routes/tierRoutes.js";
 import path from "path";
 const app = express();
 
@@ -58,4 +60,5 @@ app.get("/", (req, res) => {
 app.use("/kofi", kofiRoutes);
 app.use("/admin", adminRoutes);
 app.use("/backup", backupRoutes);
+app.use("/tiers", tierRoutes);
 export default app;
