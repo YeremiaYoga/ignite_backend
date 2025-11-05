@@ -4,9 +4,6 @@ import cron from "node-cron";
 import supabase from "../utils/db.js";
 import { backupConfig } from "../config/backupConfig.js";
 
-/**
- * Backup satu tabel ke file JSON dalam folder tanggal
- */
 export const backupSingleTable = async (table, dateDir) => {
   try {
     console.log(`📦 Backing up table: ${table}`);
@@ -18,15 +15,12 @@ export const backupSingleTable = async (table, dateDir) => {
       return null;
     }
 
-    // Pastikan folder utama backup ada
     const baseDir = path.join(process.cwd(), "backups");
     if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir);
 
-    // Buat folder tanggal, contoh: backups/2025-11-03
     const dateFolder = path.join(baseDir, dateDir);
     if (!fs.existsSync(dateFolder)) fs.mkdirSync(dateFolder);
 
-    // Nama file per tabel
     const fileName = `${table}_table.json`;
     const filePath = path.join(dateFolder, fileName);
 
@@ -40,9 +34,7 @@ export const backupSingleTable = async (table, dateDir) => {
   }
 };
 
-/**
- * Jalankan backup manual via route
- */
+
 export const manualBackup = async (req, res) => {
   try {
     const { table } = req.params;
@@ -65,9 +57,6 @@ export const manualBackup = async (req, res) => {
   }
 };
 
-/**
- * Jalankan auto backup sesuai jadwal cron
- */
 export const scheduleAutoBackup = () => {
   console.log("🟢 scheduleAutoBackup() loaded...");
   console.log("🕒 Server local time:", new Date().toString());
@@ -95,7 +84,6 @@ export const scheduleAutoBackup = () => {
 ─────────────────────────────
 `);
 
-  // 🔁 Jalankan cron job sesuai config
   cron.schedule(
     schedule,
     async () => {
