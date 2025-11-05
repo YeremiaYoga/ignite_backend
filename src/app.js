@@ -16,6 +16,11 @@ import adminRoutes from "./routes/adminRoutes.js";
 import backupRoutes from "./routes/backupRoutes.js";
 
 import tierRoutes from "./routes/tierRoutes.js";
+
+import adminSpeciesRoutes from "./routes/adminSpeciesRoutes.js";
+
+import dndSourceRoutes from "./routes/dndSourceRoutes.js";
+import speciesGroupTypeRoutes from "./routes/speciesGroupTypeRoutes.js";
 import path from "path";
 const app = express();
 
@@ -61,4 +66,10 @@ app.use("/kofi", kofiRoutes);
 app.use("/admin", adminRoutes);
 app.use("/backup", backupRoutes);
 app.use("/tiers", tierRoutes);
+
+app.use("/admin/species", adminSpeciesRoutes);
+
+
+app.use("/dnd-source", dndSourceRoutes);
+app.use("/species-group-type", speciesGroupTypeRoutes);
 export default app;

@@ -69,13 +69,10 @@ export const createUser = async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // 🔐 Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Default tier (fallback)
     let tierInfo = { slug: "free", character_limit: 5, id: null };
 
-    // 🧩 Get tier if provided
     if (tier_id) {
       const { data: tierData, error: tierError } = await supabase
         .from("tiers")
@@ -96,7 +93,6 @@ export const createUser = async (req, res) => {
       }
     }
 
-    // 🧱 Insert user
     const { data, error } = await supabase
       .from("users")
       .insert([
@@ -126,10 +122,6 @@ export const createUser = async (req, res) => {
   }
 };
 
-/**
- * PUT /admin/users/:id
- * ✏️ Update user (safe tier sync)
- */
 export const updateUserById = async (req, res) => {
   if (!ensureAdmin(req, res)) return;
 
@@ -145,7 +137,6 @@ export const updateUserById = async (req, res) => {
       profile_picture,
     } = req.body;
 
-    // 🧱 Prepare update data
     const updateData = {
       ...(email && { email }),
       ...(username && { username }),
@@ -153,12 +144,10 @@ export const updateUserById = async (req, res) => {
       ...(role && { role }),
     };
 
-    // 🔐 Optional password change
     if (password) {
       updateData.password = await bcrypt.hash(password, 10);
     }
 
-    // 🧩 Handle tier change
     if (tier_id) {
       const { data: tierData, error: tierError } = await supabase
         .from("tiers")
@@ -177,10 +166,8 @@ export const updateUserById = async (req, res) => {
       }
     }
 
-    // 🖼️ Update profile picture if changed
     if (profile_picture) updateData.profile_picture = profile_picture;
 
-    // 🚀 Run update
     const { data, error } = await supabase
       .from("users")
       .update(updateData)
@@ -197,9 +184,7 @@ export const updateUserById = async (req, res) => {
   }
 };
 
-/**
- * DELETE user
- */
+
 export const deleteUserById = async (req, res) => {
   if (!ensureAdmin(req, res)) return;
   const { id } = req.params;
