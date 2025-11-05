@@ -51,7 +51,7 @@ export const saveCharacterHandler = async (req, res) => {
     }
     const { data: user, error: userError } = await supabase
       .from("users")
-      .select("id, character_limit, subscription_plan")
+      .select("id, character_limit, tier")
       .eq("id", userId)
       .single();
 
@@ -77,7 +77,7 @@ export const saveCharacterHandler = async (req, res) => {
     if (count >= user.character_limit) {
       return res.status(403).json({
         error: `Character limit reached (${user.character_limit}). Upgrade your plan to create more.`,
-        subscription_plan: user.subscription_plan,
+        tier: user.tier,
       });
     }
 
