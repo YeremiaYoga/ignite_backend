@@ -21,6 +21,7 @@ import adminSpeciesRoutes from "./routes/adminSpeciesRoutes.js";
 
 import dndSourceRoutes from "./routes/dndSourceRoutes.js";
 import speciesGroupTypeRoutes from "./routes/speciesGroupTypeRoutes.js";
+import adminTraitRoutes from "./routes/adminTraitRoutes.js";
 import path from "path";
 const app = express();
 
@@ -68,7 +69,7 @@ app.use("/backup", backupRoutes);
 app.use("/tiers", tierRoutes);
 
 app.use("/admin/species", adminSpeciesRoutes);
-
+app.use("/admin/trait", adminTraitRoutes);
 
 app.use("/dnd-source", dndSourceRoutes);
 app.use("/species-group-type", speciesGroupTypeRoutes);

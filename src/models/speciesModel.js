@@ -11,6 +11,10 @@ export const getSpeciesById = async (id) => {
   return await supabase.from("species").select("*").eq("id", id).single();
 };
 
+export const getSpeciesBySlug = async (slug) => {
+  return await supabase.from("species").select("*").eq("slug", slug).single();
+};
+
 export const createSpecies = async (data) => {
   return await supabase.from("species").insert([data]).select().single();
 };

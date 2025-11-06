@@ -1,11 +1,20 @@
 import {
   getAllSpecies,
   getSpeciesById,
+  getSpeciesBySlug,
   createSpecies,
   updateSpecies,
   deleteSpecies,
 } from "../models/speciesModel.js";
 import { uploadToMedia } from "../utils/uploadToMedia.js";
+
+/** 🔤 Utility buat slugify */
+const slugify = (text = "") =>
+  text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-") // semua simbol/spasi jadi "-"
+    .replace(/^-+|-+$/g, ""); // hapus strip di awal/akhir
 
 /**
  * ✅ GET all species (admin)
@@ -36,31 +45,50 @@ export const fetchSpeciesByIdAdmin = async (req, res) => {
   }
 };
 
+/**
+ * ✅ GET one species by SLUG (untuk halaman traits)
+ */
+export const fetchSpeciesBySlugAdmin = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const { data, error } = await getSpeciesBySlug(slug);
+    if (error) throw error;
+    if (!data) return res.status(404).json({ error: "Species not found" });
+    res.json(data);
+  } catch (err) {
+    console.error("❌ fetchSpeciesBySlugAdmin error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * ✅ CREATE species
+ */
 export const addSpeciesAdmin = async (req, res) => {
   try {
-    console.log("📥 [ADMIN] addSpecies invoked");
-    console.log("➡️ BODY:", req.body);
-    console.log("➡️ FILES:", req.files);
-
-    const MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
     const parsed =
       typeof req.body.data === "string" ? JSON.parse(req.body.data) : req.body;
 
     if (!parsed.name)
       return res.status(400).json({ error: "Missing required field: name" });
 
-    // 🧩 Setup basic info
-    const speciesName = parsed.name.replace(/\s+/g, "_").toLowerCase();
+    const slug = parsed.slug || slugify(parsed.name);
     const token = req.headers.authorization?.split(" ")[1] || null;
+    const speciesName = slug.replace(/-/g, "_");
 
-    // 🖼 Upload images if exist
+    // Upload media
+    const iconUrl = await uploadToMedia({
+      file: req.files?.["icon"]?.[0],
+      path: "species",
+      folderName: speciesName,
+      token,
+    });
     const imgUrl = await uploadToMedia({
       file: req.files?.["img"]?.[0],
       path: "species",
       folderName: speciesName,
       token,
     });
-
     const mainImgUrl = await uploadToMedia({
       file: req.files?.["main_img"]?.[0],
       path: "species",
@@ -68,13 +96,12 @@ export const addSpeciesAdmin = async (req, res) => {
       token,
     });
 
-    // 🧠 User info (auto from token or default)
     const userId = req.user?.id || null;
     const userName = req.user?.username || req.user?.email || "admin@ignite";
 
-    // 🧱 Data to insert (strict by schema)
     const allowedFields = [
       "name",
+      "slug",
       "icon",
       "img",
       "main_img",
@@ -96,6 +123,8 @@ export const addSpeciesAdmin = async (req, res) => {
 
     const newSpecies = {
       ...parsed,
+      slug,
+      icon: iconUrl || parsed.icon || null,
       img: imgUrl || parsed.img || null,
       main_img: mainImgUrl || parsed.main_img || null,
       homebrew: false,
@@ -106,12 +135,10 @@ export const addSpeciesAdmin = async (req, res) => {
       updated_at: new Date().toISOString(),
     };
 
-    // 🧹 Remove extra fields not in schema
     const cleanData = Object.fromEntries(
-      Object.entries(newSpecies).filter(([key]) => allowedFields.includes(key))
+      Object.entries(newSpecies).filter(([k]) => allowedFields.includes(k))
     );
 
-    // 🧾 Insert to Supabase
     const { data, error } = await createSpecies(cleanData);
     if (error) throw error;
 
@@ -132,30 +159,31 @@ export const addSpeciesAdmin = async (req, res) => {
 export const editSpeciesAdmin = async (req, res) => {
   try {
     const { id } = req.params;
-    const MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
-
     const existingRes = await getSpeciesById(id);
     if (existingRes.error || !existingRes.data)
       return res.status(404).json({ error: "Species not found" });
-    const existing = existingRes.data;
 
+    const existing = existingRes.data;
     const parsed =
       typeof req.body.data === "string" ? JSON.parse(req.body.data) : req.body;
-    const speciesName =
-      parsed.name?.replace(/\s+/g, "_").toLowerCase() ||
-      existing.name?.replace(/\s+/g, "_").toLowerCase() ||
-      "unknown";
 
+    const slug = parsed.slug || slugify(parsed.name || existing.name);
     const token = req.headers.authorization?.split(" ")[1] || null;
+    const speciesName = slug.replace(/-/g, "_");
 
-    // 🖼 Upload baru (kalau ada)
+    // Upload baru (kalau ada)
+    const newIcon = await uploadToMedia({
+      file: req.files?.["icon"]?.[0],
+      path: "species",
+      folderName: speciesName,
+      token,
+    });
     const newImg = await uploadToMedia({
       file: req.files?.["img"]?.[0],
       path: "species",
       folderName: speciesName,
       token,
     });
-
     const newMainImg = await uploadToMedia({
       file: req.files?.["main_img"]?.[0],
       path: "species",
@@ -170,6 +198,8 @@ export const editSpeciesAdmin = async (req, res) => {
     const updatedData = {
       ...existing,
       ...parsed,
+      slug,
+      icon: newIcon || parsed.icon || existing.icon,
       img: newImg || parsed.img || existing.img,
       main_img: newMainImg || parsed.main_img || existing.main_img,
       public: parsed.public === true || parsed.public === "true",
@@ -200,7 +230,6 @@ export const removeSpeciesAdmin = async (req, res) => {
     const { id } = req.params;
     const { error } = await deleteSpecies(id);
     if (error) throw error;
-
     res.json({ success: true, message: "✅ Species deleted successfully" });
   } catch (err) {
     console.error("❌ removeSpeciesAdmin error:", err.message);
