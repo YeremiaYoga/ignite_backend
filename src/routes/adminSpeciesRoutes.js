@@ -12,19 +12,11 @@ import { verifyUserFullAuth } from "../middlewares/verifyUserFullAuth.js";
 
 const router = express.Router();
 
-// Gunakan memoryStorage supaya file bisa dikirim sebagai buffer
 const upload = multer({ storage: multer.memoryStorage() });
 
-// ✅ Semua species (admin)
 router.get("/", verifyUserFullAuth, fetchAllSpeciesAdmin);
-
-// ✅ Get species by ID
 router.get("/:id", verifyUserFullAuth, fetchSpeciesByIdAdmin);
-
-// ✅ Get species by SLUG (untuk halaman traits)
 router.get("/slug/:slug", verifyUserFullAuth, fetchSpeciesBySlugAdmin);
-
-// ✅ CREATE species (dengan icon, img, main_img)
 router.post(
   "/",
   verifyUserFullAuth,
@@ -36,7 +28,6 @@ router.post(
   addSpeciesAdmin
 );
 
-// ✅ UPDATE species (dengan icon, img, main_img)
 router.put(
   "/:id",
   verifyUserFullAuth,
@@ -48,7 +39,6 @@ router.put(
   editSpeciesAdmin
 );
 
-// ✅ DELETE species
 router.delete("/:id", verifyUserFullAuth, removeSpeciesAdmin);
 
 export default router;

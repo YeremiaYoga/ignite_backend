@@ -53,6 +53,8 @@ export const addTraitAdmin = async (req, res) => {
       description: body.description || "",
       has_options: body.has_options ?? false,
       options: body.options || [],
+      has_modifiers: body.has_modifiers ?? false, // ✅ baru
+      modifiers: body.modifiers || [], // ✅ baru
       scope: body.scope || "specific",
     });
     if (error) throw error;
@@ -98,7 +100,6 @@ export const editTraitAdmin = async (req, res) => {
     const { id } = req.params;
     const body = req.body;
 
-    // 1️⃣ update trait
     const { data: trait, error } = await updateTrait(id, {
       name: body.name,
       slug: body.name.toLowerCase().replace(/\s+/g, "_"),
@@ -106,6 +107,8 @@ export const editTraitAdmin = async (req, res) => {
       description: body.description || "",
       has_options: body.has_options ?? false,
       options: body.options || [],
+      has_modifiers: body.has_modifiers ?? false, // ✅ baru
+      modifiers: body.modifiers || [], // ✅ baru
       scope: body.scope || "specific",
       updated_at: new Date().toISOString(),
     });
@@ -148,31 +151,31 @@ export const editTraitAdmin = async (req, res) => {
 export const deleteTraitAdmin = async (req, res) => {
   try {
     const { id } = req.params;
-    const { species_id } = req.body;
+    const species_id = req.body?.species_id; // ✅ aman kalau body kosong
 
     // 1️⃣ Hapus trait dari species_traits
     const { error } = await deleteTrait(id);
     if (error) throw error;
 
-    // 2️⃣ Hapus referensi dari species.traits[]
-    if (species_id) {
-      const { data: species, error: speciesErr } = await getSpeciesById(
-        species_id
-      );
+    // 2️⃣ Hapus referensi dari species.traits[] hanya jika species_id valid
+    if (species_id && typeof species_id === "string") {
+      const { data: species, error: speciesErr } = await getSpeciesById(species_id);
       if (speciesErr) throw speciesErr;
 
       if (Array.isArray(species.traits)) {
         const updatedTraits = species.traits.filter((t) => t.id !== id);
-        await updateSpecies(species_id, { traits: updatedTraits });
+        const { error: updateErr } = await updateSpecies(species_id, { traits: updatedTraits });
+        if (updateErr) throw updateErr;
       }
     }
 
-    res.json({ message: "🗑️ Trait deleted and removed from species.traits[]" });
+    res.json({ success: true, message: "🗑️ Trait deleted successfully" });
   } catch (err) {
     console.error("❌ deleteTraitAdmin error:", err);
     res.status(500).json({ error: err.message });
   }
 };
+
 
 export const getTraitsByIdsAdmin = async (req, res) => {
   try {
