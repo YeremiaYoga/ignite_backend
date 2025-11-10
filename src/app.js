@@ -24,6 +24,8 @@ import speciesGroupTypeRoutes from "./routes/speciesGroupTypeRoutes.js";
 import adminTraitRoutes from "./routes/adminTraitRoutes.js";
 
 import traitModifierRoutes from "./routes/traitModifierRoutes.js";
+
+import patreonRoutes from "./routes/patreonRoutes.js";
 import path from "path";
 const app = express();
 
@@ -76,4 +78,7 @@ app.use("/admin/trait-modifier", traitModifierRoutes);
 
 app.use("/dnd-source", dndSourceRoutes);
 app.use("/species-group-type", speciesGroupTypeRoutes);
+
+
+app.use("/patreon", patreonRoutes);
 export default app;
