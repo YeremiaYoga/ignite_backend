@@ -16,10 +16,10 @@ const router = express.Router();
 
 // === CLERK AUTH ===
 
-router.post("/login", loginUser); // login Clerk
+router.post("/login", loginUser); 
 router.get("/me", verifyUserIgnite, getUserMe);
-router.get("/:clerkId", getUser); // get user Clerk
-router.patch("/:id", verifyUserIgnite, updateUser); // update user Clerk
+router.get("/:clerkId", getUser); 
+router.patch("/:id", verifyUserIgnite, updateUser); 
 router.post("/logout", logoutUserIgnite);
 
 // === JWT AUTH ===

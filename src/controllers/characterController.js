@@ -248,14 +248,12 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
     for (const field of uuidFields)
       if (parsed[field] === "") parsed[field] = null;
 
-    // --- Fetch existing character ---
     const { data: existing, error: fetchError } = await getCharacterByPrivateId(
       privateId
     );
     if (fetchError || !existing)
       return res.status(404).json({ error: "Character not found" });
 
-    // --- 🔒 Cek kepemilikan karakter ---
     const requesterId =
       req.user?.id || req.user?.user_id || req.userId || parsed.user_id || null;
 
@@ -275,7 +273,6 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       });
     }
 
-    // --- Upload helper ---
     const uploadToMedia = async (file, type) => {
       if (!file || !file.buffer) return null;
 
@@ -319,7 +316,6 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       }
     };
 
-    // --- Upload file jika ada ---
     const files = req.files || {};
     const artPath =
       (req.files["art"] && (await uploadToMedia(files["art"][0], "art"))) ||
@@ -337,7 +333,6 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
         (await uploadToMedia(files["combat_theme_ogg"][0], "combat_theme"))) ||
       existing.combat_theme_ogg;
 
-    // --- Cleanup fields ---
     [
       "creator_email",
       "creator_name",
@@ -347,10 +342,9 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       "height_unit",
       "weight_unit",
       "public_id",
-      "private_id", // kunci ID biar tidak berubah
+      "private_id", 
     ].forEach((f) => delete parsed[f]);
 
-    // --- Build updated data ---
     const updatedData = {
       ...existing,
       ...parsed,
@@ -363,7 +357,6 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       updated_at: new Date().toISOString(),
     };
 
-    // --- Update ke database ---
     const { data, error } = await updateCharacterByPrivateId(
       privateId,
       updatedData
