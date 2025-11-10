@@ -15,13 +15,17 @@ import {
   deleteExpiredTrashCharacters,
   getCharacterByPublicIdHandler,
   getCharacterByPrivateIdHandler,
+  getAllCharactersUserHandler
 } from "../controllers/characterController.js";
 
 const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
+
+// 🧩 CREATE
 router.post("/", createCharacterHandler);
 
+// 🧩 SAVE / UPDATE
 router.post(
   "/save",
   upload.fields([
@@ -34,13 +38,24 @@ router.post(
   saveCharacterHandler
 );
 
+// 🧩 GET ALL CHARACTERS (ADMIN)
 router.get("/", getCharactersHandler);
+
+// 🧩 USER-BASED ENDPOINTS
+router.get("/user/all", verifyUserIgnite, getAllCharactersUserHandler);
 router.get("/user", verifyUserIgnite, getCharactersUserHandler);
 router.get("/trash", verifyUserIgnite, getCharactersUserTrash);
-router.put("/:id/trash", moveCharacterToTrash);
-router.put("/:id/restore", restoreCharacterFromTrash);
 router.get("/trash/expired", verifyUserIgnite, deleteExpiredTrashCharacters);
 
+// 🧩 PUBLIC & PRIVATE ACCESS (more specific routes FIRST)
+router.get("/public/:id", getCharacterByPublicIdHandler);
+router.get("/private/:id", verifyUserIgnite, getCharacterByPrivateIdHandler);
+
+// 🧩 STATUS MANAGEMENT
+router.put("/:id/trash", moveCharacterToTrash);
+router.put("/:id/restore", restoreCharacterFromTrash);
+
+// 🧩 GENERIC BY ID (must always be LAST)
 router.get("/:id", getCharacterHandler);
 router.put(
   "/:id",
@@ -54,8 +69,5 @@ router.put(
   updateCharacterByPrivateIdHandler
 );
 router.delete("/:id", deleteCharacterHandler);
-router.get("/public/:id", getCharacterByPublicIdHandler);
-
-router.get("/private/:id", verifyUserIgnite, getCharacterByPrivateIdHandler);
 
 export default router;

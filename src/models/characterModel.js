@@ -28,6 +28,29 @@ export const getAllCharacters = async () => {
   return await supabase.from("characters").select("*");
 };
 
+
+export const getAllCharactersByUserId = async (userId) => {
+  try {
+    const { data, error } = await supabase
+      .from("characters")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("❌ Supabase getAllCharactersByUserId error:", error.message);
+      return { data: null, error };
+    }
+
+    console.log(`✅ Found ${data?.length || 0} characters for user ${userId}`);
+    return { data, error: null };
+  } catch (err) {
+    console.error("💥 getAllCharactersByUserId fatal error:", err);
+    return { data: null, error: err };
+  }
+};
+
+
 export const getCharactersByUserId = async (userId) => {
   return await supabase
     .from("characters")

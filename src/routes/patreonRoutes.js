@@ -114,4 +114,27 @@ router.get("/callback", async (req, res) => {
   }
 });
 
+router.get("/user/:user_id", async (req, res) => {
+  const { user_id } = req.params;
+
+  try {
+    const { data, error } = await supabase
+      .from("user_patreon")
+      .select("patreon_id, email, full_name, avatar_url, tier_name, membership_status")
+      .eq("user_id", user_id)
+      .single();
+
+    if (error && error.code !== "PGRST116") throw error; // PGRST116 = no rows
+
+    if (!data) {
+      return res.status(404).json({ message: "No Patreon account linked." });
+    }
+
+    res.json(data);
+  } catch (err) {
+    console.error("❌ Error fetching Patreon user:", err.message);
+    res.status(500).json({ error: "Failed to fetch Patreon user data" });
+  }
+});
+
 export default router;

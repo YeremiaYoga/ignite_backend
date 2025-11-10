@@ -12,6 +12,7 @@ import {
   getCharacterByPublicId,
   getCharacterByPrivateId,
   updateCharacterByPrivateId,
+  getAllCharactersByUserId
 } from "../models/characterModel.js";
 import { Blob } from "buffer";
 import supabase from "../utils/db.js";
@@ -187,14 +188,31 @@ export const getCharactersHandler = async (req, res) => {
   res.json(data);
 };
 
+export const getAllCharactersUserHandler = async (req, res) => {
+  try {
+    const userId = req.userId;
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+    const { data, error } = await getAllCharactersByUserId(userId);
+    if (error) return res.status(400).json({ error: error.message });
+
+    res.status(200).json(data);
+  } catch (err) {
+    console.error("💥 getAllCharactersUserHandler error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 export const getCharactersUserHandler = async (req, res) => {
   const { data, error } = await getCharactersByUserId(req.userId);
+
   if (error) return res.status(400).json({ error: error.message });
-  const activeCharacters = data.filter(
-    (character) => character.record_status === "active"
+
+  const validCharacters = data.filter(
+    (character) => character && character.name && character.name.trim() !== ""
   );
 
-  res.json(activeCharacters);
+  res.json(validCharacters);
 };
 
 export const getCharactersUserTrash = async (req, res) => {
