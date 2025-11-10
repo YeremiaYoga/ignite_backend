@@ -96,7 +96,7 @@ router.get("/callback", async (req, res) => {
 
     res.redirect(
       `${
-        process.env.NEXT_PUBLIC_APP_ORIGIN_2
+        process.env.NEXT_PUBLIC_APP_ORIGIN_1
       }/patreon-success?linked=true&email=${encodeURIComponent(email)}`
     );
   } catch (err) {
