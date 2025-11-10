@@ -4,6 +4,7 @@ import {
   getUser,
   updateUser,
   logoutUserIgnite,
+  getUserMe 
 } from "../controllers/userController.js";
 import {
   loginAdminJWT,
@@ -14,7 +15,9 @@ import { verifyUserIgnite } from "../middlewares/verifyUserIgnite.js";
 const router = express.Router();
 
 // === CLERK AUTH ===
+
 router.post("/login", loginUser); // login Clerk
+router.get("/me", verifyUserIgnite, getUserMe);
 router.get("/:clerkId", getUser); // get user Clerk
 router.patch("/:id", verifyUserIgnite, updateUser); // update user Clerk
 router.post("/logout", logoutUserIgnite);

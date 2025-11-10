@@ -197,3 +197,24 @@ export const updateUser = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+
+
+export const getUserMe = async (req, res) => {
+  try {
+    const { userId } = req;
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (error) throw error;
+
+    res.json({ user: data });
+  } catch (err) {
+    console.error("❌ getUserMe error:", err.message);
+    res.status(500).json({ error: "Failed to get user" });
+  }
+};
