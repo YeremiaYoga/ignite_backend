@@ -9,7 +9,7 @@ const router = express.Router();
 
 const CLIENT_ID = process.env.PATREON_CLIENT_ID;
 const CLIENT_SECRET = process.env.PATREON_CLIENT_SECRET;
-const REDIRECT_URI = process.env.PATREON_REDIRECT_URI;
+const REDIRECT_URI = process.env.PATREON_REDIRECT_URI_PROD;
 
 // 🔹 1️⃣ Redirect ke Patreon (OAuth start)
 router.get("/auth", (req, res) => {
