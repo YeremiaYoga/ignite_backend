@@ -135,9 +135,36 @@ export const loginUser = async (req, res) => {
 };
 
 export const logoutUserIgnite = async (req, res) => {
-  res.clearCookie("ignite_access_token");
-  return res.json({ success: true, message: "Logged out successfully" });
+  try {
+    const user = req.user;
+
+    res.clearCookie("ignite_access_token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
+
+    if (user?.id) {
+      await supabase
+        .from("user_patreon")
+        .update({
+          access_token: null,
+          refresh_token: null,
+          expires_in: null,
+        })
+        .eq("user_id", user.id);
+    }
+
+    return res.json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (err) {
+    console.error("❌ Logout error:", err);
+    return res.status(500).json({ success: false, message: "Logout failed" });
+  }
 };
+
 
 export const getUser = async (req, res) => {
   try {

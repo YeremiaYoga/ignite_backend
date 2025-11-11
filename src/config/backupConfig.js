@@ -44,7 +44,6 @@ export const backupConfig = {
     "wayfarers",
   ],
 
-  // 🔄 Auto convert saat config di-load
   schedule: convertTimeToCron(BACKUP_TIME),
-  readable_time: BACKUP_TIME, // opsional: biar bisa ditampilkan jam aslinya
+  readable_time: BACKUP_TIME, 
 };
