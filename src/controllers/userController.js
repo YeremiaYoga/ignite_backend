@@ -18,7 +18,6 @@ export const loginUser = async (req, res) => {
     const PUBLIC_MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
     const DEFAULT_PROFILE = `${PUBLIC_MEDIA_URL}/profile_picture/Candle.webp`;
 
-    // 🔹 Ambil data tier "Free"
     const { data: freeTier, error: freeError } = await supabase
       .from("tiers")
       .select("id, name, character_limit")
@@ -30,10 +29,8 @@ export const loginUser = async (req, res) => {
       return res.status(500).json({ error: "Free tier not found" });
     }
 
-    // 🔍 Cek apakah user sudah ada
     let user = await getUserByClerkId(clerkId);
 
-    // 🆕 Jika belum ada user, buat baru
     if (!user) {
       console.log("🆕 New user detected, creating...");
 

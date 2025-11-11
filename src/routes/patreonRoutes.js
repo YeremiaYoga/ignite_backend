@@ -1,5 +1,6 @@
 import express from "express";
 import axios from "axios";
+import jwt from "jsonwebtoken";
 import supabase from "../utils/db.js";
 import dotenv from "dotenv";
 
@@ -10,15 +11,13 @@ const CLIENT_ID = process.env.PATREON_CLIENT_ID;
 const CLIENT_SECRET = process.env.PATREON_CLIENT_SECRET;
 const REDIRECT_URI = process.env.PATREON_REDIRECT_URI_PROD;
 
-// 🔹 1️⃣ Redirect ke Patreon
+// 🔹 1️⃣ Redirect ke Patreon (OAuth start)
 router.get("/auth", (req, res) => {
   const { user_id } = req.query;
-
   const url = `https://www.patreon.com/oauth2/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
     REDIRECT_URI
   )}&scope=identity%20identity[email]%20campaigns.members`;
 
-  // Simpan user_id sebagai state agar callback bisa tahu milik siapa
   const state = encodeURIComponent(user_id || "guest");
   res.redirect(`${url}&state=${state}`);
 });
@@ -31,7 +30,7 @@ router.get("/callback", async (req, res) => {
   if (!code) return res.status(400).json({ error: "Missing code" });
 
   try {
-    // Tukar code jadi token
+    // 1️⃣ Tukar code menjadi token
     const tokenRes = await axios.post(
       "https://www.patreon.com/api/oauth2/token",
       null,
@@ -48,7 +47,7 @@ router.get("/callback", async (req, res) => {
 
     const { access_token, refresh_token, expires_in } = tokenRes.data;
 
-    // Ambil data user Patreon
+    // 2️⃣ Ambil data user Patreon
     const userRes = await axios.get(
       "https://www.patreon.com/api/oauth2/v2/identity?include=memberships&fields%5Buser%5D=full_name,email,image_url",
       { headers: { Authorization: `Bearer ${access_token}` } }
@@ -57,18 +56,17 @@ router.get("/callback", async (req, res) => {
     const patreonUser = userRes.data?.data;
     const patreonId = patreonUser?.id;
     const email = patreonUser?.attributes?.email || null;
-    const fullName = patreonUser?.attributes?.full_name || null;
+    const fullName = patreonUser?.attributes?.full_name || "Patreon User";
     const avatarUrl = patreonUser?.attributes?.image_url || null;
 
     const membership = userRes.data?.included?.[0];
-    const tierName = membership?.attributes?.patron_status || null;
+    const tierName = membership?.attributes?.patron_status || "free";
     const tierAmount = membership?.attributes?.currently_entitled_amount_cents
       ? membership.attributes.currently_entitled_amount_cents / 100
-      : null;
-    const membershipStatus = membership?.attributes?.patron_status || null;
+      : 0;
+    const membershipStatus = membership?.attributes?.patron_status || "free";
 
-    // Simpan ke Supabase
-    const { data, error } = await supabase
+    const { data: patreonLink, error: patreonError } = await supabase
       .from("user_patreon")
       .upsert(
         {
@@ -88,28 +86,99 @@ router.get("/callback", async (req, res) => {
         },
         { onConflict: "patreon_id" }
       )
-      .select();
+      .select()
+      .maybeSingle();
 
-    if (error) throw error;
+    if (patreonError) throw patreonError;
 
-    console.log("✅ Patreon linked:", data[0]);
+    const PUBLIC_MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
+    const DEFAULT_PROFILE = `${PUBLIC_MEDIA_URL}/profile_picture/Candle.webp`;
 
+    const { data: freeTier } = await supabase
+      .from("tiers")
+      .select("id, name, character_limit")
+      .eq("slug", "free")
+      .maybeSingle();
+
+    let { data: existingUser } = await supabase
+      .from("users")
+      .select("*")
+      .or(
+        `patreon_id.eq.${patreonId},email.eq.${email}${
+          user_id ? `,clerk_id.eq.${user_id}` : ""
+        }`
+      )
+      .maybeSingle();
+
+    let finalUser = existingUser;
+
+    if (!existingUser) {
+      const { data: newUser, error: insertError } = await supabase
+        .from("users")
+        .upsert(
+          [
+            {
+              email,
+              name: fullName,
+              username: fullName,
+              role: "user",
+              patreon_id: patreonId,
+              tier_id: freeTier?.id,
+              tier: tierName || freeTier?.name,
+              character_limit: freeTier?.character_limit,
+              tier_expired_at: null,
+              profile_picture: avatarUrl || DEFAULT_PROFILE,
+            },
+          ],
+          { onConflict: "email" }
+        )
+        .select()
+        .maybeSingle();
+
+      if (insertError) throw insertError;
+      finalUser = newUser;
+    } else {
+      await supabase
+        .from("users")
+        .update({
+          patreon_id: patreonId,
+          profile_picture: avatarUrl || existingUser.profile_picture,
+          tier: tierName || existingUser.tier,
+        })
+        .eq("id", existingUser.id);
+
+      finalUser = { ...existingUser, patreon_id: patreonId };
+    }
+
+    const accessTokenJWT = jwt.sign(
+      {
+        id: finalUser.id,
+        email: finalUser.email,
+        username: finalUser.name,
+        role: finalUser.role,
+        app: "ignite",
+      },
+      process.env.JWT_SECRET_USER,
+      { expiresIn: "9h" }
+    );
+
+    res.cookie("ignite_access_token", accessTokenJWT, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 9 * 60 * 60 * 1000,
+    });
     res.redirect(
-      `${
-        process.env.REDIRECT_PATREON_DOMAIN
-      }/patreon-success?linked=true&email=${encodeURIComponent(email)}`
+      `${process.env.REDIRECT_PATREON_DOMAIN}/?login=patreon_success`
     );
   } catch (err) {
     console.error("❌ Patreon callback error (details):");
     if (err.response) {
       console.error("Status:", err.response.status);
       console.error("Data:", err.response.data);
-    } else if (err.message) {
-      console.error("Message:", err.message);
     } else {
-      console.error(err);
+      console.error("Message:", err.message);
     }
-
     res.status(500).json({ error: "Patreon authentication failed" });
   }
 });
@@ -120,15 +189,15 @@ router.get("/user/:user_id", async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("user_patreon")
-      .select("patreon_id, email, full_name, avatar_url, tier_name, membership_status")
+      .select(
+        "patreon_id, email, full_name, avatar_url, tier_name, membership_status"
+      )
       .eq("user_id", user_id)
       .single();
 
-    if (error && error.code !== "PGRST116") throw error; // PGRST116 = no rows
-
-    if (!data) {
+    if (error && error.code !== "PGRST116") throw error;
+    if (!data)
       return res.status(404).json({ message: "No Patreon account linked." });
-    }
 
     res.json(data);
   } catch (err) {
