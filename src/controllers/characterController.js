@@ -12,7 +12,7 @@ import {
   getCharacterByPublicId,
   getCharacterByPrivateId,
   updateCharacterByPrivateId,
-  getAllCharactersByUserId
+  getAllCharactersByUserId,
 } from "../models/characterModel.js";
 import { Blob } from "buffer";
 import supabase from "../utils/db.js";
@@ -153,6 +153,10 @@ export const saveCharacterHandler = async (req, res) => {
       "height_unit",
       "weight_unit",
     ].forEach((f) => delete parsed[f]);
+
+    if (!parsed.name || parsed.name.trim() === "") {
+      parsed.name = "Hero Without A Name";
+    }
 
     const newCharacter = {
       ...parsed,
@@ -342,7 +346,7 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       "height_unit",
       "weight_unit",
       "public_id",
-      "private_id", 
+      "private_id",
     ].forEach((f) => delete parsed[f]);
 
     const updatedData = {

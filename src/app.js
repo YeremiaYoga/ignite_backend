@@ -26,6 +26,10 @@ import adminTraitRoutes from "./routes/adminTraitRoutes.js";
 import traitModifierRoutes from "./routes/traitModifierRoutes.js";
 
 import patreonRoutes from "./routes/patreonRoutes.js";
+
+import announcementRoutes from "./routes/announcementRoutes.js";
+import adminAnnouncementRoutes from "./routes/adminAnnouncementRoutes.js";
+import adminThemeAndGenreCampaignRoutes from "./routes/adminThemeAndGenreCampaignRoutes.js";
 import path from "path";
 const app = express();
 
@@ -59,6 +63,8 @@ app.use("/api/backgrounds", backgroundRoutes);
 app.use("/admin/character", adminCharacterRoutes);
 app.use("/api/feats", featRoutes);
 
+
+
 app.get("/", (req, res) => {
   res.json({
     status: "✅ Ignite backend running",
@@ -81,4 +87,11 @@ app.use("/species-group-type", speciesGroupTypeRoutes);
 
 
 app.use("/patreon", patreonRoutes);
+
+app.use("/announcements", announcementRoutes);
+
+// admin
+app.use("/admin/announcements", adminAnnouncementRoutes);
+
+app.use("/admin/campaign-master", adminThemeAndGenreCampaignRoutes);
 export default app;
