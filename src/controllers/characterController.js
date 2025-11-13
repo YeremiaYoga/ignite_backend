@@ -349,6 +349,10 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       "private_id",
     ].forEach((f) => delete parsed[f]);
 
+    if (!parsed.name || parsed.name.trim() === "") {
+      parsed.name = "Hero Without A Name";
+    }
+
     const updatedData = {
       ...existing,
       ...parsed,
