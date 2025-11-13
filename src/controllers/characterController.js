@@ -16,7 +16,7 @@ import {
 } from "../models/characterModel.js";
 import { Blob } from "buffer";
 import supabase from "../utils/db.js";
-
+const MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
 export const createCharacterHandler = async (req, res) => {
   const characterData = { ...req.body, user_id: req.userId };
   const { data, error } = await createCharacter(characterData);
@@ -446,9 +446,78 @@ export const deleteExpiredTrashCharacters = async (req, res) => {
 };
 
 export const deleteCharacterHandler = async (req, res) => {
-  const { error } = await deleteCharacter(req.params.id);
-  if (error) return res.status(400).json({ error: error.message });
-  res.json({ message: "Character deleted" });
+  try {
+    const privateId = req.params.id;
+    console.log("🗑️ [IGNITE] deleteCharacterHandler invoked:", privateId);
+
+    // 1. ambil data character dulu buat dapetin public_id
+    const { data: existing, error: fetchError } = await getCharacterByPrivateId(
+      privateId
+    );
+    if (fetchError || !existing) {
+      console.warn("⚠️ Character not found for delete:", privateId);
+      return res.status(404).json({ error: "Character not found" });
+    }
+
+    // (opsional) cek owner
+    if (existing.user_id && req.user?.id && existing.user_id !== req.user.id) {
+      console.warn(
+        `🚫 Unauthorized delete attempt: user ${req.user.id} tried to delete character of ${existing.user_id}`
+      );
+      return res
+        .status(403)
+        .json({
+          error: "Forbidden — you are not the owner of this character.",
+        });
+    }
+
+    // 2. hapus record di DB
+    const { error: deleteError } = await deleteCharacter(privateId);
+    if (deleteError) {
+      console.error("💥 deleteCharacter DB error:", deleteError.message);
+      return res.status(400).json({ error: deleteError.message });
+    }
+
+    // 3. best-effort hapus folder media
+    if (existing.public_id) {
+      const folderPath = `characters/${existing.public_id}`;
+
+      try {
+        const token =
+          req.cookies?.ignite_access_token ||
+          req.user?.jwt?.token ||
+          req.headers.authorization?.split(" ")[1] ||
+          null;
+
+        const resp = await fetch(`${MEDIA_URL}/upload/folder`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ folder_path: folderPath }),
+        });
+
+        if (!resp.ok) {
+          const msg = await resp.text();
+          console.warn("⚠️ Failed to delete media folder:", folderPath, msg);
+        } else {
+          console.log("🧹 Media folder deleted:", folderPath);
+        }
+      } catch (err) {
+        console.error("💥 Error calling media deleteFolder:", err);
+      }
+    } else {
+      console.log("ℹ️ Character has no public_id, skip media folder delete");
+    }
+
+    return res.json({ message: "Character deleted" });
+  } catch (err) {
+    console.error("💥 deleteCharacterHandler error:", err);
+    return res
+      .status(500)
+      .json({ error: err.message || "Internal server error" });
+  }
 };
 
 export const getCharacterByPublicIdHandler = async (req, res) => {

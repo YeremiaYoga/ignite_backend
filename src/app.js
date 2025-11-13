@@ -60,10 +60,10 @@ app.use("/api/incumbency", incumbencyRoutes);
 app.use("/api/races", raceRoutes);
 app.use("/api/subraces", subraceRoutes);
 app.use("/api/backgrounds", backgroundRoutes);
-app.use("/admin/character", adminCharacterRoutes);
+
 app.use("/api/feats", featRoutes);
 
-
+app.use("/admin/character", adminCharacterRoutes);
 
 app.get("/", (req, res) => {
   res.json({
