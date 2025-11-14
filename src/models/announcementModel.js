@@ -8,7 +8,7 @@ export async function getActiveByPosition(position) {
   const { data, error } = await supabase
     .from(TABLE)
     .select(
-      "id, active, icon, name, description, icon_size, position, start_at, end_at, image, image_size"
+      "id, active, icon, name, description, icon_size, position, start_at, end_at, image, image_size,icon_color"
     )
     .eq("active", true)
     .eq("position", position)
@@ -33,7 +33,7 @@ export async function listAnnouncements({
   let query = supabase
     .from(TABLE)
     .select(
-      "id, active, icon, name, description, icon_size, position, start_at, end_at, image, image_size",
+      "id, active, icon, name, description, icon_size, position, start_at, end_at, image, image_size,icon_color",
       { count: "exact" }
     )
     .order("start_at", { ascending: false });
@@ -81,7 +81,6 @@ export async function deleteAnnouncement(id) {
   if (error) throw error;
   return { success: true };
 }
-
 
 export async function deactivateOtherAnnouncements(position, excludeId) {
   const { data, error } = await supabase

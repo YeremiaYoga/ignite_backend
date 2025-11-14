@@ -153,26 +153,33 @@ export const adminCreateAnnouncement = async (req, res) => {
       end_at: parsed.end_at || null,
       image: imgUrl || parsed.image || null,
       image_size: Number(parsed.image_size) || 24,
-
-      // 🔹 NEW
       icon_color: parsed.icon_color || null,
       created_at: new Date().toISOString(),
     };
 
-    const { data, error } = await createAnnouncement(payload);
-    if (error) throw error;
+    // ⬇⬇⬇ DI SINI YANG DIUBAH
+    const created = await createAnnouncement(payload);
+    // kalau createAnnouncement pakai supabase langsung { data, error }:
+    // const { data, error } = await createAnnouncement(payload);
+    // if (error) throw error;
+    // const created = Array.isArray(data) ? data[0] : data;
+
+    if (!created || !created.id) {
+      throw new Error("Failed to create announcement: missing id");
+    }
 
     // 🔥 Kalau announcement ini aktif → nonaktifkan semua yg lain di posisi sama
     if (payload.active) {
-      await deactivateOtherAnnouncements(payload.position, data.id);
+      await deactivateOtherAnnouncements(payload.position, created.id);
     }
 
-    res.status(201).json({ success: true, data });
+    res.status(201).json({ success: true, data: created });
   } catch (err) {
     console.error("💥 adminCreateAnnouncement error:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 };
+
 
 /** PUT /admin/announcements/:id  (full update; supports new image) */
 export const adminUpdateAnnouncement = async (req, res) => {
@@ -180,15 +187,19 @@ export const adminUpdateAnnouncement = async (req, res) => {
     const { id } = req.params;
     const token = req.headers.authorization?.split(" ")[1] || null;
 
-    // full update requires all required fields
-    const payload = normalizePayload({ ...req.body }, { partial: false });
+    // ⬇⬇⬇ ini yang penting: pakai partial: true
+    const payload = normalizePayload({ ...req.body }, { partial: true });
 
     let uploadedUrl = null;
     if (req.files?.image?.[0]) {
+      // folderName masih coba pakai nama baru kalau ada, kalau tidak pakai default
+      const folderSafeName =
+        (payload.name || req.body.name || "announcement").replace(/\s+/g, "_");
+
       uploadedUrl = await uploadToMedia({
         file: req.files.image[0],
         path: "announcements",
-        folderName: (payload.name || "announcement").replace(/\s+/g, "_"),
+        folderName: folderSafeName,
         token,
       });
     }
@@ -209,6 +220,7 @@ export const adminUpdateAnnouncement = async (req, res) => {
     return res.status(400).json({ error: err.message });
   }
 };
+
 
 /** PATCH /admin/announcements/:id/toggle  (active only) */
 export const adminToggleAnnouncement = async (req, res) => {
