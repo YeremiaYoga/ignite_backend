@@ -81,3 +81,32 @@ export async function deleteAnnouncement(id) {
   if (error) throw error;
   return { success: true };
 }
+
+
+export async function deactivateOtherAnnouncements(position, excludeId) {
+  const { data, error } = await supabase
+    .from("announcements")
+    .update({ active: false })
+    .eq("position", position)
+    .neq("id", excludeId);
+
+  if (error) {
+    console.error("💥 deactivateOtherAnnouncements error:", error.message);
+    throw error;
+  }
+  return data;
+}
+
+export async function getAnnouncementById(id) {
+  const { data, error } = await supabase
+    .from("announcements")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    console.error("💥 getAnnouncementById error:", error.message);
+    throw error;
+  }
+  return data;
+}

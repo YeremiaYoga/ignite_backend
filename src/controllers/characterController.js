@@ -16,6 +16,8 @@ import {
 } from "../models/characterModel.js";
 import { Blob } from "buffer";
 import supabase from "../utils/db.js";
+import { deleteMediaFile } from "../utils/deleteMediaFile.js";
+import { uploadToMedia } from "../utils/uploadToMedia.js";
 const MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
 export const createCharacterHandler = async (req, res) => {
   const characterData = { ...req.body, user_id: req.userId };
@@ -242,6 +244,7 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
     const parsed =
       typeof req.body.data === "string" ? JSON.parse(req.body.data) : req.body;
 
+    // 1️⃣ Normalisasi UUID kosong -> null
     const uuidFields = [
       "race_id",
       "subrace_id",
@@ -249,15 +252,20 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       "user_id",
       "incumbency_id",
     ];
-    for (const field of uuidFields)
+    for (const field of uuidFields) {
       if (parsed[field] === "") parsed[field] = null;
+    }
 
+    // 2️⃣ Ambil existing character
     const { data: existing, error: fetchError } = await getCharacterByPrivateId(
       privateId
     );
-    if (fetchError || !existing)
+    if (fetchError || !existing) {
+      console.warn("⚠️ Character not found for update:", privateId);
       return res.status(404).json({ error: "Character not found" });
+    }
 
+    // 3️⃣ Cek owner
     const requesterId =
       req.user?.id || req.user?.user_id || req.userId || parsed.user_id || null;
 
@@ -277,66 +285,92 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       });
     }
 
-    const uploadToMedia = async (file, type) => {
-      if (!file || !file.buffer) return null;
-
-      try {
-        const blob = new Blob([file.buffer], { type: file.mimetype });
-        const formData = new FormData();
-        formData.append("path", "characters");
-        formData.append("folder_name", existing.public_id);
-        formData.append("file", blob, file.originalname);
-
-        const token =
-          req.cookies?.ignite_access_token ||
-          req.user?.jwt?.token ||
-          req.headers.authorization?.split(" ")[1] ||
-          null;
-
-        const resUpload = await fetch(`${MEDIA_URL}/upload`, {
-          method: "POST",
-          headers: { Authorization: token ? `Bearer ${token}` : "" },
-          body: formData,
-        });
-
-        if (!resUpload.ok) {
-          const msg = await resUpload.text();
-          console.error(`❌ Upload ${type} gagal:`, msg);
-          return null;
-        }
-
-        const result = await resUpload.json();
-        const fileUrl =
-          result.fullUrl ||
-          result.data?.fullUrl ||
-          result.url ||
-          result.data?.url;
-
-        console.log(`✅ ${type} uploaded:`, fileUrl);
-        return fileUrl;
-      } catch (err) {
-        console.error(`💥 Upload ${type} error:`, err);
-        return null;
-      }
-    };
+    // 4️⃣ Ambil token sekali
+    const token =
+      req.cookies?.ignite_access_token ||
+      req.user?.jwt?.token ||
+      req.headers.authorization?.split(" ")[1] ||
+      null;
 
     const files = req.files || {};
-    const artPath =
-      (req.files["art"] && (await uploadToMedia(files["art"][0], "art"))) ||
-      existing.art_image;
-    const tokenArtPath =
-      (req.files["token_art"] &&
-        (await uploadToMedia(files["token_art"][0], "token_art"))) ||
-      existing.token_image;
-    const mainThemePath =
-      (req.files["main_theme_ogg"] &&
-        (await uploadToMedia(files["main_theme_ogg"][0], "main_theme"))) ||
-      existing.main_theme_ogg;
-    const combatThemePath =
-      (req.files["combat_theme_ogg"] &&
-        (await uploadToMedia(files["combat_theme_ogg"][0], "combat_theme"))) ||
-      existing.combat_theme_ogg;
 
+    // 5️⃣ Handle ART
+    let artPath = existing.art_image;
+    if (files["art"] && files["art"][0]) {
+      const newUrl = await uploadToMedia({
+        file: files["art"][0],
+        path: "characters",
+        folderName: existing.public_id,
+        token,
+        mediaUrl: MEDIA_URL,
+      });
+
+      if (newUrl) {
+        if (existing.art_image && existing.art_image !== newUrl) {
+          await deleteMediaFile(existing.art_image, MEDIA_URL, token);
+        }
+        artPath = newUrl;
+      }
+    }
+
+    // 6️⃣ Handle TOKEN ART
+    let tokenArtPath = existing.token_image;
+    if (files["token_art"] && files["token_art"][0]) {
+      const newUrl = await uploadToMedia({
+        file: files["token_art"][0],
+        path: "characters",
+        folderName: existing.public_id,
+        token,
+        mediaUrl: MEDIA_URL,
+      });
+
+      if (newUrl) {
+        if (existing.token_image && existing.token_image !== newUrl) {
+          await deleteMediaFile(existing.token_image, MEDIA_URL, token);
+        }
+        tokenArtPath = newUrl;
+      }
+    }
+
+    // 7️⃣ Handle MAIN THEME
+    let mainThemePath = existing.main_theme_ogg;
+    if (files["main_theme_ogg"] && files["main_theme_ogg"][0]) {
+      const newUrl = await uploadToMedia({
+        file: files["main_theme_ogg"][0],
+        path: "characters",
+        folderName: existing.public_id,
+        token,
+        mediaUrl: MEDIA_URL,
+      });
+
+      if (newUrl) {
+        if (existing.main_theme_ogg && existing.main_theme_ogg !== newUrl) {
+          await deleteMediaFile(existing.main_theme_ogg, MEDIA_URL, token);
+        }
+        mainThemePath = newUrl;
+      }
+    }
+
+    // 8️⃣ Handle COMBAT THEME
+    let combatThemePath = existing.combat_theme_ogg;
+    if (files["combat_theme_ogg"] && files["combat_theme_ogg"][0]) {
+      const newUrl = await uploadToMedia({
+        file: files["combat_theme_ogg"][0],
+        path: "characters",
+        folderName: existing.public_id,
+        token,
+        mediaUrl: MEDIA_URL,
+      });
+
+      if (newUrl) {
+        if (existing.combat_theme_ogg && existing.combat_theme_ogg !== newUrl) {
+          await deleteMediaFile(existing.combat_theme_ogg, MEDIA_URL, token);
+        }
+        combatThemePath = newUrl;
+      }
+    }
+
+    // 9️⃣ Bersihkan field yang tidak boleh diubah client
     [
       "creator_email",
       "creator_name",
@@ -353,6 +387,7 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       parsed.name = "Hero Without A Name";
     }
 
+    // 🔟 Build final payload
     const updatedData = {
       ...existing,
       ...parsed,
@@ -369,13 +404,16 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       privateId,
       updatedData
     );
-    if (error) return res.status(400).json({ error: error.message });
+    if (error) {
+      console.error("💥 updateCharacterByPrivateId DB error:", error);
+      return res.status(400).json({ error: error.message });
+    }
 
-    console.log("✅ Character updated:", data);
-    res.status(200).json(data);
+    console.log("✅ Character updated:", data?.id, data?.name);
+    return res.status(200).json(data);
   } catch (err) {
     console.error("💥 updateCharacterByPrivateIdHandler error:", err);
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message });
   }
 };
 
@@ -472,7 +510,7 @@ export const deleteCharacterHandler = async (req, res) => {
     }
 
     // 2. hapus record di DB
-    const { error: deleteError } = await deleteCharacter(privateId);
+    const { error: deleteError } = await deleteCharacter(existing.id);
     if (deleteError) {
       console.error("💥 deleteCharacter DB error:", deleteError.message);
       return res.status(400).json({ error: deleteError.message });

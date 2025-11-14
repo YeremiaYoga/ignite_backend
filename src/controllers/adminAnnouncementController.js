@@ -5,6 +5,8 @@ import {
   createAnnouncement,
   updateAnnouncement,
   deleteAnnouncement,
+  deactivateOtherAnnouncements,
+  getAnnouncementById,
 } from "../models/announcementModel.js";
 import { uploadToMedia } from "../utils/uploadToMedia.js";
 
@@ -22,16 +24,35 @@ function toNum(v, fallback) {
 
 function normalizePayload(body, { partial = false } = {}) {
   const payload = {
-    active: body.active != null ? toBool(body.active, true) : (partial ? undefined : true),
+    active:
+      body.active != null
+        ? toBool(body.active, true)
+        : partial
+        ? undefined
+        : true,
     icon: body.icon ?? (partial ? undefined : "Megaphone"),
-    name: body.name != null ? String(body.name).trim() : (partial ? undefined : ""),
+    name:
+      body.name != null ? String(body.name).trim() : partial ? undefined : "",
     description: body.description ?? (partial ? undefined : null),
-    icon_size: body.icon_size != null ? toNum(body.icon_size, 20) : (partial ? undefined : 20),
-    position: body.position ?? (partial ? undefined : "left"), // 'left' | 'right'
+    icon_size:
+      body.icon_size != null
+        ? toNum(body.icon_size, 20)
+        : partial
+        ? undefined
+        : 20,
+    position: body.position ?? (partial ? undefined : "left"),
     start_at: body.start_at ?? (partial ? undefined : new Date().toISOString()),
     end_at: body.end_at ?? (partial ? undefined : null),
     image: body.image ?? (partial ? undefined : null),
-    image_size: body.image_size != null ? toNum(body.image_size, 24) : (partial ? undefined : 24),
+    image_size:
+      body.image_size != null
+        ? toNum(body.image_size, 24)
+        : partial
+        ? undefined
+        : 24,
+
+    // 🔹 NEW: icon_color
+    icon_color: body.icon_color ?? (partial ? undefined : null),
   };
 
   // required checks (only when not partial)
@@ -42,14 +63,19 @@ function normalizePayload(body, { partial = false } = {}) {
     }
   } else {
     // if provided in partial, still validate position value
-    if (payload.position !== undefined && !["left", "right"].includes(payload.position)) {
+    if (
+      payload.position !== undefined &&
+      !["left", "right"].includes(payload.position)
+    ) {
       throw new Error("position must be 'left' or 'right'");
     }
   }
 
   // remove undefined keys in partial mode
   if (partial) {
-    Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
+    Object.keys(payload).forEach(
+      (k) => payload[k] === undefined && delete payload[k]
+    );
   }
 
   return payload;
@@ -100,7 +126,6 @@ export const adminListAnnouncements = async (req, res) => {
 /** POST /admin/announcements  (supports multipart image) */
 export const adminCreateAnnouncement = async (req, res) => {
   try {
-    // 🧩 Parse payload dari multipart (karena pakai FormData)
     const parsed =
       typeof req.body.data === "string" ? JSON.parse(req.body.data) : req.body;
 
@@ -110,7 +135,6 @@ export const adminCreateAnnouncement = async (req, res) => {
 
     const token = req.headers.authorization?.split(" ")[1] || null;
 
-    // 🖼 Upload image jika ada
     const imgUrl = await uploadToMedia({
       file: req.files?.["image"]?.[0],
       path: "announcements",
@@ -118,7 +142,6 @@ export const adminCreateAnnouncement = async (req, res) => {
       token,
     });
 
-    // 🧱 Bentuk payload akhir
     const payload = {
       active: parsed.active ?? true,
       icon: parsed.icon ?? "Megaphone",
@@ -130,11 +153,19 @@ export const adminCreateAnnouncement = async (req, res) => {
       end_at: parsed.end_at || null,
       image: imgUrl || parsed.image || null,
       image_size: Number(parsed.image_size) || 24,
+
+      // 🔹 NEW
+      icon_color: parsed.icon_color || null,
       created_at: new Date().toISOString(),
     };
 
     const { data, error } = await createAnnouncement(payload);
     if (error) throw error;
+
+    // 🔥 Kalau announcement ini aktif → nonaktifkan semua yg lain di posisi sama
+    if (payload.active) {
+      await deactivateOtherAnnouncements(payload.position, data.id);
+    }
 
     res.status(201).json({ success: true, data });
   } catch (err) {
@@ -167,6 +198,11 @@ export const adminUpdateAnnouncement = async (req, res) => {
       image: uploadedUrl ?? payload.image ?? null,
     });
 
+    // 🔥 Kalau setelah update dia aktif → nonaktifkan semua yang lain di posisi sama
+    if (updated?.active) {
+      await deactivateOtherAnnouncements(updated.position, updated.id);
+    }
+
     return res.json(updated);
   } catch (err) {
     console.error("adminUpdateAnnouncement error:", err.message);
@@ -183,7 +219,19 @@ export const adminToggleAnnouncement = async (req, res) => {
         ? req.body.active
         : req.body.active === "true";
 
+    // ambil dulu buat tahu position
+    const existing = await getAnnouncementById(id);
+    if (!existing) {
+      return res.status(404).json({ error: "Announcement not found" });
+    }
+
     const updated = await updateAnnouncement(id, { active });
+
+    // 🔥 kalau di-set active = true → matikan semua yg lain di posisi sama
+    if (active && updated?.position) {
+      await deactivateOtherAnnouncements(updated.position, id);
+    }
+
     return res.json(updated);
   } catch (err) {
     console.error("adminToggleAnnouncement error:", err.message);
