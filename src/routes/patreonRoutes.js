@@ -3,7 +3,7 @@ import axios from "axios";
 import jwt from "jsonwebtoken";
 import supabase from "../utils/db.js";
 import dotenv from "dotenv";
-
+import { upsertUserFromPatreon } from "../models/userModel.js";
 dotenv.config();
 const router = express.Router();
 
@@ -24,7 +24,7 @@ router.get("/auth", (req, res) => {
 // 🔹 2️⃣ Callback dari Patreon
 router.get("/callback", async (req, res) => {
   const { code, state } = req.query;
-  const user_id = state === "guest" ? null : state;
+  const user_id = state === "guest" ? null : state; // kalau mau link ke user existing (opsional)
 
   if (!code) return res.status(400).json({ error: "Missing code" });
 
@@ -65,18 +65,15 @@ router.get("/callback", async (req, res) => {
       : 0;
     const membershipStatus = membership?.attributes?.patron_status || "free";
 
-    // 3️⃣ Cek apakah sudah pernah login Patreon sebelumnya
+    // 3️⃣ Upsert ke user_patreon (link akun)
     const { data: existingPatreon } = await supabase
       .from("user_patreon")
       .select("id")
       .eq("patreon_id", patreonId)
       .maybeSingle();
 
-    let patreonLink;
-
     if (existingPatreon) {
-      // 🔁 Update record lama
-      const { data, error } = await supabase
+      await supabase
         .from("user_patreon")
         .update({
           user_id,
@@ -92,104 +89,34 @@ router.get("/callback", async (req, res) => {
           patreon_data: userRes.data,
           updated_at: new Date().toISOString(),
         })
-        .eq("patreon_id", patreonId)
-        .select()
-        .maybeSingle();
-
-      if (error) throw error;
-      patreonLink = data;
+        .eq("patreon_id", patreonId);
     } else {
-      // 🆕 Login pertama kali
-      const { data, error } = await supabase
-        .from("user_patreon")
-        .insert([
-          {
-            user_id,
-            patreon_id: patreonId,
-            email,
-            full_name: fullName,
-            avatar_url: avatarUrl,
-            tier_name: tierName,
-            tier_amount: tierAmount,
-            membership_status: membershipStatus,
-            access_token,
-            refresh_token,
-            expires_in,
-            patreon_data: userRes.data,
-            updated_at: new Date().toISOString(),
-          },
-        ])
-        .select()
-        .maybeSingle();
-
-      if (error) throw error;
-      patreonLink = data;
-    }
-
-    // 4️⃣ User table logic
-    const PUBLIC_MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
-    const DEFAULT_PROFILE = `${PUBLIC_MEDIA_URL}/profile_picture/Candle.webp`;
-
-    const { data: freeTier } = await supabase
-      .from("tiers")
-      .select("id, name, character_limit")
-      .eq("slug", "free")
-      .maybeSingle();
-
-    let { data: existingUser } = await supabase
-      .from("users")
-      .select("*")
-      .or(
-        `patreon_id.eq.${patreonId},email.eq.${email}${
-          user_id ? `,clerk_id.eq.${user_id}` : ""
-        }`
-      )
-      .maybeSingle();
-
-    let finalUser = existingUser;
-
-    if (!existingUser) {
-      // 🔹 Buat user baru
-      const { data: newUser, error: insertError } = await supabase
-        .from("users")
-        .insert([
-          {
-            email,
-            name: fullName,
-            username: fullName,
-            role: "user",
-            patreon_id: patreonId,
-            tier_id: freeTier?.id,
-            tier: tierName || freeTier?.name,
-            character_limit: freeTier?.character_limit,
-            tier_expired_at: null,
-            profile_picture: avatarUrl || DEFAULT_PROFILE,
-          },
-        ])
-        .select()
-        .maybeSingle();
-
-      if (insertError) throw insertError;
-      finalUser = newUser;
-    } else {
-      // 🔹 Update data user lama (jangan ganti foto jika sudah punya)
-      const newProfile =
-        existingUser.profile_picture &&
-        !existingUser.profile_picture.includes("Candle.webp")
-          ? existingUser.profile_picture
-          : avatarUrl || existingUser.profile_picture;
-
-      await supabase
-        .from("users")
-        .update({
+      await supabase.from("user_patreon").insert([
+        {
+          user_id,
           patreon_id: patreonId,
-          profile_picture: newProfile,
-          tier: tierName || existingUser.tier,
-        })
-        .eq("id", existingUser.id);
-
-      finalUser = { ...existingUser, patreon_id: patreonId };
+          email,
+          full_name: fullName,
+          avatar_url: avatarUrl,
+          tier_name: tierName,
+          tier_amount: tierAmount,
+          membership_status: membershipStatus,
+          access_token,
+          refresh_token,
+          expires_in,
+          patreon_data: userRes.data,
+          updated_at: new Date().toISOString(),
+        },
+      ]);
     }
+
+    const finalUser = await upsertUserFromPatreon({
+      patreonId,
+      email,
+      fullName,
+      avatarUrl,
+      tierName,
+    });
 
     // 5️⃣ Generate token JWT
     const accessTokenJWT = jwt.sign(
@@ -211,7 +138,7 @@ router.get("/callback", async (req, res) => {
       maxAge: 9 * 60 * 60 * 1000,
     });
 
-    // ✅ Redirect ke domain frontend setelah sukses
+    // ✅ Redirect ke frontend
     res.redirect(`${process.env.REDIRECT_PATREON_DOMAIN}/patreon-success`);
   } catch (err) {
     console.error("❌ Patreon callback error (details):");
