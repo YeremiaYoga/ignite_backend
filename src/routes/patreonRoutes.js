@@ -299,22 +299,37 @@ router.get("/callback", async (req, res) => {
       { expiresIn: "9h" }
     );
 
+    const userAgent = req.get("User-Agent") || "";
+    const isFirefox = /firefox/i.test(userAgent);
     const isProd = process.env.NODE_ENV === "production";
 
-    res.cookie("ignite_access_token", accessTokenJWT, {
-      httpOnly: true,
-      secure: isProd ? true : false, // ✅ dev: false, prod: true
-      sameSite: isProd ? "none" : "lax", // ✅ prod butuh "none" kalau cross-domain
-      domain: isProd ? ".projectignite.web.id" : undefined, // ✅ jangan set domain di localhost
-      maxAge: 9 * 60 * 60 * 1000,
-    });
+    // --------------
+    // 🔥 CONFIG KHUSUS FIREFOX
+    // --------------
+    // Firefox TIDAK akan menerima cookie Secure=true kalau bukan HTTPS beneran
+    if (isFirefox) {
+      console.log("🔥 Setting cookie khusus Firefox");
 
-    // res.cookie("ignite_access_token", accessTokenJWT, {
-    //   httpOnly: true,
-    //   secure: true,
-    //   sameSite: "none",
-    //   maxAge: 9 * 60 * 60 * 1000,
-    // });
+      res.cookie("ignite_access_token", accessTokenJWT, {
+        httpOnly: true,
+        secure: isProd, // Prod: true, Dev: false (Firefox strict!)
+        sameSite: isProd ? "none" : "lax", // Dev: 'lax', Prod: 'none'
+        domain: isProd ? ".projectignite.web.id" : undefined,
+        maxAge: 9 * 60 * 60 * 1000,
+      });
+    } else {
+      // --------------
+      // 🌐 CONFIG UNTUK CHROME, EDGE, SAFARI, DLL
+      // --------------
+      console.log("🌐 Setting cookie untuk non-Firefox");
+
+      res.cookie("ignite_access_token", accessTokenJWT, {
+        httpOnly: true,
+        secure: true, // Chrome santai, localhost juga biasanya oke
+        sameSite: "none", // Chrome oke, Firefox yang bermasalah
+        maxAge: 9 * 60 * 60 * 1000,
+      });
+    }
 
     // ✅ Redirect ke frontend
     res.redirect(`${process.env.REDIRECT_PATREON_DOMAIN}/patreon-success`);
