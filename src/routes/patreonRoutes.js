@@ -24,7 +24,9 @@ router.get("/auth", (req, res) => {
 // 🔹 2️⃣ Callback dari Patreon
 router.get("/callback", async (req, res) => {
   const { code, state } = req.query;
-  const user_id = state === "guest" ? null : state; // kalau mau link ke user existing (opsional)
+
+  // user_id dari state (kalau frontend kirim ?user_id=...)
+  const userIdFromState = state === "guest" ? null : state;
 
   if (!code) return res.status(400).json({ error: "Missing code" });
 
@@ -58,6 +60,7 @@ router.get("/callback", async (req, res) => {
     const fullName = patreonUser?.attributes?.full_name || "Patreon User";
     const avatarUrl = patreonUser?.attributes?.image_url || null;
 
+    // memberships bisa kosong → kasih default aman
     const membership = userRes.data?.included?.[0];
     const tierName = membership?.attributes?.patron_status || "free";
     const tierAmount = membership?.attributes?.currently_entitled_amount_cents
@@ -65,51 +68,12 @@ router.get("/callback", async (req, res) => {
       : 0;
     const membershipStatus = membership?.attributes?.patron_status || "free";
 
-    // 3️⃣ Upsert ke user_patreon (link akun)
-    const { data: existingPatreon } = await supabase
-      .from("user_patreon")
-      .select("id")
-      .eq("patreon_id", patreonId)
-      .maybeSingle();
-
-    if (existingPatreon) {
-      await supabase
-        .from("user_patreon")
-        .update({
-          user_id,
-          email,
-          full_name: fullName,
-          avatar_url: avatarUrl,
-          tier_name: tierName,
-          tier_amount: tierAmount,
-          membership_status: membershipStatus,
-          access_token,
-          refresh_token,
-          expires_in,
-          patreon_data: userRes.data,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("patreon_id", patreonId);
-    } else {
-      await supabase.from("user_patreon").insert([
-        {
-          user_id,
-          patreon_id: patreonId,
-          email,
-          full_name: fullName,
-          avatar_url: avatarUrl,
-          tier_name: tierName,
-          tier_amount: tierAmount,
-          membership_status: membershipStatus,
-          access_token,
-          refresh_token,
-          expires_in,
-          patreon_data: userRes.data,
-          updated_at: new Date().toISOString(),
-        },
-      ]);
+    if (!patreonId) {
+      console.error("❌ Tidak ada patreonId di response Patreon:", userRes.data);
+      return res.status(500).json({ error: "Invalid Patreon response" });
     }
 
+    // 3️⃣ Upsert user utama (tabel users) dari Patreon
     const finalUser = await upsertUserFromPatreon({
       patreonId,
       email,
@@ -118,7 +82,54 @@ router.get("/callback", async (req, res) => {
       tierName,
     });
 
-    // 5️⃣ Generate token JWT
+    // Kalau frontend kirim user_id (user sudah login), pakai itu.
+    // Kalau tidak, fallback ke finalUser.id (user baru dari Patreon).
+    const linkedUserId = userIdFromState || finalUser?.id || null;
+
+    // 4️⃣ Upsert ke user_patreon (link akun Patreon ↔ Ignite)
+    const { data: existingPatreon } = await supabase
+      .from("user_patreon")
+      .select("id, user_id")
+      .eq("patreon_id", patreonId)
+      .maybeSingle();
+
+    const basePatch = {
+      email,
+      full_name: fullName,
+      avatar_url: avatarUrl,
+      tier_name: tierName,
+      tier_amount: tierAmount,
+      membership_status: membershipStatus,
+      access_token,
+      refresh_token,
+      expires_in,
+      patreon_data: userRes.data,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (existingPatreon) {
+      // kalau sudah ada, update data + user_id (kalau ada linkedUserId)
+      const patch = {
+        ...basePatch,
+        ...(linkedUserId ? { user_id: linkedUserId } : {}),
+      };
+
+      await supabase
+        .from("user_patreon")
+        .update(patch)
+        .eq("patreon_id", patreonId);
+    } else {
+      // kalau belum ada, insert row baru
+      await supabase.from("user_patreon").insert([
+        {
+          user_id: linkedUserId,
+          patreon_id: patreonId,
+          ...basePatch,
+        },
+      ]);
+    }
+
+    // 5️⃣ Generate token JWT untuk Ignite
     const accessTokenJWT = jwt.sign(
       {
         id: finalUser.id,
@@ -131,10 +142,14 @@ router.get("/callback", async (req, res) => {
       { expiresIn: "9h" }
     );
 
+    const isProd = process.env.NODE_ENV === "production";
+
+    // 6️⃣ Set cookie (compatible Chrome + Firefox)
     res.cookie("ignite_access_token", accessTokenJWT, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: isProd,                         // dev: false, prod: true
+      sameSite: isProd ? "none" : "lax",     // prod: bisa cross-site
+      domain: isProd ? ".projectignite.web.id" : undefined, // sesuaikan domain utama
       maxAge: 9 * 60 * 60 * 1000,
     });
 
