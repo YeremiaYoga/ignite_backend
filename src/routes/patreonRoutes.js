@@ -310,13 +310,13 @@ router.get("/callback", async (req, res) => {
     if (isFirefox) {
       console.log("🔥 Setting cookie khusus Firefox");
 
-  res.cookie("ignite_access_token", accessTokenJWT, {
-  httpOnly: true,
-  secure: false,       
-  sameSite: "lax",     
-  maxAge: 9 * 60 * 60 * 1000,
-});
-
+      res.cookie("ignite_access_token", accessTokenJWT, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        domain: ".projectignite.web.id",
+        maxAge: 9 * 60 * 60 * 1000,
+      });
     } else {
       // --------------
       // 🌐 CONFIG UNTUK CHROME, EDGE, SAFARI, DLL
