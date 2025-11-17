@@ -261,7 +261,7 @@ router.get("/callback", async (req, res) => {
         user_id: linkedUserId, // ignite user id (boleh null)
         patreon_id: patreonId,
         raw_user: userRes.data, // FULL payload Patreon (user + included)
-        raw_token: tokenRes.data, // FULL token response
+        raw_token: tokenRes.data,
         updated_at: now,
       };
 
@@ -301,14 +301,20 @@ router.get("/callback", async (req, res) => {
 
     const isProd = process.env.NODE_ENV === "production";
 
-    // 8️⃣ Set cookie (compatible Chrome + Firefox)
     res.cookie("ignite_access_token", accessTokenJWT, {
       httpOnly: true,
-      secure: isProd, // dev: false, prod: true
-      sameSite: isProd ? "none" : "lax", // prod: bisa cross-site
-      domain: isProd ? ".projectignite.web.id" : undefined, // sesuaikan domain utama
+      secure: isProd ? true : false, // ✅ dev: false, prod: true
+      sameSite: isProd ? "none" : "lax", // ✅ prod butuh "none" kalau cross-domain
+      domain: isProd ? ".projectignite.web.id" : undefined, // ✅ jangan set domain di localhost
       maxAge: 9 * 60 * 60 * 1000,
     });
+
+    // res.cookie("ignite_access_token", accessTokenJWT, {
+    //   httpOnly: true,
+    //   secure: true,
+    //   sameSite: "none",
+    //   maxAge: 9 * 60 * 60 * 1000,
+    // });
 
     // ✅ Redirect ke frontend
     res.redirect(`${process.env.REDIRECT_PATREON_DOMAIN}/patreon-success`);
