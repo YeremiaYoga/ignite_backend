@@ -301,14 +301,14 @@ router.get("/callback", async (req, res) => {
 
     const userAgent = req.get("User-Agent") || "";
     const isFirefox = /firefox/i.test(userAgent);
-    const isProd = process.env.NODE_ENV === "production";
 
     // --------------
     // 🔥 CONFIG KHUSUS FIREFOX
     // --------------
     // Firefox TIDAK akan menerima cookie Secure=true kalau bukan HTTPS beneran
+    console.log(isFirefox);
     if (isFirefox) {
-
+      console.log(isFirefox);
       res.cookie("ignite_access_token", accessTokenJWT, {
         httpOnly: true,
         secure: false,
