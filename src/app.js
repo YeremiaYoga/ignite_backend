@@ -23,7 +23,7 @@ import dndSourceRoutes from "./routes/dndSourceRoutes.js";
 import speciesGroupTypeRoutes from "./routes/speciesGroupTypeRoutes.js";
 import adminTraitRoutes from "./routes/adminTraitRoutes.js";
 
-import traitModifierRoutes from "./routes/traitModifierRoutes.js";
+import modifierRouter from "./routes/modifierRoutes.js";
 
 import patreonRoutes from "./routes/patreonRoutes.js";
 
@@ -80,7 +80,8 @@ app.use("/tiers", tierRoutes);
 
 app.use("/admin/species", adminSpeciesRoutes);
 app.use("/admin/trait", adminTraitRoutes);
-app.use("/admin/trait-modifier", traitModifierRoutes);
+
+app.use("/admin/modifiers", modifierRouter);
 
 app.use("/dnd-source", dndSourceRoutes);
 app.use("/species-group-type", speciesGroupTypeRoutes);

@@ -11,12 +11,39 @@ const CLIENT_ID = process.env.PATREON_CLIENT_ID;
 const CLIENT_SECRET = process.env.PATREON_CLIENT_SECRET;
 const REDIRECT_URI = process.env.PATREON_REDIRECT_URI;
 
+/**
+ * 🔧 Scope lama (minimal)
+ * const RAW_SCOPE = "identity identity[email] campaigns.members";
+ *
+ * 🔧 Scope baru (lebih lengkap):
+ *  - identity + email + memberships
+ *  - akses campaign + members
+ *  - alamat & email member
+ */
+const PATREON_SCOPE = [
+  "identity",
+  "identity[email]",
+  "identity.memberships",
+  "campaigns",
+  "campaigns.members",
+  "campaigns.members[email]",
+  "campaigns.members.address",
+].join(" ");
+
 // 🔹 1️⃣ Redirect ke Patreon (OAuth start)
 router.get("/auth", (req, res) => {
   const { user_id } = req.query;
+
+  // ❌ VERSI LAMA (disimpan sebagai referensi)
+  // const url = `https://www.patreon.com/oauth2/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
+  //   REDIRECT_URI
+  // )}&scope=identity%20identity[email]%20campaigns.members`;
+
+  // ✅ VERSI BARU DENGAN SCOPE LEBIH LENGKAP
   const url = `https://www.patreon.com/oauth2/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
     REDIRECT_URI
-  )}&scope=identity%20identity[email]%20campaigns.members`;
+  )}&scope=${encodeURIComponent(PATREON_SCOPE)}`;
+
   const state = encodeURIComponent(user_id || "guest");
   res.redirect(`${url}&state=${state}`);
 });
@@ -48,20 +75,98 @@ router.get("/callback", async (req, res) => {
 
     const { access_token, refresh_token, expires_in } = tokenRes.data;
 
-    // 2️⃣ Ambil data user Patreon
+    /**
+     * ❌ VERSI LAMA — contoh minimal (disimpan sebagai referensi)
+     *
+     * const userRes = await axios.get(
+     *   "https://www.patreon.com/api/oauth2/v2/identity?include=memberships&fields%5Buser%5D=full_name,email,image_url",
+     *   { headers: { Authorization: `Bearer ${access_token}` } }
+     * );
+     */
+
+    /**
+     * ✅ VERSI BARU — ambil data LEBIH LENGKAP (user, memberships, tiers, campaign, dll)
+     *    TANPA error 400:
+     *    - pakai `fields[member]` (BUKAN `fields[membership]`)
+     *    - hapus `fields[campaign]` yang bikin error
+     */
     const userRes = await axios.get(
-      "https://www.patreon.com/api/oauth2/v2/identity?include=memberships&fields%5Buser%5D=full_name,email,image_url",
-      { headers: { Authorization: `Bearer ${access_token}` } }
+      "https://www.patreon.com/api/oauth2/v2/identity",
+      {
+        headers: { Authorization: `Bearer ${access_token}` },
+        params: {
+          // 👉 relationships / include yang kaya:
+          include: [
+            "memberships",
+            "memberships.campaign",
+            "memberships.currently_entitled_tiers",
+          ].join(","),
+
+          // 👉 semua field user yang berguna
+          "fields[user]": [
+            "full_name",
+            "first_name",
+            "last_name",
+            "email",
+            "image_url",
+            "thumb_url",
+            "url",
+            "about",
+            "social_connections",
+            "vanity",
+            "created",
+          ].join(","),
+
+          // ⚠️ PENTING: harus `member`, bukan `membership`
+          "fields[member]": [
+            "full_name",
+            "patron_status",
+            "is_follower",
+            "currently_entitled_amount_cents",
+            "lifetime_support_cents",
+            "last_charge_date",
+            "last_charge_status",
+            "pledge_relationship_start",
+            "campaign_lifetime_support_cents",
+          ].join(","),
+
+          // 👉 detail tier (kalau ada entitled tiers)
+          "fields[tier]": [
+            "title",
+            "description",
+            "amount_cents",
+            "requires_shipping",
+            "created_at",
+            "published",
+            "unpublished_at",
+          ].join(","),
+          // ❌ sengaja TIDAK pakai "fields[campaign]" karena sebelumnya
+          //    menyebabkan 400 "Invalid value for parameter 'fields[campaign]'"
+        },
+      }
     );
 
+    // ==============================
+    // 3️⃣ Ambil data dasar user
+    // ==============================
     const patreonUser = userRes.data?.data;
     const patreonId = patreonUser?.id;
     const email = patreonUser?.attributes?.email || null;
     const fullName = patreonUser?.attributes?.full_name || "Patreon User";
     const avatarUrl = patreonUser?.attributes?.image_url || null;
 
-    // memberships bisa kosong → kasih default aman
-    const membership = userRes.data?.included?.[0];
+    // 🔍 included sekarang bisa berisi:
+    //  - type: "member"  → membership
+    //  - type: "tier"    → tiers
+    //  - type: "campaign"→ campaign
+    const included = Array.isArray(userRes.data?.included)
+      ? userRes.data.included
+      : [];
+
+    // Cari membership utama (member)
+    const membership =
+      included.find((i) => i.type === "member") || included[0] || null;
+
     const tierName = membership?.attributes?.patron_status || "free";
     const tierAmount = membership?.attributes?.currently_entitled_amount_cents
       ? membership.attributes.currently_entitled_amount_cents / 100
@@ -69,11 +174,14 @@ router.get("/callback", async (req, res) => {
     const membershipStatus = membership?.attributes?.patron_status || "free";
 
     if (!patreonId) {
-      console.error("❌ Tidak ada patreonId di response Patreon:", userRes.data);
+      console.error(
+        "❌ Tidak ada patreonId di response Patreon:",
+        userRes.data
+      );
       return res.status(500).json({ error: "Invalid Patreon response" });
     }
 
-    // 3️⃣ Upsert user utama (tabel users) dari Patreon
+    // 4️⃣ Upsert user utama (tabel users) dari Patreon
     const finalUser = await upsertUserFromPatreon({
       patreonId,
       email,
@@ -86,7 +194,7 @@ router.get("/callback", async (req, res) => {
     // Kalau tidak, fallback ke finalUser.id (user baru dari Patreon).
     const linkedUserId = userIdFromState || finalUser?.id || null;
 
-    // 4️⃣ Upsert ke user_patreon (link akun Patreon ↔ Ignite)
+    // 5️⃣ Upsert ke user_patreon (link akun Patreon ↔ Ignite)
     const { data: existingPatreon } = await supabase
       .from("user_patreon")
       .select("id, user_id")
@@ -103,6 +211,7 @@ router.get("/callback", async (req, res) => {
       access_token,
       refresh_token,
       expires_in,
+      // ⚠️ Masih disimpan juga di user_patreon (snapshot cepat)
       patreon_data: userRes.data,
       updated_at: new Date().toISOString(),
     };
@@ -129,7 +238,55 @@ router.get("/callback", async (req, res) => {
       ]);
     }
 
-    // 5️⃣ Generate token JWT untuk Ignite
+    // 6️⃣ LOGGING PENUH ke tabel patreon_data (FULL SNAPSHOT)
+    try {
+      const now = new Date().toISOString();
+
+      // cek apakah sudah ada log untuk patreon_id ini
+      const { data: existingLog, error: logFetchError } = await supabase
+        .from("patreon_data")
+        .select("id")
+        .eq("patreon_id", patreonId)
+        .maybeSingle();
+
+      if (logFetchError && logFetchError.code !== "PGRST116") {
+        // PGRST116 = no rows found → itu bukan error fatal
+        console.error(
+          "⚠️ Gagal cek existing patreon_data:",
+          logFetchError.message
+        );
+      }
+
+      const payload = {
+        user_id: linkedUserId, // ignite user id (boleh null)
+        patreon_id: patreonId,
+        raw_user: userRes.data, // FULL payload Patreon (user + included)
+        raw_token: tokenRes.data, // FULL token response
+        updated_at: now,
+      };
+
+      if (existingLog) {
+        // 🔁 Kalau sudah ada → UPDATE saja snapshot-nya
+        await supabase
+          .from("patreon_data")
+          .update(payload)
+          .eq("id", existingLog.id);
+      } else {
+        // 🆕 Kalau belum ada → INSERT baru
+        await supabase.from("patreon_data").insert([
+          {
+            ...payload,
+            created_at: now,
+          },
+        ]);
+      }
+    } catch (logErr) {
+      // ⚠️ Jangan blokir login kalau logging gagal
+      console.error("⚠️ Gagal upsert ke patreon_data:", logErr.message);
+    }
+    // 🔺 END patreon_data logging
+
+    // 7️⃣ Generate token JWT untuk Ignite
     const accessTokenJWT = jwt.sign(
       {
         id: finalUser.id,
@@ -144,11 +301,11 @@ router.get("/callback", async (req, res) => {
 
     const isProd = process.env.NODE_ENV === "production";
 
-    // 6️⃣ Set cookie (compatible Chrome + Firefox)
+    // 8️⃣ Set cookie (compatible Chrome + Firefox)
     res.cookie("ignite_access_token", accessTokenJWT, {
       httpOnly: true,
-      secure: isProd,                         // dev: false, prod: true
-      sameSite: isProd ? "none" : "lax",     // prod: bisa cross-site
+      secure: isProd, // dev: false, prod: true
+      sameSite: isProd ? "none" : "lax", // prod: bisa cross-site
       domain: isProd ? ".projectignite.web.id" : undefined, // sesuaikan domain utama
       maxAge: 9 * 60 * 60 * 1000,
     });
@@ -167,7 +324,7 @@ router.get("/callback", async (req, res) => {
   }
 });
 
-// 🔹 Fetch data Patreon link
+// 🔹 Fetch data Patreon link (versi ringkas untuk frontend)
 router.get("/user/:user_id", async (req, res) => {
   const { user_id } = req.params;
   try {
