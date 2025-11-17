@@ -308,11 +308,10 @@ router.get("/callback", async (req, res) => {
     // --------------
     // Firefox TIDAK akan menerima cookie Secure=true kalau bukan HTTPS beneran
     if (isFirefox) {
-      console.log("🔥 Setting cookie khusus Firefox");
 
       res.cookie("ignite_access_token", accessTokenJWT, {
         httpOnly: true,
-        secure: true,
+        secure: false,
         sameSite: "none",
         domain: ".projectignite.web.id",
         maxAge: 9 * 60 * 60 * 1000,
