@@ -30,6 +30,7 @@ import patreonRoutes from "./routes/patreonRoutes.js";
 import announcementRoutes from "./routes/announcementRoutes.js";
 import adminAnnouncementRoutes from "./routes/adminAnnouncementRoutes.js";
 import adminThemeAndGenreCampaignRoutes from "./routes/adminThemeAndGenreCampaignRoutes.js";
+import adminWorldRoutes from "./routes/adminWorldRoutes.js";
 import path from "path";
 const app = express();
 
@@ -95,4 +96,5 @@ app.use("/announcements", announcementRoutes);
 app.use("/admin/announcements", adminAnnouncementRoutes);
 
 app.use("/admin/campaign-master", adminThemeAndGenreCampaignRoutes);
+app.use("/admin/worlds", adminWorldRoutes);
 export default app;
