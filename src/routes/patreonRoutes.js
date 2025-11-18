@@ -311,9 +311,9 @@ router.get("/callback", async (req, res) => {
       console.log(isFirefox);
       res.cookie("ignite_access_token", accessTokenJWT, {
         httpOnly: true,
-        secure: false,
-        sameSite: "none",
-        domain: ".projectignite.web.id",
+        secure: isProd, // prod = true (HARUS HTTPS)
+        sameSite: isProd ? "none" : "lax",
+        path: "/", // penting, jangan lupa
         maxAge: 9 * 60 * 60 * 1000,
       });
     } else {
