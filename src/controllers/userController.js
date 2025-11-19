@@ -7,6 +7,69 @@ import jwt from "jsonwebtoken";
 
 import supabase from "../utils/db.js";
 
+/* 🔹 Helper: generate friend code dengan format PI-1234-5678-9012 */
+function generateFriendCode() {
+  const block = () => String(Math.floor(Math.random() * 10000)).padStart(4, "0");
+  return `PI-${block()}-${block()}-${block()}`;
+}
+
+/* 🔹 Helper: pastikan user punya friend_code yang unik */
+async function ensureFriendCode(userId) {
+  // cek dulu: kalau sudah punya, langsung pakai
+  const { data: existing, error: existingErr } = await supabase
+    .from("users")
+    .select("friend_code")
+    .eq("id", userId)
+    .single();
+
+  if (existingErr) {
+    console.error("❌ Failed to fetch friend_code:", existingErr.message);
+    throw existingErr;
+  }
+
+  if (existing?.friend_code) {
+    return existing.friend_code;
+  }
+
+  // belum ada → generate + update, handle kemungkinan duplicate
+  let attempt = 0;
+  const maxAttempts = 10;
+
+  while (attempt < maxAttempts) {
+    attempt++;
+    const code = generateFriendCode();
+
+    const { data, error } = await supabase
+      .from("users")
+      .update({ friend_code: code })
+      .eq("id", userId)
+      .select("friend_code")
+      .single();
+
+    if (!error && data?.friend_code) {
+      console.log(`✅ Friend code generated for user ${userId}: ${data.friend_code}`);
+      return data.friend_code;
+    }
+
+    const isDuplicate =
+      error &&
+      (error.code === "23505" || // Postgres unique_violation
+        (typeof error.message === "string" &&
+          error.message.includes("duplicate key value")));
+
+    if (isDuplicate) {
+      console.warn(
+        `⚠️ Duplicate friend_code '${code}' on attempt ${attempt}, retrying...`
+      );
+      continue;
+    }
+
+    console.error("❌ Error updating friend_code:", error?.message);
+    throw error;
+  }
+
+  throw new Error("Failed to generate unique friend code after several attempts");
+}
 
 export const loginUser = async (req, res) => {
   try {
@@ -91,6 +154,10 @@ export const loginUser = async (req, res) => {
       }
     }
 
+    // 🔹 Pastikan user punya friend_code (unik, format PI-XXXX-XXXX-XXXX)
+    const friendCode = await ensureFriendCode(user.id);
+    user.friend_code = friendCode;
+
     // 🔐 Buat JWT
     const accessToken = jwt.sign(
       {
@@ -99,6 +166,7 @@ export const loginUser = async (req, res) => {
         username: user.name,
         role: user.role,
         app: "ignite",
+        friend_code: user.friend_code, // optional, kalau mau di pakai di client
       },
       process.env.JWT_SECRET_USER,
       { expiresIn: "9h" }
@@ -126,6 +194,7 @@ export const loginUser = async (req, res) => {
         character_limit: user.character_limit,
         tier_expired_at: user.tier_expired_at,
         profile_picture: user.profile_picture,
+        friend_code: user.friend_code, // 🔹 kirim ke frontend
       },
     });
   } catch (err) {
@@ -165,7 +234,6 @@ export const logoutUserIgnite = async (req, res) => {
   }
 };
 
-
 export const getUser = async (req, res) => {
   try {
     const { clerkId } = req.params;
@@ -175,6 +243,7 @@ export const getUser = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
+    // user di sini sudah termasuk friend_code kalau ada di kolom users
     return res.json({ user });
   } catch (err) {
     console.error("❌ getUser:", err.message);
@@ -222,7 +291,6 @@ export const updateUser = async (req, res) => {
   }
 };
 
-
 export const getUserMe = async (req, res) => {
   try {
     const { userId } = req;
@@ -236,6 +304,7 @@ export const getUserMe = async (req, res) => {
 
     if (error) throw error;
 
+    // di sini juga sudah termasuk friend_code kalau kolomnya ada
     res.json({ user: data });
   } catch (err) {
     console.error("❌ getUserMe error:", err.message);

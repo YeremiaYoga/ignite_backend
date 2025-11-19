@@ -79,6 +79,5 @@ export const verifyAccessToken = (req, res, next) => {
  * 🚪 LOGOUT — Hapus token di sisi frontend (tidak perlu dari server)
  */
 export const logoutUser = async (req, res) => {
-  // Gak perlu hapus cookie, tinggal hapus token di localStorage frontend
   return res.json({ success: true, message: "Logged out successfully" });
 };

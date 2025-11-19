@@ -4,22 +4,16 @@ import jwt from "jsonwebtoken";
 import supabase from "../utils/db.js";
 import dotenv from "dotenv";
 import { upsertUserFromPatreon } from "../models/userModel.js";
+import { generateUniqueFriendCode } from "../utils/friendCode.js"; // 🔹 NEW
+
 dotenv.config();
 const router = express.Router();
 
 const CLIENT_ID = process.env.PATREON_CLIENT_ID;
 const CLIENT_SECRET = process.env.PATREON_CLIENT_SECRET;
 const REDIRECT_URI = process.env.PATREON_REDIRECT_URI;
+const isProd = process.env.NODE_ENV === "production"; // 🔹 biar isProd tidak undefined
 
-/**
- * 🔧 Scope lama (minimal)
- * const RAW_SCOPE = "identity identity[email] campaigns.members";
- *
- * 🔧 Scope baru (lebih lengkap):
- *  - identity + email + memberships
- *  - akses campaign + members
- *  - alamat & email member
- */
 const PATREON_SCOPE = [
   "identity",
   "identity[email]",
@@ -30,16 +24,44 @@ const PATREON_SCOPE = [
   "campaigns.members.address",
 ].join(" ");
 
-// 🔹 1️⃣ Redirect ke Patreon (OAuth start)
+/* 🔹 Helper: pastikan user punya friend_code unik */
+async function ensureFriendCode(userId) {
+  const { data: existing, error: existingErr } = await supabase
+    .from("users")
+    .select("friend_code")
+    .eq("id", userId)
+    .single();
+
+  if (existingErr) {
+    console.error("❌ Failed to fetch friend_code:", existingErr.message);
+    throw existingErr;
+  }
+
+  // sudah punya → langsung pakai
+  if (existing?.friend_code) return existing.friend_code;
+
+  // belum punya → generate unik dan update
+  const newCode = await generateUniqueFriendCode();
+
+  const { data: updated, error: updateErr } = await supabase
+    .from("users")
+    .update({ friend_code: newCode })
+    .eq("id", userId)
+    .select("friend_code")
+    .single();
+
+  if (updateErr) {
+    console.error("❌ Failed to set friend_code:", updateErr.message);
+    throw updateErr;
+  }
+
+  console.log(`✅ Friend code generated for user ${userId}: ${updated.friend_code}`);
+  return updated.friend_code;
+}
+
 router.get("/auth", (req, res) => {
   const { user_id } = req.query;
 
-  // ❌ VERSI LAMA (disimpan sebagai referensi)
-  // const url = `https://www.patreon.com/oauth2/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
-  //   REDIRECT_URI
-  // )}&scope=identity%20identity[email]%20campaigns.members`;
-
-  // ✅ VERSI BARU DENGAN SCOPE LEBIH LENGKAP
   const url = `https://www.patreon.com/oauth2/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
     REDIRECT_URI
   )}&scope=${encodeURIComponent(PATREON_SCOPE)}`;
@@ -75,34 +97,16 @@ router.get("/callback", async (req, res) => {
 
     const { access_token, refresh_token, expires_in } = tokenRes.data;
 
-    /**
-     * ❌ VERSI LAMA — contoh minimal (disimpan sebagai referensi)
-     *
-     * const userRes = await axios.get(
-     *   "https://www.patreon.com/api/oauth2/v2/identity?include=memberships&fields%5Buser%5D=full_name,email,image_url",
-     *   { headers: { Authorization: `Bearer ${access_token}` } }
-     * );
-     */
-
-    /**
-     * ✅ VERSI BARU — ambil data LEBIH LENGKAP (user, memberships, tiers, campaign, dll)
-     *    TANPA error 400:
-     *    - pakai `fields[member]` (BUKAN `fields[membership]`)
-     *    - hapus `fields[campaign]` yang bikin error
-     */
     const userRes = await axios.get(
       "https://www.patreon.com/api/oauth2/v2/identity",
       {
         headers: { Authorization: `Bearer ${access_token}` },
         params: {
-          // 👉 relationships / include yang kaya:
           include: [
             "memberships",
             "memberships.campaign",
             "memberships.currently_entitled_tiers",
           ].join(","),
-
-          // 👉 semua field user yang berguna
           "fields[user]": [
             "full_name",
             "first_name",
@@ -116,8 +120,6 @@ router.get("/callback", async (req, res) => {
             "vanity",
             "created",
           ].join(","),
-
-          // ⚠️ PENTING: harus `member`, bukan `membership`
           "fields[member]": [
             "full_name",
             "patron_status",
@@ -129,8 +131,6 @@ router.get("/callback", async (req, res) => {
             "pledge_relationship_start",
             "campaign_lifetime_support_cents",
           ].join(","),
-
-          // 👉 detail tier (kalau ada entitled tiers)
           "fields[tier]": [
             "title",
             "description",
@@ -140,8 +140,6 @@ router.get("/callback", async (req, res) => {
             "published",
             "unpublished_at",
           ].join(","),
-          // ❌ sengaja TIDAK pakai "fields[campaign]" karena sebelumnya
-          //    menyebabkan 400 "Invalid value for parameter 'fields[campaign]'"
         },
       }
     );
@@ -155,15 +153,10 @@ router.get("/callback", async (req, res) => {
     const fullName = patreonUser?.attributes?.full_name || "Patreon User";
     const avatarUrl = patreonUser?.attributes?.image_url || null;
 
-    // 🔍 included sekarang bisa berisi:
-    //  - type: "member"  → membership
-    //  - type: "tier"    → tiers
-    //  - type: "campaign"→ campaign
     const included = Array.isArray(userRes.data?.included)
       ? userRes.data.included
       : [];
 
-    // Cari membership utama (member)
     const membership =
       included.find((i) => i.type === "member") || included[0] || null;
 
@@ -190,6 +183,9 @@ router.get("/callback", async (req, res) => {
       tierName,
     });
 
+    // 🔹 Pastikan user punya friend_code (unik)
+    const friendCode = await ensureFriendCode(finalUser.id);
+
     // Kalau frontend kirim user_id (user sudah login), pakai itu.
     // Kalau tidak, fallback ke finalUser.id (user baru dari Patreon).
     const linkedUserId = userIdFromState || finalUser?.id || null;
@@ -211,13 +207,11 @@ router.get("/callback", async (req, res) => {
       access_token,
       refresh_token,
       expires_in,
-      // ⚠️ Masih disimpan juga di user_patreon (snapshot cepat)
       patreon_data: userRes.data,
       updated_at: new Date().toISOString(),
     };
 
     if (existingPatreon) {
-      // kalau sudah ada, update data + user_id (kalau ada linkedUserId)
       const patch = {
         ...basePatch,
         ...(linkedUserId ? { user_id: linkedUserId } : {}),
@@ -228,7 +222,6 @@ router.get("/callback", async (req, res) => {
         .update(patch)
         .eq("patreon_id", patreonId);
     } else {
-      // kalau belum ada, insert row baru
       await supabase.from("user_patreon").insert([
         {
           user_id: linkedUserId,
@@ -242,7 +235,6 @@ router.get("/callback", async (req, res) => {
     try {
       const now = new Date().toISOString();
 
-      // cek apakah sudah ada log untuk patreon_id ini
       const { data: existingLog, error: logFetchError } = await supabase
         .from("patreon_data")
         .select("id")
@@ -250,7 +242,6 @@ router.get("/callback", async (req, res) => {
         .maybeSingle();
 
       if (logFetchError && logFetchError.code !== "PGRST116") {
-        // PGRST116 = no rows found → itu bukan error fatal
         console.error(
           "⚠️ Gagal cek existing patreon_data:",
           logFetchError.message
@@ -258,21 +249,19 @@ router.get("/callback", async (req, res) => {
       }
 
       const payload = {
-        user_id: linkedUserId, // ignite user id (boleh null)
+        user_id: linkedUserId,
         patreon_id: patreonId,
-        raw_user: userRes.data, // FULL payload Patreon (user + included)
+        raw_user: userRes.data,
         raw_token: tokenRes.data,
         updated_at: now,
       };
 
       if (existingLog) {
-        // 🔁 Kalau sudah ada → UPDATE saja snapshot-nya
         await supabase
           .from("patreon_data")
           .update(payload)
           .eq("id", existingLog.id);
       } else {
-        // 🆕 Kalau belum ada → INSERT baru
         await supabase.from("patreon_data").insert([
           {
             ...payload,
@@ -281,12 +270,10 @@ router.get("/callback", async (req, res) => {
         ]);
       }
     } catch (logErr) {
-      // ⚠️ Jangan blokir login kalau logging gagal
       console.error("⚠️ Gagal upsert ke patreon_data:", logErr.message);
     }
-    // 🔺 END patreon_data logging
 
-    // 7️⃣ Generate token JWT untuk Ignite
+    // 🔐 Buat JWT (sekarang include friend_code juga kalau mau)
     const accessTokenJWT = jwt.sign(
       {
         id: finalUser.id,
@@ -294,6 +281,7 @@ router.get("/callback", async (req, res) => {
         username: finalUser.name,
         role: finalUser.role,
         app: "ignite",
+        friend_code: friendCode, // 🔹 tambahkan di JWT payload
       },
       process.env.JWT_SECRET_USER,
       { expiresIn: "9h" }
@@ -302,35 +290,27 @@ router.get("/callback", async (req, res) => {
     const userAgent = req.get("User-Agent") || "";
     const isFirefox = /firefox/i.test(userAgent);
 
-    // --------------
-    // 🔥 CONFIG KHUSUS FIREFOX
-    // --------------
-    // Firefox TIDAK akan menerima cookie Secure=true kalau bukan HTTPS beneran
     console.log(isFirefox);
     if (isFirefox) {
       console.log(isFirefox);
       res.cookie("ignite_access_token", accessTokenJWT, {
         httpOnly: true,
-        secure: isProd, // prod = true (HARUS HTTPS)
+        secure: isProd,
         sameSite: isProd ? "none" : "lax",
-        path: "/", // penting, jangan lupa
+        path: "/",
         maxAge: 9 * 60 * 60 * 1000,
       });
     } else {
-      // --------------
-      // 🌐 CONFIG UNTUK CHROME, EDGE, SAFARI, DLL
-      // --------------
       console.log("🌐 Setting cookie untuk non-Firefox");
 
       res.cookie("ignite_access_token", accessTokenJWT, {
         httpOnly: true,
-        secure: true, // Chrome santai, localhost juga biasanya oke
-        sameSite: "none", // Chrome oke, Firefox yang bermasalah
+        secure: true,
+        sameSite: "none",
         maxAge: 9 * 60 * 60 * 1000,
       });
     }
 
-    // ✅ Redirect ke frontend
     res.redirect(`${process.env.REDIRECT_PATREON_DOMAIN}/patreon-success`);
   } catch (err) {
     console.error("❌ Patreon callback error (details):");
@@ -344,7 +324,6 @@ router.get("/callback", async (req, res) => {
   }
 });
 
-// 🔹 Fetch data Patreon link (versi ringkas untuk frontend)
 router.get("/user/:user_id", async (req, res) => {
   const { user_id } = req.params;
   try {

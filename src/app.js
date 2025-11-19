@@ -31,6 +31,12 @@ import announcementRoutes from "./routes/announcementRoutes.js";
 import adminAnnouncementRoutes from "./routes/adminAnnouncementRoutes.js";
 import adminThemeAndGenreCampaignRoutes from "./routes/adminThemeAndGenreCampaignRoutes.js";
 import adminWorldRoutes from "./routes/adminWorldRoutes.js";
+
+
+import realLanguageRoutes from "./routes/realLanguageRoutes.js";
+import platformRoutes from "./routes/platformRoutes.js";
+import gameSystemRoutes from "./routes/gameSystemRoutes.js";
+import friendshipRoutes from "./routes/friendshipRoutes.js";
 import path from "path";
 const app = express();
 
@@ -97,4 +103,11 @@ app.use("/admin/announcements", adminAnnouncementRoutes);
 
 app.use("/admin/campaign-master", adminThemeAndGenreCampaignRoutes);
 app.use("/admin/worlds", adminWorldRoutes);
+
+
+app.use("/real-languages", realLanguageRoutes);
+app.use("/platforms", platformRoutes);
+app.use("/game-systems", gameSystemRoutes);
+
+app.use("/friends", friendshipRoutes);
 export default app;
