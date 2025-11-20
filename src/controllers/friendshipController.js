@@ -1,12 +1,14 @@
 // controllers/friendshipController.js
 import supabase from "../utils/db.js";
+
 import {
   getFriendshipBetween,
   createFriendRequest,
   updateFriendshipById,
   deleteFriendshipBetween,
   listFriendshipsForUser,
-  listPendingFriendshipsForUser,
+  deleteFriendshipById,          // 🆕
+  listPendingFriendshipsForUser
 } from "../models/friendshipModel.js";
 
 /**
@@ -386,5 +388,99 @@ export const listFriendRequests = async (req, res) => {
   } catch (err) {
     console.error("💥 listFriendRequests error:", err);
     return res.status(500).json({ error: "Failed to list friend requests" });
+  }
+};
+
+export const listBlockedFriends = async (req, res) => {
+  try {
+    const me = req.user?.id;
+    if (!me) return res.status(401).json({ error: "Unauthorized" });
+
+    // ambil semua relasi status "blocked"
+    const blocked = await listFriendshipsForUser(me, "blocked");
+
+    if (!blocked.length) {
+      return res.json({ success: true, blocked: [] });
+    }
+
+    // ambil id user yang jadi “teman” (lawan kita)
+    const friendIds = blocked.map((f) =>
+      f.user_a_id === me ? f.user_b_id : f.user_a_id
+    );
+
+    const { data: users, error } = await supabase
+      .from("users")
+      .select("id, email, name, username, profile_picture, friend_code")
+      .in("id", friendIds);
+
+    if (error) {
+      console.error("❌ listBlockedFriends users error:", error.message);
+      return res.status(500).json({ error: "Failed to fetch blocked users" });
+    }
+
+    const friends = blocked.map((f) => {
+      const friendId = f.user_a_id === me ? f.user_b_id : f.user_a_id;
+      const friendUser = users.find((u) => u.id === friendId);
+      return {
+        friendship_id: f.id,
+        friend: friendUser,
+        created_at: f.created_at,
+        blocked_by: f.blocked_by,
+      };
+    });
+
+    return res.json({ success: true, blocked: friends });
+  } catch (err) {
+    console.error("💥 listBlockedFriends error:", err);
+    return res.status(500).json({ error: "Failed to list blocked users" });
+  }
+};
+
+export const unblockUser = async (req, res) => {
+  try {
+    const me = req.user?.id;
+    const { friendship_id } = req.body;
+
+    if (!me) return res.status(401).json({ error: "Unauthorized" });
+    if (!friendship_id) {
+      return res.status(400).json({ error: "friendship_id is required" });
+    }
+
+    const { data: friendship, error } = await supabase
+      .from("friendships")
+      .select("*")
+      .eq("id", friendship_id)
+      .single();
+
+    if (error || !friendship) {
+      console.error("❌ unblockUser fetch error:", error?.message);
+      return res.status(404).json({ error: "Friendship not found" });
+    }
+
+    if (friendship.status !== "blocked") {
+      return res.status(400).json({ error: "Friendship is not blocked" });
+    }
+
+    // opsional: hanya yang nge-block yang boleh unblock
+    if (friendship.blocked_by && friendship.blocked_by !== me) {
+      return res
+        .status(403)
+        .json({ error: "You are not the one who blocked this user" });
+    }
+
+    // ✅ Unblock = balik jadi teman
+    const updated = await updateFriendshipById(friendship_id, {
+      status: "accepted",
+      blocked_by: null,
+    });
+
+    return res.json({
+      success: true,
+      message: "User unblocked and added back as friend",
+      friendship: updated,
+    });
+  } catch (err) {
+    console.error("💥 unblockUser error:", err);
+    return res.status(500).json({ error: "Failed to unblock user" });
   }
 };

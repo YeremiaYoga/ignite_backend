@@ -137,3 +137,16 @@ export async function listFriendshipsForUser(userId, status = "accepted") {
 export async function listPendingFriendshipsForUser(userId) {
   return listFriendshipsForUser(userId, "pending");
 }
+
+
+export async function deleteFriendshipById(id) {
+  const { error } = await supabase
+    .from("friendships")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("❌ deleteFriendshipById error:", error.message);
+    throw error;
+  }
+}

@@ -1,4 +1,3 @@
-
 import express from "express";
 import {
   addFriendByCode,
@@ -7,23 +6,24 @@ import {
   blockUser,
   listFriends,
   listFriendRequests,
+  listBlockedFriends,   // 🆕
+  unblockUser,          // 🆕
 } from "../controllers/friendshipController.js";
 import { verifyUserIgnite } from "../middlewares/verifyUserIgnite.js";
 
 const router = express.Router();
 
-
 router.use(verifyUserIgnite);
 
+router.post("/add-by-code", addFriendByCode);
+router.post("/respond", respondFriendRequest);
+router.delete("/:friendId", removeFriend);
+router.post("/block", blockUser);
+router.post("/unblock", unblockUser);       // 🆕
+router.get("/", listFriends);
+router.get("/requests", listFriendRequests);
+router.get("/blocked", listBlockedFriends); // 🆕
 
-router.get("/", listFriends);            
-router.get("/requests", listFriendRequests); 
-
-router.post("/add-by-code", addFriendByCode);  
-router.post("/respond", respondFriendRequest); 
-router.post("/block", blockUser);              
-
-
-router.delete("/:friendId", removeFriend);     
+// di app.js: app.use("/friends", friendshipRoutes)
 
 export default router;
