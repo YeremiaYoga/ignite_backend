@@ -1,4 +1,4 @@
-// routes/friendshipRoutes.js
+
 import express from "express";
 import {
   addFriendByCode,
@@ -8,18 +8,22 @@ import {
   listFriends,
   listFriendRequests,
 } from "../controllers/friendshipController.js";
-import { verifyUserIgnite } from "../middlewares/verifyUserIgnite.js"; // ganti sesuai punyamu
+import { verifyUserIgnite } from "../middlewares/verifyUserIgnite.js";
 
 const router = express.Router();
 
-// semua route butuh user login
+
 router.use(verifyUserIgnite);
 
-router.post("/friendships/add-by-code", addFriendByCode);
-router.post("/friendships/respond", respondFriendRequest);
-router.delete("/friendships/:friendId", removeFriend);
-router.post("/friendships/block", blockUser);
-router.get("/friendships", listFriends);
-router.get("/friendships/requests", listFriendRequests);
+
+router.get("/", listFriends);            
+router.get("/requests", listFriendRequests); 
+
+router.post("/add-by-code", addFriendByCode);  
+router.post("/respond", respondFriendRequest); 
+router.post("/block", blockUser);              
+
+
+router.delete("/:friendId", removeFriend);     
 
 export default router;

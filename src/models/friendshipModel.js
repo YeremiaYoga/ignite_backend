@@ -3,7 +3,7 @@ import supabase from "../utils/db.js";
 
 /**
  * Normalisasi pasangan user:
- * - user_a_id = yang id-nya lebih kecil
+ * - user_a_id = yang id-nya secara leksikal lebih kecil
  * - user_b_id = yang id-nya lebih besar
  */
 export function normalizePair(userId1, userId2) {
@@ -37,7 +37,7 @@ export async function getFriendshipBetween(userId1, userId2) {
 }
 
 /**
- * Buat request pertemanan baru
+ * Buat request pertemanan baru (status = pending)
  */
 export async function createFriendRequest({
   fromUserId,
@@ -111,6 +111,7 @@ export async function deleteFriendshipBetween(userId1, userId2) {
 
 /**
  * Ambil semua friendship user (opsional filter status)
+ * - status bisa: "accepted", "pending", "blocked", atau null (semua)
  */
 export async function listFriendshipsForUser(userId, status = "accepted") {
   const query = supabase
@@ -128,4 +129,11 @@ export async function listFriendshipsForUser(userId, status = "accepted") {
   }
 
   return data || [];
+}
+
+/**
+ * Shortcut khusus pending request
+ */
+export async function listPendingFriendshipsForUser(userId) {
+  return listFriendshipsForUser(userId, "pending");
 }

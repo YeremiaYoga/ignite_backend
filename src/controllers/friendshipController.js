@@ -6,6 +6,7 @@ import {
   updateFriendshipById,
   deleteFriendshipBetween,
   listFriendshipsForUser,
+  listPendingFriendshipsForUser,
 } from "../models/friendshipModel.js";
 
 /**
@@ -45,12 +46,12 @@ async function getUserByFriendCode(friendCode) {
 }
 
 /**
- * POST /friendships/add-by-code
+ * POST /friends/add-by-code
  * body: { friend_code }
  */
 export const addFriendByCode = async (req, res) => {
   try {
-    const me = req.user?.id; // pastikan middleware auth isi req.user.id
+    const me = req.user?.id;
     const { friend_code } = req.body;
 
     if (!me) {
@@ -101,7 +102,7 @@ export const addFriendByCode = async (req, res) => {
       }
     }
 
-    // buat friend request baru
+    // buat friend request baru (pending)
     const friendship = await createFriendRequest({
       fromUserId: me,
       toUserId: target.id,
@@ -121,7 +122,7 @@ export const addFriendByCode = async (req, res) => {
 };
 
 /**
- * POST /friendships/respond
+ * POST /friends/respond
  * body: { friendship_id, action }  // action: "accept" | "reject"
  */
 export const respondFriendRequest = async (req, res) => {
@@ -195,8 +196,8 @@ export const respondFriendRequest = async (req, res) => {
 };
 
 /**
- * DELETE /friendships/:friendId
- * - Hapus pertemanan antara current user dan friendId
+ * DELETE /friends/:friendId
+ * - Hapus pertemanan antara current user dan friendId (user.id teman)
  */
 export const removeFriend = async (req, res) => {
   try {
@@ -204,7 +205,9 @@ export const removeFriend = async (req, res) => {
     const { friendId } = req.params;
 
     if (!me) return res.status(401).json({ error: "Unauthorized" });
-    if (!friendId) return res.status(400).json({ error: "friendId is required" });
+    if (!friendId) {
+      return res.status(400).json({ error: "friendId is required" });
+    }
 
     const friendship = await getFriendshipBetween(me, friendId);
 
@@ -222,7 +225,7 @@ export const removeFriend = async (req, res) => {
 };
 
 /**
- * POST /friendships/block
+ * POST /friends/block
  * body: { target_user_id }
  */
 export const blockUser = async (req, res) => {
@@ -280,7 +283,7 @@ export const blockUser = async (req, res) => {
 };
 
 /**
- * GET /friendships
+ * GET /friends
  * - List semua teman (status = accepted)
  */
 export const listFriends = async (req, res) => {
@@ -294,7 +297,7 @@ export const listFriends = async (req, res) => {
       return res.json({ success: true, friends: [] });
     }
 
-    // ambil id teman (dari pair)
+    // ambil id teman (dari pair user_a / user_b)
     const friendIds = friendships.map((f) =>
       f.user_a_id === me ? f.user_b_id : f.user_a_id
     );
@@ -327,7 +330,7 @@ export const listFriends = async (req, res) => {
 };
 
 /**
- * GET /friendships/requests
+ * GET /friends/requests
  * - List incoming & outgoing requests (status pending)
  */
 export const listFriendRequests = async (req, res) => {
@@ -335,21 +338,12 @@ export const listFriendRequests = async (req, res) => {
     const me = req.user?.id;
     if (!me) return res.status(401).json({ error: "Unauthorized" });
 
-    const { data, error } = await supabase
-      .from("friendships")
-      .select("*")
-      .eq("status", "pending")
-      .or(`user_a_id.eq.${me},user_b_id.eq.${me}`);
-
-    if (error) {
-      console.error("❌ listFriendRequests error:", error.message);
-      return res.status(500).json({ error: "Failed to fetch requests" });
-    }
+    const pending = await listPendingFriendshipsForUser(me);
 
     const incoming = [];
     const outgoing = [];
 
-    for (const f of data || []) {
+    for (const f of pending || []) {
       if (f.requester_id === me) {
         outgoing.push(f);
       } else {
@@ -359,9 +353,7 @@ export const listFriendRequests = async (req, res) => {
 
     // ambil semua user yang terlibat
     const userIds = Array.from(
-      new Set(
-        (data || []).flatMap((f) => [f.user_a_id, f.user_b_id])
-      )
+      new Set((pending || []).flatMap((f) => [f.user_a_id, f.user_b_id]))
     );
 
     const { data: users, error: userErr } = await supabase
