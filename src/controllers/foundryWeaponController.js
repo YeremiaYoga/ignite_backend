@@ -19,10 +19,10 @@ function normalizeFoundryWeapon(raw) {
 
   const name = raw.name || "Unknown Weapon";
   const type = raw.type || "weapon";
-  const img = raw.img || null;
+  const img  = raw.img || null;
 
   const systemRaw = raw.system ?? {};
-  const effects = Array.isArray(raw.effects) ? raw.effects : [];
+  const effects   = Array.isArray(raw.effects) ? raw.effects : [];
 
   // sekarang system dipakai apa adanya, termasuk source
   const system = systemRaw;
@@ -42,6 +42,8 @@ function normalizeFoundryWeapon(raw) {
  * Body bisa:
  *  - 1 object JSON
  *  - atau array of JSON
+ *
+ * HANYA item dengan type === "weapon" yang diinsert.
  */
 export const importFoundryWeapons = async (req, res) => {
   try {
@@ -63,13 +65,22 @@ export const importFoundryWeapons = async (req, res) => {
     }
 
     const payloads = [];
-    const errors = [];
+    const errors   = [];
 
     for (const raw of items) {
       try {
         // 🔥 Normalisasi Foundry weapon
         const normalized = normalizeFoundryWeapon(raw);
         const { name, type, system } = normalized;
+
+        // ❗ cegah selain type "weapon"
+        if (type !== "weapon") {
+          errors.push({
+            name: name || raw?.name || null,
+            error: `Item type must be "weapon", got "${type}"`,
+          });
+          continue;
+        }
 
         const sysType = system?.type || {};
         const dmgBase = system?.damage?.base || {};
@@ -78,7 +89,7 @@ export const importFoundryWeapons = async (req, res) => {
           name,
           type,
 
-          // 📌 tambahkan raw + format (WAJIB!)
+          // 📌 simpan raw + format
           raw_data: raw,
           format_data: normalized,
 
@@ -118,14 +129,13 @@ export const importFoundryWeapons = async (req, res) => {
   }
 };
 
-
 /**
  * GET /foundry/weapons
  * ?limit=50&offset=0
  */
 export const listFoundryWeaponsHandler = async (req, res) => {
   try {
-    const limit = Number(req.query.limit) || 50;
+    const limit  = Number(req.query.limit) || 50;
     const offset = Number(req.query.offset) || 0;
 
     const rows = await listFoundryWeapons({ limit, offset });
@@ -164,12 +174,11 @@ export const getFoundryWeaponHandler = async (req, res) => {
 
 /**
  * PUT /foundry/weapons/:id/format
- * (sekarang pakai updateFoundryWeapon biasa, bukan format_data lagi)
  */
 export const updateFoundryWeaponFormatHandler = async (req, res) => {
   try {
-    const { id } = req.params;
-    const payload = req.body;
+    const { id }    = req.params;
+    const payload   = req.body;
 
     if (!payload || typeof payload !== "object") {
       return res
@@ -210,12 +219,12 @@ export const deleteFoundryWeaponHandler = async (req, res) => {
 
 /**
  * GET /foundry/weapons/:id/export?mode=raw|format
- * Sekarang export langsung row dari DB (karena model lo udah nggak punya raw_data/format_data)
+ * (di sini lo masih export full row — kalau mau nanti bisa diganti kayak tools/weapon versi export model)
  */
 export async function exportFoundryWeaponHandler(req, res) {
   try {
-    const { id } = req.params;
-    const { mode = "raw" } = req.query; // mode masih diterima, tapi sekarang nggak dibedain
+    const { id }        = req.params;
+    const { mode = "raw" } = req.query;
 
     const row = await getFoundryWeaponById(id);
     if (!row) {
