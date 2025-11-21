@@ -7,8 +7,8 @@ import {
   updateFriendshipById,
   deleteFriendshipBetween,
   listFriendshipsForUser,
-  deleteFriendshipById,          // 🆕
-  listPendingFriendshipsForUser
+  deleteFriendshipById, // 🆕
+  listPendingFriendshipsForUser,
 } from "../models/friendshipModel.js";
 
 /**
@@ -90,17 +90,13 @@ export const addFriendByCode = async (req, res) => {
 
     if (existing) {
       if (existing.status === "accepted") {
-        return res.status(400).json({ error: "You are already friends" });
+        return res.status(400).send("You are already friends");
       }
       if (existing.status === "pending") {
-        return res
-          .status(400)
-          .json({ error: "There is already a pending request" });
+        return res.status(400).send("There is already a pending request");
       }
       if (existing.status === "blocked") {
-        return res
-          .status(400)
-          .json({ error: "This relationship has been blocked" });
+        return res.status(400).send("Blocked");
       }
     }
 
@@ -158,7 +154,6 @@ export const respondFriendRequest = async (req, res) => {
       return res.status(400).json({ error: "Request is not pending" });
     }
 
-    // me harus salah satu dari user pair
     const imInThis = me === user_a_id || me === user_b_id;
     if (!imInThis) {
       return res
@@ -166,15 +161,27 @@ export const respondFriendRequest = async (req, res) => {
         .json({ error: "You are not part of this friendship" });
     }
 
-    // yang bisa accept / reject hanya yang menerima, bukan requester
     if (me === requester_id) {
       return res
         .status(403)
         .json({ error: "Requester cannot accept their own request" });
     }
 
+    // 🆕 aksi BLOCK dari incoming request
+    if (action === "block") {
+      const updated = await updateFriendshipById(friendship_id, {
+        status: "blocked",
+        blocked_by: me,
+      });
+
+      return res.json({
+        success: true,
+        message: "User blocked",
+        friendship: updated,
+      });
+    }
+
     if (action === "reject") {
-      // hapus row
       await supabase.from("friendships").delete().eq("id", friendship_id);
       return res.json({ success: true, message: "Friend request rejected" });
     }
@@ -396,14 +403,16 @@ export const listBlockedFriends = async (req, res) => {
     const me = req.user?.id;
     if (!me) return res.status(401).json({ error: "Unauthorized" });
 
-    // ambil semua relasi status "blocked"
-    const blocked = await listFriendshipsForUser(me, "blocked");
+    // ambil semua relasi status "blocked" yang melibatkan gue
+    let blocked = await listFriendshipsForUser(me, "blocked");
+
+    // 🆕 hanya tampilkan kalau GUE yang nge-block
+    blocked = (blocked || []).filter((f) => f.blocked_by === me);
 
     if (!blocked.length) {
       return res.json({ success: true, blocked: [] });
     }
 
-    // ambil id user yang jadi “teman” (lawan kita)
     const friendIds = blocked.map((f) =>
       f.user_a_id === me ? f.user_b_id : f.user_a_id
     );

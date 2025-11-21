@@ -7,6 +7,12 @@ import {
   updateFoundryTool,
 } from "../models/foundryToolModel.js";
 
+const MEDIA_BASE =
+  process.env.PUBLIC_MEDIA_URL ||
+  process.env.NEXT_PUBLIC_MEDIA_URL ||
+  process.env.MEDIA_URL ||
+  "";
+
 /**
  * Normalisasi raw JSON Foundry untuk tool:
  *  - pastikan name, type, img, system, effects ada
@@ -31,6 +37,53 @@ function normalizeFoundryTool(raw) {
     system,
     effects,
   };
+}
+
+/**
+ * Resolve image URL untuk tool:
+ * - ambil dari system.img (fallback ke img di root kalau perlu)
+ * - kalau sudah http/https => pakai langsung
+ * - kalau diawali "systems/dnd5e/icons/" => buang prefix itu, sisanya jadi:
+ *     MEDIA_BASE/foundryvtt/<sisa_path>
+ * - kalau diawali "icons/" => buang "icons/", sisanya jadi:
+ *     MEDIA_BASE/foundryvtt/<sisa_path>
+ */
+function resolveToolImage(raw, normalized) {
+  const system = normalized.system || {};
+  let src = system.img || normalized.img || raw.img || null;
+
+  if (!src) return null;
+  src = String(src).trim();
+  if (!src) return null;
+
+  // Sudah full URL
+  if (src.startsWith("http://") || src.startsWith("https://")) {
+    return src;
+  }
+
+  // Normalisasi path
+  let path = src.replace(/^\/+/, ""); // buang leading "/"
+
+  // systems/dnd5e/icons/... => buang sampai "icons/"
+  const systemsPrefix = "systems/dnd5e/icons/";
+  if (path.startsWith(systemsPrefix)) {
+    path = path.slice(systemsPrefix.length);
+  }
+
+  // icons/... => buang "icons/"
+  const iconsPrefix = "icons/";
+  if (path.startsWith(iconsPrefix)) {
+    path = path.slice(iconsPrefix.length);
+  }
+
+  //   const base = MEDIA_BASE.replace(/\/+$/, ""); // buang trailing /
+  //   if (!base) {
+  //     // fallback relatif kalau env belum di-set
+  //     return `/foundryvtt/${path}`;
+  //   }
+
+  //   return `${base}/foundryvtt/${path}`;
+  return `${normalized.img}`;
 }
 
 /**
@@ -70,13 +123,27 @@ export const importFoundryTools = async (req, res) => {
         const normalized = normalizeFoundryTool(raw);
         const { name, type, system } = normalized;
 
+        // ❌ hanya terima type "tool"
+        if (type !== "tool") {
+          errors.push({
+            name,
+            error: `Invalid type "${type}", only "tool" is allowed`,
+          });
+          continue;
+        }
+
         const sysType = system?.type || {};
+        const image = resolveToolImage(raw, normalized);
 
         payloads.push({
           name,
           type,
 
-          // mapping sesuai aturan lo:
+          // JSONB di DB
+          raw_data: raw,
+          format_data: normalized,
+
+          // mapping sesuai aturan:
           // rarity    = system.rarity
           // base_item = system.type.baseItem
           // tool_type = system.type.value
@@ -89,6 +156,9 @@ export const importFoundryTools = async (req, res) => {
           properties: system?.properties ?? null,
           weight: system?.weight?.value ?? null,
           attunement: system?.attunement ?? null,
+
+        //   image: image ?? null,
+          image: null,
         });
       } catch (err) {
         console.error("💥 Normalisasi tool gagal:", err);
@@ -200,29 +270,34 @@ export const deleteFoundryToolHandler = async (req, res) => {
 };
 
 /**
- * GET /foundry/tools/:id/export?mode=raw
- *
- * Untuk sekarang export langsung row dari DB.
- * Kalau nanti lo mau simpan raw_data Foundry di tabel, handler ini bisa di-upgrade.
+ * GET /foundry/tools/:id/export?mode=raw|format
+ * - Kalau ada raw_data / format_data, pakai itu
+ * - Fallback ke row penuh kalau nggak ada
  */
 export async function exportFoundryToolHandler(req, res) {
   try {
     const { id } = req.params;
-    const { mode = "raw" } = req.query; // disimpan buat konsistensi, walau sekarang belum beda
+    const { mode = "raw" } = req.query;
 
     const row = await getFoundryToolById(id);
     if (!row) {
       return res.status(404).json({ error: "Tool not found" });
     }
 
-    const exported = row;
-    const filename = `${row.name.replace(/\s+/g, "_")}_${mode}.json`;
+    let exported;
+    if (mode === "raw" && row.raw_data) {
+      exported = row.raw_data;
+    } else if (mode === "format" && row.format_data) {
+      exported = row.format_data;
+    } else {
+      exported = row;
+    }
+
+    const safeMode = mode === "format" ? "format" : "raw";
+    const filename = `${row.name.replace(/\s+/g, "_")}_${safeMode}.json`;
 
     res.setHeader("Content-Type", "application/json");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${filename}"`
-    );
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
 
     return res.status(200).send(JSON.stringify(exported, null, 2));
   } catch (err) {

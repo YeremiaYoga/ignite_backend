@@ -7,10 +7,48 @@ import {
   updateFoundryWeapon,
 } from "../models/foundryWeaponModel.js";
 
+const PUBLIC_MEDIA_URL = (process.env.PUBLIC_MEDIA_URL || "").replace(/\/$/, "");
+
+/**
+ * Resolve image untuk kolom "image" di DB:
+ * - ambil dari system.img (fallback ke top-level img)
+ * - kalau sudah http/https → pakai langsung
+ * - kalau path lokal:
+ *    - "icons/..." → ganti jadi "foundryvtt/..."
+ *    - prefix dengan PUBLIC_MEDIA_URL/
+ */
+function resolveWeaponImage(systemImg, fallbackImg) {
+  let img = systemImg || fallbackImg;
+  if (!img) return null;
+
+  // kalau sudah URL penuh
+  if (/^https?:\/\//i.test(img)) {
+    return img;
+  }
+
+  // --- RULE BARU ---
+  // cari "icons/" dan buang semua sebelum itu
+  const cutIndex = img.indexOf("icons/");
+  if (cutIndex !== -1) {
+    img = img.substring(cutIndex); // hasil: icons/....
+  }
+
+  // ubah prefix icons → foundryvtt
+  img = img.replace(/^icons/, "foundryvtt");
+
+  // prefix PUBLIC_MEDIA_URL
+  if (PUBLIC_MEDIA_URL) {
+    return `${PUBLIC_MEDIA_URL}/${img}`;
+  }
+
+  return img;
+}
+
+
 /**
  * Normalisasi raw JSON dari Foundry:
  *  - pastikan name, type, img, system, effects ada
- *  - TIDAK lagi trim system.source (dikembalikan seperti semula)
+ *  - system.source dibiarkan apa adanya
  */
 function normalizeFoundryWeapon(raw) {
   if (!raw || typeof raw !== "object") {
@@ -24,7 +62,7 @@ function normalizeFoundryWeapon(raw) {
   const systemRaw = raw.system ?? {};
   const effects   = Array.isArray(raw.effects) ? raw.effects : [];
 
-  // sekarang system dipakai apa adanya, termasuk source
+  // system dipakai apa adanya (termasuk source)
   const system = systemRaw;
 
   return {
@@ -71,9 +109,9 @@ export const importFoundryWeapons = async (req, res) => {
       try {
         // 🔥 Normalisasi Foundry weapon
         const normalized = normalizeFoundryWeapon(raw);
-        const { name, type, system } = normalized;
+        const { name, type, system, img } = normalized;
 
-        // ❗ cegah selain type "weapon"
+        // ❗ Hanya type "weapon" yang boleh masuk
         if (type !== "weapon") {
           errors.push({
             name: name || raw?.name || null,
@@ -85,11 +123,14 @@ export const importFoundryWeapons = async (req, res) => {
         const sysType = system?.type || {};
         const dmgBase = system?.damage?.base || {};
 
+        // 🆕 hitung image dari system.img (fallback raw.img)
+        const image = resolveWeaponImage(system?.img, img);
+
         payloads.push({
           name,
           type,
 
-          // 📌 simpan raw + format
+          // simpan raw + format
           raw_data: raw,
           format_data: normalized,
 
@@ -102,6 +143,9 @@ export const importFoundryWeapons = async (req, res) => {
           properties: system?.properties ?? null,
           weight: system?.weight?.value ?? null,
           mastery: system?.mastery ?? null,
+
+          // kolom image di DB
+          image,
         });
       } catch (err) {
         console.error("💥 Normalisasi weapon gagal:", err);
@@ -174,11 +218,12 @@ export const getFoundryWeaponHandler = async (req, res) => {
 
 /**
  * PUT /foundry/weapons/:id/format
+ * (sekarang pakai updateFoundryWeapon biasa, boleh edit image juga)
  */
 export const updateFoundryWeaponFormatHandler = async (req, res) => {
   try {
-    const { id }    = req.params;
-    const payload   = req.body;
+    const { id }   = req.params;
+    const payload  = req.body;
 
     if (!payload || typeof payload !== "object") {
       return res
@@ -219,7 +264,7 @@ export const deleteFoundryWeaponHandler = async (req, res) => {
 
 /**
  * GET /foundry/weapons/:id/export?mode=raw|format
- * (di sini lo masih export full row — kalau mau nanti bisa diganti kayak tools/weapon versi export model)
+ * (sekarang masih export full row; kalau mau bisa diubah ke raw_data/format_data)
  */
 export async function exportFoundryWeaponHandler(req, res) {
   try {

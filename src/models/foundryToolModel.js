@@ -16,7 +16,7 @@ export async function insertFoundryTool(payload) {
     weight,
     attunement,
 
-    // untuk kolom JSONB di DB
+    image, // 🆕 IMAGE
     raw_data,
     format_data,
   } = payload;
@@ -34,6 +34,7 @@ export async function insertFoundryTool(payload) {
       weight,
       attunement,
 
+      image: image ?? null,
       raw_data: raw_data ?? {},
       format_data: format_data ?? {},
     })
@@ -65,6 +66,8 @@ export async function bulkInsertFoundryTools(items) {
     weight: it.weight ?? null,
     attunement: it.attunement ?? null,
 
+    // image: it.image ?? null,
+    image: null,
     raw_data: it.raw_data ?? {},
     format_data: it.format_data ?? {},
   }));
@@ -91,7 +94,7 @@ export async function listFoundryTools({ limit = 50, offset = 0 } = {}) {
 
   const { data, error } = await supabase
     .from("foundry_tools")
-    .select("*")
+    .select("*") // image ikut keluar otomatis
     .order("created_at", { ascending: false })
     .range(from, to);
 
@@ -147,10 +150,7 @@ export async function updateFoundryTool(id, payload) {
  * Delete tool
  */
 export async function deleteFoundryTool(id) {
-  const { error } = await supabase
-    .from("foundry_tools")
-    .delete()
-    .eq("id", id);
+  const { error } = await supabase.from("foundry_tools").delete().eq("id", id);
 
   if (error) {
     console.error("❌ deleteFoundryTool error:", error.message);
