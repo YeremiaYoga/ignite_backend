@@ -67,6 +67,7 @@ export const importFoundryWeapons = async (req, res) => {
 
     for (const raw of items) {
       try {
+        // 🔥 Normalisasi Foundry weapon
         const normalized = normalizeFoundryWeapon(raw);
         const { name, type, system } = normalized;
 
@@ -77,7 +78,11 @@ export const importFoundryWeapons = async (req, res) => {
           name,
           type,
 
-          // kolom di foundry_weapons (sesuai mapping lo)
+          // 📌 tambahkan raw + format (WAJIB!)
+          raw_data: raw,
+          format_data: normalized,
+
+          // kolom tambahan untuk foundry_weapons
           rarity: system?.rarity ?? null,
           base_item: sysType.baseItem ?? null,
           weapon_type: sysType.value ?? null,
@@ -112,6 +117,7 @@ export const importFoundryWeapons = async (req, res) => {
     return res.status(500).json({ error: "Failed to import foundry weapons" });
   }
 };
+
 
 /**
  * GET /foundry/weapons

@@ -39,6 +39,7 @@ import gameSystemRoutes from "./routes/gameSystemRoutes.js";
 import friendshipRoutes from "./routes/friendshipRoutes.js";
 
 import foundryWeaponRoutes from "./routes/foundryWeaponRoutes.js";
+import foundryToolRoutes from "./routes/foundryToolRoutes.js";
 import path from "path";
 const app = express();
 
@@ -113,4 +114,5 @@ app.use("/game-systems", gameSystemRoutes);
 
 app.use("/friends", friendshipRoutes);
 app.use("/foundry/weapons", foundryWeaponRoutes);
+app.use("/foundry/tools", foundryToolRoutes);
 export default app;

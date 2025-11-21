@@ -17,6 +17,10 @@ export async function insertFoundryWeapon(payload) {
     properties,
     weight,
     mastery,
+
+    // 🆕 untuk kolom JSONB di DB
+    raw_data,
+    format_data,
   } = payload;
 
   const { data, error } = await supabase
@@ -33,6 +37,10 @@ export async function insertFoundryWeapon(payload) {
       properties,
       weight,
       mastery,
+
+      // 🧱 kolom wajib di DB
+      raw_data: raw_data ?? {},
+      format_data: format_data ?? {},
     })
     .select()
     .single();
@@ -63,6 +71,10 @@ export async function bulkInsertFoundryWeapons(items) {
     properties: it.properties ?? null,
     weight: it.weight ?? null,
     mastery: it.mastery ?? null,
+
+    // 🧱 kolom JSONB di Supabase
+    raw_data: it.raw_data ?? {},
+    format_data: it.format_data ?? {},
   }));
 
   const { data, error } = await supabase
@@ -83,13 +95,11 @@ export async function bulkInsertFoundryWeapons(items) {
  */
 export async function listFoundryWeapons({ limit = 50, offset = 0 } = {}) {
   const from = offset;
-  const to   = offset + limit - 1;
+  const to = offset + limit - 1;
 
   const { data, error } = await supabase
     .from("foundry_weapons")
-    .select(
-      "id, name, type, rarity, base_item, weapon_type, mastery, created_at"
-    )
+    .select("*") // ⬅️ LANGSUNG AMBIL SEMUA KOLOM
     .order("created_at", { ascending: false })
     .range(from, to);
 

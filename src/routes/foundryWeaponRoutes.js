@@ -8,11 +8,11 @@ import {
   deleteFoundryWeaponHandler,
   exportFoundryWeaponHandler, // 🆕
 } from "../controllers/foundryWeaponController.js";
-import { verifyUserIgnite } from "../middlewares/verifyUserIgnite.js";
+import { verifyUserFullAuth } from "../middlewares/verifyUserFullAuth.js";
 
 const router = express.Router();
 
-router.use(verifyUserIgnite);
+router.use(verifyUserFullAuth);
 
 router.post("/import", importFoundryWeapons);
 router.get("/", listFoundryWeaponsHandler);
