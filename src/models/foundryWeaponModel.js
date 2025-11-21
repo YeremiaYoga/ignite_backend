@@ -4,14 +4,35 @@ import supabase from "../utils/db.js";
 /**
  * Insert 1 foundry weapon
  */
-export async function insertFoundryWeapon({ name, type = "weapon", rawData, formatData }) {
+export async function insertFoundryWeapon(payload) {
+  const {
+    name,
+    type = "weapon",
+
+    rarity,
+    base_item,
+    weapon_type,
+    damage_type,
+    attunement,
+    properties,
+    weight,
+    mastery,
+  } = payload;
+
   const { data, error } = await supabase
     .from("foundry_weapons")
     .insert({
       name,
       type,
-      raw_data: rawData,
-      format_data: formatData,
+
+      rarity,
+      base_item,
+      weapon_type,
+      damage_type,
+      attunement,
+      properties,
+      weight,
+      mastery,
     })
     .select()
     .single();
@@ -25,21 +46,28 @@ export async function insertFoundryWeapon({ name, type = "weapon", rawData, form
 }
 
 /**
- * Bulk insert (dipakai waktu import banyak)
+ * Bulk insert
  */
 export async function bulkInsertFoundryWeapons(items) {
   if (!items?.length) return [];
 
+  const mapped = items.map((it) => ({
+    name: it.name,
+    type: it.type || "weapon",
+
+    rarity: it.rarity ?? null,
+    base_item: it.base_item ?? null,
+    weapon_type: it.weapon_type ?? null,
+    damage_type: it.damage_type ?? null,
+    attunement: it.attunement ?? null,
+    properties: it.properties ?? null,
+    weight: it.weight ?? null,
+    mastery: it.mastery ?? null,
+  }));
+
   const { data, error } = await supabase
     .from("foundry_weapons")
-    .insert(
-      items.map((it) => ({
-        name: it.name,
-        type: it.type || "weapon",
-        raw_data: it.rawData,
-        format_data: it.formatData,
-      }))
-    )
+    .insert(mapped)
     .select();
 
   if (error) {
@@ -51,15 +79,17 @@ export async function bulkInsertFoundryWeapons(items) {
 }
 
 /**
- * List weapon (simple, dengan pagination)
+ * List weapon
  */
 export async function listFoundryWeapons({ limit = 50, offset = 0 } = {}) {
   const from = offset;
-  const to = offset + limit - 1;
+  const to   = offset + limit - 1;
 
   const { data, error } = await supabase
     .from("foundry_weapons")
-    .select("id, name, type, created_at")
+    .select(
+      "id, name, type, rarity, base_item, weapon_type, mastery, created_at"
+    )
     .order("created_at", { ascending: false })
     .range(from, to);
 
@@ -77,7 +107,7 @@ export async function listFoundryWeapons({ limit = 50, offset = 0 } = {}) {
 export async function getFoundryWeaponById(id) {
   const { data, error } = await supabase
     .from("foundry_weapons")
-    .select("id, name, type, raw_data, format_data, created_at, updated_at")
+    .select("*")
     .eq("id", id)
     .single();
 
@@ -90,13 +120,13 @@ export async function getFoundryWeaponById(id) {
 }
 
 /**
- * Update format_data saja (kalau nanti kamu mau edit di admin)
+ * Update weapon (bisa edit semua kolom kecuali id)
  */
-export async function updateFoundryWeaponFormat(id, formatData) {
+export async function updateFoundryWeapon(id, payload) {
   const { data, error } = await supabase
     .from("foundry_weapons")
     .update({
-      format_data: formatData,
+      ...payload,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
@@ -104,7 +134,7 @@ export async function updateFoundryWeaponFormat(id, formatData) {
     .single();
 
   if (error) {
-    console.error("❌ updateFoundryWeaponFormat error:", error.message);
+    console.error("❌ updateFoundryWeapon error:", error.message);
     throw error;
   }
 
@@ -126,29 +156,4 @@ export async function deleteFoundryWeapon(id) {
   }
 
   return true;
-}
-
-
-export async function exportFoundryWeapon(id, mode = "raw") {
-  const { data, error } = await supabase
-    .from("foundry_weapons")
-    .select("id, name, raw_data, format_data")
-    .eq("id", id)
-    .single();
-
-  if (error) {
-    console.error("❌ exportFoundryWeapon error:", error.message);
-    throw error;
-  }
-
-  if (!data) throw new Error("Weapon not found");
-
-  return {
-    id: data.id,
-    name: data.name,
-    exported:
-      mode === "format"
-        ? data.format_data
-        : data.raw_data,
-  };
 }

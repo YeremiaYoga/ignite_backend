@@ -4,21 +4,13 @@ import {
   listFoundryWeapons,
   getFoundryWeaponById,
   deleteFoundryWeapon,
-  updateFoundryWeaponFormat,
-  exportFoundryWeapon,
+  updateFoundryWeapon,
 } from "../models/foundryWeaponModel.js";
 
 /**
- * Normalisasi raw JSON dari Foundry ke format_data standar Ignite:
- * {
- *   name,
- *   type,
- *   img,
- *   system,
- *   effects
- * }
- *
- * Sisanya (flags, folder, _stats, ownership, dll) tetap aman di raw_data.
+ * Normalisasi raw JSON dari Foundry:
+ *  - pastikan name, type, img, system, effects ada
+ *  - TIDAK lagi trim system.source (dikembalikan seperti semula)
  */
 function normalizeFoundryWeapon(raw) {
   if (!raw || typeof raw !== "object") {
@@ -29,8 +21,11 @@ function normalizeFoundryWeapon(raw) {
   const type = raw.type || "weapon";
   const img = raw.img || null;
 
-  const system = raw.system ?? {};
+  const systemRaw = raw.system ?? {};
   const effects = Array.isArray(raw.effects) ? raw.effects : [];
+
+  // sekarang system dipakai apa adanya, termasuk source
+  const system = systemRaw;
 
   return {
     name,
@@ -47,9 +42,6 @@ function normalizeFoundryWeapon(raw) {
  * Body bisa:
  *  - 1 object JSON
  *  - atau array of JSON
- *
- * Contoh single:
- *  { "name": "...", "type": "weapon", "system": {...}, "img": "...", "effects": [...] }
  */
 export const importFoundryWeapons = async (req, res) => {
   try {
@@ -75,14 +67,25 @@ export const importFoundryWeapons = async (req, res) => {
 
     for (const raw of items) {
       try {
-        const formatData = normalizeFoundryWeapon(raw);
-        const { name, type } = formatData;
+        const normalized = normalizeFoundryWeapon(raw);
+        const { name, type, system } = normalized;
+
+        const sysType = system?.type || {};
+        const dmgBase = system?.damage?.base || {};
 
         payloads.push({
           name,
           type,
-          rawData: raw, // mentahan
-          formatData, // sudah distandarisasi
+
+          // kolom di foundry_weapons (sesuai mapping lo)
+          rarity: system?.rarity ?? null,
+          base_item: sysType.baseItem ?? null,
+          weapon_type: sysType.value ?? null,
+          damage_type: dmgBase.types ?? null,
+          attunement: system?.attunement ?? null,
+          properties: system?.properties ?? null,
+          weight: system?.weight?.value ?? null,
+          mastery: system?.mastery ?? null,
         });
       } catch (err) {
         console.error("💥 Normalisasi weapon gagal:", err);
@@ -133,7 +136,6 @@ export const listFoundryWeaponsHandler = async (req, res) => {
 
 /**
  * GET /foundry/weapons/:id
- * return raw_data + format_data
  */
 export const getFoundryWeaponHandler = async (req, res) => {
   try {
@@ -156,20 +158,20 @@ export const getFoundryWeaponHandler = async (req, res) => {
 
 /**
  * PUT /foundry/weapons/:id/format
- * - kalau kamu mau edit format_data dari admin panel
+ * (sekarang pakai updateFoundryWeapon biasa, bukan format_data lagi)
  */
 export const updateFoundryWeaponFormatHandler = async (req, res) => {
   try {
     const { id } = req.params;
-    const formatData = req.body;
+    const payload = req.body;
 
-    if (!formatData || typeof formatData !== "object") {
+    if (!payload || typeof payload !== "object") {
       return res
         .status(400)
-        .json({ error: "format_data harus berupa JSON object" });
+        .json({ error: "Payload harus berupa JSON object" });
     }
 
-    const updated = await updateFoundryWeaponFormat(id, formatData);
+    const updated = await updateFoundryWeapon(id, payload);
 
     return res.json({
       success: true,
@@ -177,7 +179,7 @@ export const updateFoundryWeaponFormatHandler = async (req, res) => {
     });
   } catch (err) {
     console.error("💥 updateFoundryWeaponFormatHandler error:", err);
-    return res.status(500).json({ error: "Failed to update format_data" });
+    return res.status(500).json({ error: "Failed to update weapon" });
   }
 };
 
@@ -200,17 +202,28 @@ export const deleteFoundryWeaponHandler = async (req, res) => {
   }
 };
 
+/**
+ * GET /foundry/weapons/:id/export?mode=raw|format
+ * Sekarang export langsung row dari DB (karena model lo udah nggak punya raw_data/format_data)
+ */
 export async function exportFoundryWeaponHandler(req, res) {
   try {
     const { id } = req.params;
-    const { mode = "raw" } = req.query;
+    const { mode = "raw" } = req.query; // mode masih diterima, tapi sekarang nggak dibedain
 
-    const { name, exported } = await exportFoundryWeapon(id, mode);
+    const row = await getFoundryWeaponById(id);
+    if (!row) {
+      return res.status(404).json({ error: "Weapon not found" });
+    }
 
-    const filename = `${name.replace(/\s+/g, "_")}_${mode}.json`;
+    const exported = row;
+    const filename = `${row.name.replace(/\s+/g, "_")}_${mode}.json`;
 
     res.setHeader("Content-Type", "application/json");
-    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${filename}"`
+    );
 
     return res.status(200).send(JSON.stringify(exported, null, 2));
   } catch (err) {
