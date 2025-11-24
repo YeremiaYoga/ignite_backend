@@ -1,11 +1,12 @@
-// controllers/foundryToolController.js
+// controllers/foundryContainerController.js
 import {
-  bulkInsertFoundryTools,
-  listFoundryTools,
-  getFoundryToolById,
-  deleteFoundryTool,
-  updateFoundryTool,
-} from "../models/foundryToolModel.js";
+  bulkInsertFoundryContainers,
+  listFoundryContainers,
+  getFoundryContainerById,
+  deleteFoundryContainer,
+  updateFoundryContainer,
+  exportFoundryContainer,
+} from "../models/foundryContainerModel.js";
 
 const MEDIA_BASE =
   process.env.PUBLIC_MEDIA_URL ||
@@ -13,16 +14,15 @@ const MEDIA_BASE =
   process.env.MEDIA_URL ||
   "";
 
-/**
- * Helper: normalisasi raw tool
- */
-function normalizeFoundryTool(raw) {
+/** Helpers */
+
+function normalizeFoundryContainer(raw) {
   if (!raw || typeof raw !== "object") {
-    throw new Error("Invalid tool JSON");
+    throw new Error("Invalid container JSON");
   }
 
-  const name = raw.name || "Unknown Tool";
-  const type = raw.type || "tool";
+  const name = raw.name || "Unknown Container";
+  const type = raw.type || "container";
   const img = raw.img || null;
 
   const system = raw.system ?? {};
@@ -37,10 +37,7 @@ function normalizeFoundryTool(raw) {
   };
 }
 
-/**
- * Helper: resolve image path ke URL
- */
-function resolveToolImage(raw, normalized) {
+function resolveItemImage(raw, normalized) {
   const system = normalized.system || {};
   let src = system.img || normalized.img || raw.img || null;
 
@@ -48,21 +45,17 @@ function resolveToolImage(raw, normalized) {
   src = String(src).trim();
   if (!src) return null;
 
-  // Sudah full URL
   if (src.startsWith("http://") || src.startsWith("https://")) {
     return src;
   }
 
-  // Normalisasi path
-  let path = src.replace(/^\/+/, ""); // buang leading "/"
+  let path = src.replace(/^\/+/, "");
 
-  // systems/dnd5e/icons/... => buang sampai "icons/"
   const systemsPrefix = "systems/dnd5e/icons/";
   if (path.startsWith(systemsPrefix)) {
     path = path.slice(systemsPrefix.length);
   }
 
-  // icons/... => buang "icons/"
   const iconsPrefix = "icons/";
   if (path.startsWith(iconsPrefix)) {
     path = path.slice(iconsPrefix.length);
@@ -76,24 +69,14 @@ function resolveToolImage(raw, normalized) {
   return `${base}/foundryvtt/${path}`;
 }
 
-/**
- * Helper: ambil compendiumSource dari _stats
- */
 function getCompendiumSource(rawItem) {
   return rawItem?._stats?.compendiumSource ?? null;
 }
 
-/**
- * Helper: ambil source book, contoh "DMG 2024"
- */
 function getSourceBook(system) {
   return system?.source?.book ?? null;
 }
 
-/**
- * Helper: hitung harga dalam CP
- * cp: x1, sp: x10, ep: x50, gp: x100, pp: x1000
- */
 function getPriceInCp(system) {
   const price = system?.price;
   if (!price) return null;
@@ -128,18 +111,16 @@ function getPriceInCp(system) {
 }
 
 /**
- * POST /foundry/tools/import
+ * POST /foundry/containers/import
  */
-export const importFoundryTools = async (req, res) => {
+export const importFoundryContainers = async (req, res) => {
   try {
     const body = req.body;
 
     let items = [];
-    if (Array.isArray(body)) {
-      items = body;
-    } else if (body && typeof body === "object") {
-      items = [body];
-    } else {
+    if (Array.isArray(body)) items = body;
+    else if (body && typeof body === "object") items = [body];
+    else {
       return res.status(400).json({
         error: "Request body harus berupa 1 JSON object atau array of JSON",
       });
@@ -154,58 +135,44 @@ export const importFoundryTools = async (req, res) => {
 
     for (const raw of items) {
       try {
-        const normalized = normalizeFoundryTool(raw);
+        const normalized = normalizeFoundryContainer(raw);
         const { name, type, system } = normalized;
 
-        // ❌ hanya terima type "tool"
-        if (type !== "tool") {
+        if (type !== "container") {
           errors.push({
             name,
-            error: `Invalid type "${type}", only "tool" is allowed`,
+            error: `Invalid type "${type}", only "container" is allowed`,
           });
           continue;
         }
 
-        const sysType = system?.type || {};
-        const image = resolveToolImage(raw, normalized);
+        const weight = system?.weight?.value ?? null;
+        const image = resolveItemImage(raw, normalized);
 
-        // 🆕 kolom tambahan: compendium, price(cp), source book
         const compendium_source = getCompendiumSource(raw);
-        const price = getPriceInCp(system); // dalam CP
+        const price = getPriceInCp(system);
         const source_book = getSourceBook(system);
 
         payloads.push({
           name,
           type,
 
-          // JSONB di DB
           raw_data: raw,
           format_data: normalized,
 
-          // mapping sesuai aturan:
-          // rarity    = system.rarity
-          // base_item = system.type.baseItem
-          // tool_type = system.type.value
-          // properties = system.properties
-          // weight    = system.weight.value
-          // attunement= system.attunement
-          rarity: system?.rarity ?? null,
-          base_item: sysType.baseItem ?? null,
-          tool_type: sysType.value ?? null,
           properties: system?.properties ?? null,
-          weight: system?.weight?.value ?? null,
-          attunement: system?.attunement ?? null,
+          weight,
+          rarity: system?.rarity ?? null,
 
-          // kolom baru
           compendium_source,
           price,
           source_book,
 
-          // kalau mau aktifkan image tinggal ganti ke image ?? null
-          image: null,
+          attunement: system?.attunement ?? null,
+          image,
         });
       } catch (err) {
-        console.error("💥 Normalisasi tool gagal:", err);
+        console.error("💥 Normalisasi container gagal:", err);
         errors.push({
           name: raw?.name || null,
           error: err.message,
@@ -215,7 +182,7 @@ export const importFoundryTools = async (req, res) => {
 
     let inserted = [];
     if (payloads.length) {
-      inserted = await bulkInsertFoundryTools(payloads);
+      inserted = await bulkInsertFoundryContainers(payloads);
     }
 
     return res.json({
@@ -225,42 +192,45 @@ export const importFoundryTools = async (req, res) => {
       items: inserted,
     });
   } catch (err) {
-    console.error("💥 importFoundryTools error:", err);
-    return res.status(500).json({ error: "Failed to import foundry tools" });
+    console.error("💥 importFoundryContainers error:", err);
+    return res
+      .status(500)
+      .json({ error: "Failed to import foundry containers" });
   }
 };
 
 /**
- * GET /foundry/tools
- * ?limit=50&offset=0
+ * GET /foundry/containers
  */
-export const listFoundryToolsHandler = async (req, res) => {
+export const listFoundryContainersHandler = async (req, res) => {
   try {
     const limit = Number(req.query.limit) || 50;
     const offset = Number(req.query.offset) || 0;
 
-    const rows = await listFoundryTools({ limit, offset });
+    const rows = await listFoundryContainers({ limit, offset });
 
     return res.json({
       success: true,
       items: rows,
     });
   } catch (err) {
-    console.error("💥 listFoundryToolsHandler error:", err);
-    return res.status(500).json({ error: "Failed to list foundry tools" });
+    console.error("💥 listFoundryContainersHandler error:", err);
+    return res
+      .status(500)
+      .json({ error: "Failed to list foundry containers" });
   }
 };
 
 /**
- * GET /foundry/tools/:id
+ * GET /foundry/containers/:id
  */
-export const getFoundryToolHandler = async (req, res) => {
+export const getFoundryContainerHandler = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const row = await getFoundryToolById(id);
+    const row = await getFoundryContainerById(id);
     if (!row) {
-      return res.status(404).json({ error: "Tool not found" });
+      return res.status(404).json({ error: "Container not found" });
     }
 
     return res.json({
@@ -268,74 +238,72 @@ export const getFoundryToolHandler = async (req, res) => {
       item: row,
     });
   } catch (err) {
-    console.error("💥 getFoundryToolHandler error:", err);
-    return res.status(500).json({ error: "Failed to get foundry tool" });
+    console.error("💥 getFoundryContainerHandler error:", err);
+    return res
+      .status(500)
+      .json({ error: "Failed to get foundry container" });
   }
 };
 
 /**
- * PUT /foundry/tools/:id
- * - update data tool (rarity, base_item, tool_type, dll, termasuk kolom baru)
+ * PUT /foundry/containers/:id
  */
-export const updateFoundryToolHandler = async (req, res) => {
+export const updateFoundryContainerHandler = async (req, res) => {
   try {
     const { id } = req.params;
     const payload = req.body || {};
 
-    const updated = await updateFoundryTool(id, payload);
+    const updated = await updateFoundryContainer(id, payload);
 
     return res.json({
       success: true,
       item: updated,
     });
   } catch (err) {
-    console.error("💥 updateFoundryToolHandler error:", err);
-    return res.status(500).json({ error: "Failed to update foundry tool" });
+    console.error("💥 updateFoundryContainerHandler error:", err);
+    return res
+      .status(500)
+      .json({ error: "Failed to update foundry container" });
   }
 };
 
 /**
- * DELETE /foundry/tools/:id
+ * DELETE /foundry/containers/:id
  */
-export const deleteFoundryToolHandler = async (req, res) => {
+export const deleteFoundryContainerHandler = async (req, res) => {
   try {
     const { id } = req.params;
 
-    await deleteFoundryTool(id);
+    await deleteFoundryContainer(id);
 
     return res.json({
       success: true,
-      message: "Tool deleted",
+      message: "Container deleted",
     });
   } catch (err) {
-    console.error("💥 deleteFoundryToolHandler error:", err);
-    return res.status(500).json({ error: "Failed to delete foundry tool" });
+    console.error("💥 deleteFoundryContainerHandler error:", err);
+    return res
+      .status(500)
+      .json({ error: "Failed to delete foundry container" });
   }
 };
 
 /**
- * GET /foundry/tools/:id/export?mode=raw|format
- * - Kalau ada raw_data / format_data, pakai itu
- * - Fallback ke row penuh kalau nggak ada
+ * GET /foundry/containers/:id/export?mode=raw|format
  */
-export async function exportFoundryToolHandler(req, res) {
+export async function exportFoundryContainerHandler(req, res) {
   try {
     const { id } = req.params;
     const { mode = "raw" } = req.query;
 
-    const row = await getFoundryToolById(id);
+    const row = await exportFoundryContainer(id);
     if (!row) {
-      return res.status(404).json({ error: "Tool not found" });
+      return res.status(404).json({ error: "Container not found" });
     }
 
     let exported;
-    if (mode === "raw" && row.raw_data) {
-      exported = row.raw_data;
-    } else if (mode === "format" && row.format_data) {
-      exported = row.format_data;
-    } else {
-      exported = row;
-    }
+    if (mode === "format") exported = row.format_data || row;
+    else exported = row.raw_data || row;
 
     const safeMode = mode === "format" ? "format" : "raw";
     const filename = `${row.name.replace(/\s+/g, "_")}_${safeMode}.json`;
@@ -345,7 +313,7 @@ export async function exportFoundryToolHandler(req, res) {
 
     return res.status(200).send(JSON.stringify(exported, null, 2));
   } catch (err) {
-    console.error("❌ exportFoundryToolHandler error:", err);
+    console.error("❌ exportFoundryContainerHandler error:", err);
     res.status(500).json({ error: err.message });
   }
 }

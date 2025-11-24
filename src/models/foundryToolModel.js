@@ -16,7 +16,12 @@ export async function insertFoundryTool(payload) {
     weight,
     attunement,
 
-    image, // 🆕 IMAGE
+    // 🆕 kolom tambahan
+    compendium_source,
+    price,
+    source_book,
+
+    image, // IMAGE
     raw_data,
     format_data,
   } = payload;
@@ -33,6 +38,11 @@ export async function insertFoundryTool(payload) {
       properties,
       weight,
       attunement,
+
+      // kolom baru
+      compendium_source: compendium_source ?? null,
+      price: price ?? null,
+      source_book: source_book ?? null,
 
       image: image ?? null,
       raw_data: raw_data ?? {},
@@ -66,7 +76,12 @@ export async function bulkInsertFoundryTools(items) {
     weight: it.weight ?? null,
     attunement: it.attunement ?? null,
 
-    // image: it.image ?? null,
+    // kolom baru
+    compendium_source: it.compendium_source ?? null,
+    price: it.price ?? null,
+    source_book: it.source_book ?? null,
+
+    // kalau mau pakai image dari importer, tinggal ganti ke: it.image ?? null
     image: null,
     raw_data: it.raw_data ?? {},
     format_data: it.format_data ?? {},

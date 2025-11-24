@@ -10,33 +10,26 @@ import {
 const PUBLIC_MEDIA_URL = (process.env.PUBLIC_MEDIA_URL || "").replace(/\/$/, "");
 
 /**
- * Resolve image untuk kolom "image" di DB:
- * - ambil dari system.img (fallback ke top-level img)
- * - kalau sudah http/https → pakai langsung
- * - kalau path lokal:
- *    - "icons/..." → ganti jadi "foundryvtt/..."
- *    - prefix dengan PUBLIC_MEDIA_URL/
+ * Helper: resolve image URL
  */
 function resolveWeaponImage(systemImg, fallbackImg) {
   let img = systemImg || fallbackImg;
   if (!img) return null;
 
-  // kalau sudah URL penuh
+  // sudah full URL
   if (/^https?:\/\//i.test(img)) {
     return img;
   }
 
-  // --- RULE BARU ---
-  // cari "icons/" dan buang semua sebelum itu
+  // potong mulai dari "icons/"
   const cutIndex = img.indexOf("icons/");
   if (cutIndex !== -1) {
-    img = img.substring(cutIndex); // hasil: icons/....
+    img = img.substring(cutIndex);
   }
 
-  // ubah prefix icons → foundryvtt
+  // ganti root folder
   img = img.replace(/^icons/, "foundryvtt");
 
-  // prefix PUBLIC_MEDIA_URL
   if (PUBLIC_MEDIA_URL) {
     return `${PUBLIC_MEDIA_URL}/${img}`;
   }
@@ -44,11 +37,59 @@ function resolveWeaponImage(systemImg, fallbackImg) {
   return img;
 }
 
+/**
+ * Helper: ambil compendiumSource dari _stats
+ */
+function getCompendiumSource(rawItem) {
+  return rawItem?._stats?.compendiumSource ?? null;
+}
 
 /**
- * Normalisasi raw JSON dari Foundry:
- *  - pastikan name, type, img, system, effects ada
- *  - system.source dibiarkan apa adanya
+ * Helper: ambil source book, contoh "DMG 2024"
+ */
+function getSourceBook(system) {
+  return system?.source?.book ?? null;
+}
+
+/**
+ * Helper: hitung harga dalam CP
+ * cp: x1, sp: x10, ep: x50, gp: x100, pp: x1000
+ */
+function getPriceInCp(system) {
+  const price = system?.price;
+  if (!price) return null;
+
+  const value = Number(price.value ?? 0);
+  if (!Number.isFinite(value)) return null;
+
+  const denom = (price.denomination || "cp").toLowerCase();
+
+  let multiplier;
+  switch (denom) {
+    case "cp":
+      multiplier = 1;
+      break;
+    case "sp":
+      multiplier = 10;
+      break;
+    case "ep":
+      multiplier = 50;
+      break;
+    case "gp":
+      multiplier = 100;
+      break;
+    case "pp":
+      multiplier = 1000;
+      break;
+    default:
+      multiplier = 1;
+  }
+
+  return value * multiplier;
+}
+
+/**
+ * Normalisasi raw weapon dari Foundry
  */
 function normalizeFoundryWeapon(raw) {
   if (!raw || typeof raw !== "object") {
@@ -62,7 +103,6 @@ function normalizeFoundryWeapon(raw) {
   const systemRaw = raw.system ?? {};
   const effects   = Array.isArray(raw.effects) ? raw.effects : [];
 
-  // system dipakai apa adanya (termasuk source)
   const system = systemRaw;
 
   return {
@@ -76,12 +116,7 @@ function normalizeFoundryWeapon(raw) {
 
 /**
  * POST /foundry/weapons/import
- *
- * Body bisa:
- *  - 1 object JSON
- *  - atau array of JSON
- *
- * HANYA item dengan type === "weapon" yang diinsert.
+ * body: 1 item JSON atau array of items
  */
 export const importFoundryWeapons = async (req, res) => {
   try {
@@ -123,8 +158,13 @@ export const importFoundryWeapons = async (req, res) => {
         const sysType = system?.type || {};
         const dmgBase = system?.damage?.base || {};
 
-        // 🆕 hitung image dari system.img (fallback raw.img)
+        // 🖼️ hitung image dari system.img (fallback raw.img)
         const image = resolveWeaponImage(system?.img, img);
+
+        // 🆕 kolom tambahan: compendium, price(cp), source book
+        const compendium_source = getCompendiumSource(raw);
+        const price             = getPriceInCp(system);     // dalam CP
+        const source_book       = getSourceBook(system);
 
         payloads.push({
           name,
@@ -143,6 +183,11 @@ export const importFoundryWeapons = async (req, res) => {
           properties: system?.properties ?? null,
           weight: system?.weight?.value ?? null,
           mastery: system?.mastery ?? null,
+
+          // 🆕 kolom baru
+          compendium_source,
+          price,
+          source_book,
 
           // kolom image di DB
           image,
@@ -174,8 +219,7 @@ export const importFoundryWeapons = async (req, res) => {
 };
 
 /**
- * GET /foundry/weapons
- * ?limit=50&offset=0
+ * GET /foundry/weapons?limit=50&offset=0
  */
 export const listFoundryWeaponsHandler = async (req, res) => {
   try {
@@ -218,7 +262,7 @@ export const getFoundryWeaponHandler = async (req, res) => {
 
 /**
  * PUT /foundry/weapons/:id/format
- * (sekarang pakai updateFoundryWeapon biasa, boleh edit image juga)
+ * (pakai updateFoundryWeapon biasa, bisa edit semua kolom)
  */
 export const updateFoundryWeaponFormatHandler = async (req, res) => {
   try {
@@ -264,7 +308,7 @@ export const deleteFoundryWeaponHandler = async (req, res) => {
 
 /**
  * GET /foundry/weapons/:id/export?mode=raw|format
- * (sekarang masih export full row; kalau mau bisa diubah ke raw_data/format_data)
+ * (sekarang masih export full row)
  */
 export async function exportFoundryWeaponHandler(req, res) {
   try {

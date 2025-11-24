@@ -18,6 +18,11 @@ export async function insertFoundryWeapon(payload) {
     weight,
     mastery,
 
+    // kolom baru
+    compendium_source,
+    price,
+    source_book,
+
     // JSONB di DB
     raw_data,
     format_data,
@@ -40,6 +45,11 @@ export async function insertFoundryWeapon(payload) {
       properties,
       weight,
       mastery,
+
+      // baru
+      compendium_source: compendium_source ?? null,
+      price: price ?? null,
+      source_book: source_book ?? null,
 
       raw_data: raw_data ?? {},
       format_data: format_data ?? {},
@@ -75,6 +85,11 @@ export async function bulkInsertFoundryWeapons(items) {
     weight: it.weight ?? null,
     mastery: it.mastery ?? null,
 
+    // baru
+    compendium_source: it.compendium_source ?? null,
+    price: it.price ?? null,
+    source_book: it.source_book ?? null,
+
     raw_data: it.raw_data ?? {},
     format_data: it.format_data ?? {},
     image: it.image ?? null,
@@ -98,7 +113,7 @@ export async function bulkInsertFoundryWeapons(items) {
  */
 export async function listFoundryWeapons({ limit = 50, offset = 0 } = {}) {
   const from = offset;
-  const to   = offset + limit - 1;
+  const to = offset + limit - 1;
 
   const { data, error } = await supabase
     .from("foundry_weapons")
@@ -134,6 +149,7 @@ export async function getFoundryWeaponById(id) {
 
 /**
  * Update weapon (bisa edit semua kolom kecuali id)
+ * Termasuk kolom baru: compendium_source, price, source_book
  */
 export async function updateFoundryWeapon(id, payload) {
   const { data, error } = await supabase

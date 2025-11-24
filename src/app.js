@@ -32,7 +32,6 @@ import adminAnnouncementRoutes from "./routes/adminAnnouncementRoutes.js";
 import adminThemeAndGenreCampaignRoutes from "./routes/adminThemeAndGenreCampaignRoutes.js";
 import adminWorldRoutes from "./routes/adminWorldRoutes.js";
 
-
 import realLanguageRoutes from "./routes/realLanguageRoutes.js";
 import platformRoutes from "./routes/platformRoutes.js";
 import gameSystemRoutes from "./routes/gameSystemRoutes.js";
@@ -40,6 +39,9 @@ import friendshipRoutes from "./routes/friendshipRoutes.js";
 
 import foundryWeaponRoutes from "./routes/foundryWeaponRoutes.js";
 import foundryToolRoutes from "./routes/foundryToolRoutes.js";
+import foundryConsumableRoutes from "./routes/foundryConsumableRoutes.js";
+import foundryContainerRoutes from "./routes/foundryContainerRoutes.js";
+import foundryEquipmentRoutes from "./routes/foundryEquipmentRoutes.js";
 import path from "path";
 const app = express();
 
@@ -96,7 +98,6 @@ app.use("/admin/modifiers", modifierRouter);
 app.use("/dnd-source", dndSourceRoutes);
 app.use("/species-group-type", speciesGroupTypeRoutes);
 
-
 app.use("/patreon", patreonRoutes);
 
 app.use("/announcements", announcementRoutes);
@@ -107,12 +108,15 @@ app.use("/admin/announcements", adminAnnouncementRoutes);
 app.use("/admin/campaign-master", adminThemeAndGenreCampaignRoutes);
 app.use("/admin/worlds", adminWorldRoutes);
 
-
 app.use("/real-languages", realLanguageRoutes);
 app.use("/platforms", platformRoutes);
 app.use("/game-systems", gameSystemRoutes);
 
 app.use("/friends", friendshipRoutes);
+
 app.use("/foundry/weapons", foundryWeaponRoutes);
 app.use("/foundry/tools", foundryToolRoutes);
+app.use("/foundry/consumables", foundryConsumableRoutes);
+app.use("/foundry/containers", foundryContainerRoutes);
+app.use("/foundry/equipments", foundryEquipmentRoutes);
 export default app;
