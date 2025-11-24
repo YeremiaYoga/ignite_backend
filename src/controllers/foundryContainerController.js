@@ -215,9 +215,7 @@ export const listFoundryContainersHandler = async (req, res) => {
     });
   } catch (err) {
     console.error("💥 listFoundryContainersHandler error:", err);
-    return res
-      .status(500)
-      .json({ error: "Failed to list foundry containers" });
+    return res.status(500).json({ error: "Failed to list foundry containers" });
   }
 };
 
@@ -239,9 +237,7 @@ export const getFoundryContainerHandler = async (req, res) => {
     });
   } catch (err) {
     console.error("💥 getFoundryContainerHandler error:", err);
-    return res
-      .status(500)
-      .json({ error: "Failed to get foundry container" });
+    return res.status(500).json({ error: "Failed to get foundry container" });
   }
 };
 
@@ -307,6 +303,11 @@ export async function exportFoundryContainerHandler(req, res) {
 
     const safeMode = mode === "format" ? "format" : "raw";
     const filename = `${row.name.replace(/\s+/g, "_")}_${safeMode}.json`;
+
+    // const safeName = row.name?.replace(/\s+/g, "_") || "item";
+    // const safeType = row.type?.toLowerCase() || "unknown";
+
+    // const filename = `${safeName}_${safeType}_${safeMode}.json`;
 
     res.setHeader("Content-Type", "application/json");
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);

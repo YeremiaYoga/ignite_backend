@@ -244,9 +244,7 @@ export const getFoundryConsumableHandler = async (req, res) => {
     });
   } catch (err) {
     console.error("💥 getFoundryConsumableHandler error:", err);
-    return res
-      .status(500)
-      .json({ error: "Failed to get foundry consumable" });
+    return res.status(500).json({ error: "Failed to get foundry consumable" });
   }
 };
 
@@ -312,6 +310,11 @@ export async function exportFoundryConsumableHandler(req, res) {
 
     const safeMode = mode === "format" ? "format" : "raw";
     const filename = `${row.name.replace(/\s+/g, "_")}_${safeMode}.json`;
+
+    // const safeName = row.name?.replace(/\s+/g, "_") || "item";
+    // const safeType = row.type?.toLowerCase() || "unknown";
+
+    // const filename = `${safeName}_${safeType}_${safeMode}.json`;
 
     res.setHeader("Content-Type", "application/json");
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
