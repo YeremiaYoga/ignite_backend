@@ -202,7 +202,7 @@ export const importFoundryTools = async (req, res) => {
           source_book,
 
           // kalau mau aktifkan image tinggal ganti ke image ?? null
-          image: null,
+          image: image ?? null,
         });
       } catch (err) {
         console.error("💥 Normalisasi tool gagal:", err);

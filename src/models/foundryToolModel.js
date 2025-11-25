@@ -82,7 +82,7 @@ export async function bulkInsertFoundryTools(items) {
     source_book: it.source_book ?? null,
 
     // kalau mau pakai image dari importer, tinggal ganti ke: it.image ?? null
-    image: null,
+    image: it.image ?? null,
     raw_data: it.raw_data ?? {},
     format_data: it.format_data ?? {},
   }));
