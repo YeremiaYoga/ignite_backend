@@ -1,26 +1,39 @@
 // routes/foundryWeaponRoutes.js
 import express from "express";
+import multer from "multer";
+
 import {
-  importFoundryWeapons,
+  importFoundryWeapons,               // body JSON (1 atau array)
+  importFoundryWeaponsFromFiles,      // 🆕 multi file JSON
   listFoundryWeaponsHandler,
   getFoundryWeaponHandler,
   updateFoundryWeaponFormatHandler,
   deleteFoundryWeaponHandler,
-  exportFoundryWeaponHandler, // 🆕
+  exportFoundryWeaponHandler, // export 1 weapon
 } from "../controllers/foundryWeaponController.js";
 import { verifyUserFullAuth } from "../middlewares/verifyUserFullAuth.js";
 
 const router = express.Router();
+const upload = multer(); // pakai memory storage default
 
 router.use(verifyUserFullAuth);
 
 router.post("/import", importFoundryWeapons);
+
+router.post(
+  "/import-files",
+  upload.array("files"),
+  importFoundryWeaponsFromFiles
+);
+
 router.get("/", listFoundryWeaponsHandler);
+
 router.get("/:id", getFoundryWeaponHandler);
+
 router.put("/:id/format", updateFoundryWeaponFormatHandler);
+
 router.delete("/:id", deleteFoundryWeaponHandler);
 
-// 🆕 GET /foundry/weapons/:id/export?mode=raw|format
 router.get("/:id/export", exportFoundryWeaponHandler);
 
 export default router;

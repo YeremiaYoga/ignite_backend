@@ -9,25 +9,22 @@ import {
 
 const PUBLIC_MEDIA_URL = (process.env.PUBLIC_MEDIA_URL || "").replace(/\/$/, "");
 
-/**
- * Helper: resolve image URL
- */
 function resolveWeaponImage(systemImg, fallbackImg) {
   let img = systemImg || fallbackImg;
   if (!img) return null;
 
-  // sudah full URL
+  // Kalau sudah URL absolut, pakai apa adanya
   if (/^https?:\/\//i.test(img)) {
     return img;
   }
 
-  // potong mulai dari "icons/"
+  // Potong dari "icons/..." kalau ada
   const cutIndex = img.indexOf("icons/");
   if (cutIndex !== -1) {
     img = img.substring(cutIndex);
   }
 
-  // ganti root folder
+  // Ganti prefix "icons" → "foundryvtt"
   img = img.replace(/^icons/, "foundryvtt");
 
   if (PUBLIC_MEDIA_URL) {
@@ -37,24 +34,14 @@ function resolveWeaponImage(systemImg, fallbackImg) {
   return img;
 }
 
-/**
- * Helper: ambil compendiumSource dari _stats
- */
 function getCompendiumSource(rawItem) {
   return rawItem?._stats?.compendiumSource ?? null;
 }
 
-/**
- * Helper: ambil source book, contoh "DMG 2024"
- */
 function getSourceBook(system) {
   return system?.source?.book ?? null;
 }
 
-/**
- * Helper: hitung harga dalam CP
- * cp: x1, sp: x10, ep: x50, gp: x100, pp: x1000
- */
 function getPriceInCp(system) {
   const price = system?.price;
   if (!price) return null;
@@ -88,9 +75,6 @@ function getPriceInCp(system) {
   return value * multiplier;
 }
 
-/**
- * Normalisasi raw weapon dari Foundry
- */
 function normalizeFoundryWeapon(raw) {
   if (!raw || typeof raw !== "object") {
     throw new Error("Invalid weapon JSON");
@@ -98,10 +82,10 @@ function normalizeFoundryWeapon(raw) {
 
   const name = raw.name || "Unknown Weapon";
   const type = raw.type || "weapon";
-  const img  = raw.img || null;
+  const img = raw.img || null;
 
   const systemRaw = raw.system ?? {};
-  const effects   = Array.isArray(raw.effects) ? raw.effects : [];
+  const effects = Array.isArray(raw.effects) ? raw.effects : [];
 
   const system = systemRaw;
 
@@ -115,8 +99,76 @@ function normalizeFoundryWeapon(raw) {
 }
 
 /**
- * POST /foundry/weapons/import
- * body: 1 item JSON atau array of items
+ * Helper untuk membangun payload insert dari array raw items.
+ * Dipakai oleh:
+ * - importFoundryWeapons (body JSON/array)
+ * - importFoundryWeaponsFromFiles (banyak file JSON)
+ */
+function buildWeaponPayloads(rawItems) {
+  const payloads = [];
+  const errors = [];
+
+  for (const raw of rawItems) {
+    try {
+      const normalized = normalizeFoundryWeapon(raw);
+      const { name, type, system, img } = normalized;
+
+      if (type !== "weapon") {
+        errors.push({
+          name: name || raw?.name || null,
+          error: `Item type must be "weapon", got "${type}"`,
+        });
+        continue;
+      }
+
+      const sysType = system?.type || {};
+      const dmgBase = system?.damage?.base || {};
+
+      const image = resolveWeaponImage(system?.img, img);
+
+      const compendium_source = getCompendiumSource(raw);
+      const price = getPriceInCp(system);
+      const source_book = getSourceBook(system);
+
+      payloads.push({
+        name,
+        type,
+
+        raw_data: raw,
+        format_data: normalized,
+
+        rarity: system?.rarity ?? null,
+        base_item: sysType.baseItem ?? null,
+        weapon_type: sysType.value ?? null,
+        damage_type: dmgBase.types ?? null,
+        attunement: system?.attunement ?? null,
+        properties: system?.properties ?? null,
+        weight: system?.weight?.value ?? null,
+        mastery: system?.mastery ?? null,
+
+        compendium_source,
+        price,
+        source_book,
+
+        image,
+      });
+    } catch (err) {
+      console.error("💥 Normalisasi weapon gagal:", err);
+      errors.push({
+        name: raw?.name || null,
+        error: err.message,
+      });
+    }
+  }
+
+  return { payloads, errors };
+}
+
+/**
+ * IMPORT via body JSON (1 object atau array) — versi lama, sudah support mass import.
+ * Contoh:
+ *  POST /api/foundry/weapons/import
+ *  body = [ {...}, {...}, ... ]
  */
 export const importFoundryWeapons = async (req, res) => {
   try {
@@ -137,69 +189,7 @@ export const importFoundryWeapons = async (req, res) => {
       return res.status(400).json({ error: "Tidak ada item untuk diimport" });
     }
 
-    const payloads = [];
-    const errors   = [];
-
-    for (const raw of items) {
-      try {
-        // 🔥 Normalisasi Foundry weapon
-        const normalized = normalizeFoundryWeapon(raw);
-        const { name, type, system, img } = normalized;
-
-        // ❗ Hanya type "weapon" yang boleh masuk
-        if (type !== "weapon") {
-          errors.push({
-            name: name || raw?.name || null,
-            error: `Item type must be "weapon", got "${type}"`,
-          });
-          continue;
-        }
-
-        const sysType = system?.type || {};
-        const dmgBase = system?.damage?.base || {};
-
-        // 🖼️ hitung image dari system.img (fallback raw.img)
-        const image = resolveWeaponImage(system?.img, img);
-
-        // 🆕 kolom tambahan: compendium, price(cp), source book
-        const compendium_source = getCompendiumSource(raw);
-        const price             = getPriceInCp(system);     // dalam CP
-        const source_book       = getSourceBook(system);
-
-        payloads.push({
-          name,
-          type,
-
-          // simpan raw + format
-          raw_data: raw,
-          format_data: normalized,
-
-          // kolom tambahan untuk foundry_weapons
-          rarity: system?.rarity ?? null,
-          base_item: sysType.baseItem ?? null,
-          weapon_type: sysType.value ?? null,
-          damage_type: dmgBase.types ?? null,
-          attunement: system?.attunement ?? null,
-          properties: system?.properties ?? null,
-          weight: system?.weight?.value ?? null,
-          mastery: system?.mastery ?? null,
-
-          // 🆕 kolom baru
-          compendium_source,
-          price,
-          source_book,
-
-          // kolom image di DB
-          image,
-        });
-      } catch (err) {
-        console.error("💥 Normalisasi weapon gagal:", err);
-        errors.push({
-          name: raw?.name || null,
-          error: err.message,
-        });
-      }
-    }
+    const { payloads, errors } = buildWeaponPayloads(items);
 
     let inserted = [];
     if (payloads.length) {
@@ -219,11 +209,86 @@ export const importFoundryWeapons = async (req, res) => {
 };
 
 /**
- * GET /foundry/weapons?limit=50&offset=0
+ * IMPORT via banyak file JSON (mass import via upload).
+ * - Diasumsikan pakai multer: upload.array("files")
+ * - Tiap file bisa:
+ *    - 1 weapon object
+ *    - atau array weapon objects (export-an Foundry)
+ *
+ * Contoh router:
+ *   router.post(
+ *     "/api/foundry/weapons/import-files",
+ *     upload.array("files"),
+ *     importFoundryWeaponsFromFiles
+ *   );
  */
+export const importFoundryWeaponsFromFiles = async (req, res) => {
+  try {
+    const files = req.files || [];
+
+    if (!files.length) {
+      return res
+        .status(400)
+        .json({ error: "Tidak ada file yang di-upload untuk diimport" });
+    }
+
+    const rawItems = [];
+    const parseErrors = [];
+
+    for (const file of files) {
+      try {
+        const text = file.buffer.toString("utf8");
+        const parsed = JSON.parse(text);
+
+        if (Array.isArray(parsed)) {
+          rawItems.push(...parsed);
+        } else if (parsed && typeof parsed === "object") {
+          rawItems.push(parsed);
+        } else {
+          parseErrors.push({
+            file: file.originalname,
+            error: "File JSON harus berupa object atau array of object",
+          });
+        }
+      } catch (err) {
+        console.error("💥 Gagal parse file JSON:", file.originalname, err);
+        parseErrors.push({
+          file: file.originalname,
+          error: err.message,
+        });
+      }
+    }
+
+    if (!rawItems.length && !parseErrors.length) {
+      return res.status(400).json({
+        error: "Tidak ada item JSON valid yang ditemukan di file upload",
+      });
+    }
+
+    const { payloads, errors } = buildWeaponPayloads(rawItems);
+
+    let inserted = [];
+    if (payloads.length) {
+      inserted = await bulkInsertFoundryWeapons(payloads);
+    }
+
+    return res.json({
+      success: parseErrors.length === 0 && errors.length === 0,
+      imported: inserted.length,
+      totalFiles: files.length,
+      totalParsedItems: rawItems.length,
+      errors: [...parseErrors, ...errors],
+      items: inserted,
+    });
+  } catch (err) {
+    console.error("💥 importFoundryWeaponsFromFiles error:", err);
+    return res.status(500).json({ error: "Failed to mass import weapons" });
+  }
+};
+
 export const listFoundryWeaponsHandler = async (req, res) => {
   try {
-    const limit  = Number(req.query.limit) || 50;
+    const limit = Number(req.query.limit) || 50;
     const offset = Number(req.query.offset) || 0;
 
     const rows = await listFoundryWeapons({ limit, offset });
@@ -238,9 +303,6 @@ export const listFoundryWeaponsHandler = async (req, res) => {
   }
 };
 
-/**
- * GET /foundry/weapons/:id
- */
 export const getFoundryWeaponHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -260,14 +322,10 @@ export const getFoundryWeaponHandler = async (req, res) => {
   }
 };
 
-/**
- * PUT /foundry/weapons/:id/format
- * (pakai updateFoundryWeapon biasa, bisa edit semua kolom)
- */
 export const updateFoundryWeaponFormatHandler = async (req, res) => {
   try {
-    const { id }   = req.params;
-    const payload  = req.body;
+    const { id } = req.params;
+    const payload = req.body;
 
     if (!payload || typeof payload !== "object") {
       return res
@@ -287,9 +345,6 @@ export const updateFoundryWeaponFormatHandler = async (req, res) => {
   }
 };
 
-/**
- * DELETE /foundry/weapons/:id
- */
 export const deleteFoundryWeaponHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -306,13 +361,9 @@ export const deleteFoundryWeaponHandler = async (req, res) => {
   }
 };
 
-/**
- * GET /foundry/weapons/:id/export?mode=raw|format
- * (sekarang masih export full row)
- */
 export async function exportFoundryWeaponHandler(req, res) {
   try {
-    const { id }        = req.params;
+    const { id } = req.params;
     const { mode = "raw" } = req.query;
 
     const row = await getFoundryWeaponById(id);
@@ -320,7 +371,7 @@ export async function exportFoundryWeaponHandler(req, res) {
       return res.status(404).json({ error: "Weapon not found" });
     }
 
-    const exported = row;
+    const exported = row; // kalau mau mode 'raw' / 'format_data' tinggal di-switch di sini
     const filename = `${row.name.replace(/\s+/g, "_")}_${mode}.json`;
 
     res.setHeader("Content-Type", "application/json");
