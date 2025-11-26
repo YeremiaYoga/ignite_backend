@@ -185,13 +185,13 @@ export const importFoundryTools = async (req, res) => {
           // mapping sesuai aturan:
           // rarity    = system.rarity
           // base_item = system.type.baseItem
-          // tool_type = system.type.value
+          // type_value = system.type.value
           // properties = system.properties
           // weight    = system.weight.value
           // attunement= system.attunement
           rarity: system?.rarity ?? null,
           base_item: sysType.baseItem ?? null,
-          tool_type: sysType.value ?? null,
+          type_value: sysType.value ?? null,
           properties: system?.properties ?? null,
           weight: system?.weight?.value ?? null,
           attunement: system?.attunement ?? null,
@@ -275,7 +275,7 @@ export const getFoundryToolHandler = async (req, res) => {
 
 /**
  * PUT /foundry/tools/:id
- * - update data tool (rarity, base_item, tool_type, dll, termasuk kolom baru)
+ * - update data tool (rarity, base_item, type_value, dll, termasuk kolom baru)
  */
 export const updateFoundryToolHandler = async (req, res) => {
   try {

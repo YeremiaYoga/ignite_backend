@@ -46,6 +46,7 @@ import foundryEquipmentRoutes from "./routes/foundryEquipmentRoutes.js";
 import foundryLootRoutes from "./routes/foundryLootRoutes.js";
 import foundrySpellRoutes from "./routes/foundrySpellRoutes.js";
 import foundryFeatureRoutes from "./routes/foundryFeatureRoutes.js";
+import foundryItemsRoutes from "./routes/foundryItemsRoutes.js";
 import path from "path";
 const app = express();
 
@@ -127,4 +128,6 @@ app.use("/foundry/equipments", foundryEquipmentRoutes);
 app.use("/foundry/loots", foundryLootRoutes);
 app.use("/foundry/spells", foundrySpellRoutes);
 app.use("/foundry/features", foundryFeatureRoutes);
+
+app.use("/foundry/items", foundryItemsRoutes);
 export default app;

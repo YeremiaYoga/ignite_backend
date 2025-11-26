@@ -11,7 +11,7 @@ export async function insertFoundryWeapon(payload) {
 
     rarity,
     base_item,
-    weapon_type,
+    type_value,
     damage_type,
     attunement,
     properties,
@@ -39,7 +39,7 @@ export async function insertFoundryWeapon(payload) {
 
       rarity,
       base_item,
-      weapon_type,
+      type_value,
       damage_type,
       attunement,
       properties,
@@ -78,7 +78,7 @@ export async function bulkInsertFoundryWeapons(items) {
 
     rarity: it.rarity ?? null,
     base_item: it.base_item ?? null,
-    weapon_type: it.weapon_type ?? null,
+    type_value: it.type_value ?? null,
     damage_type: it.damage_type ?? null,
     attunement: it.attunement ?? null,
     properties: it.properties ?? null,

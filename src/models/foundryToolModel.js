@@ -11,7 +11,7 @@ export async function insertFoundryTool(payload) {
 
     rarity,
     base_item,
-    tool_type,
+    type_value,
     properties,
     weight,
     attunement,
@@ -34,7 +34,7 @@ export async function insertFoundryTool(payload) {
 
       rarity,
       base_item,
-      tool_type,
+      type_value,
       properties,
       weight,
       attunement,
@@ -71,7 +71,7 @@ export async function bulkInsertFoundryTools(items) {
 
     rarity: it.rarity ?? null,
     base_item: it.base_item ?? null,
-    tool_type: it.tool_type ?? null,
+    type_value: it.type_value ?? null,
     properties: it.properties ?? null,
     weight: it.weight ?? null,
     attunement: it.attunement ?? null,

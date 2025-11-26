@@ -139,7 +139,7 @@ function buildWeaponPayloads(rawItems) {
 
         rarity: system?.rarity ?? null,
         base_item: sysType.baseItem ?? null,
-        weapon_type: sysType.value ?? null,
+        type_value: sysType.value ?? null,
         damage_type: dmgBase.types ?? null,
         attunement: system?.attunement ?? null,
         properties: system?.properties ?? null,
