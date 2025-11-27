@@ -5,17 +5,16 @@ import {
   getFoundryContainerById,
   deleteFoundryContainer,
   updateFoundryContainer,
-  exportFoundryContainer,
 } from "../models/foundryContainerModel.js";
 
-const MEDIA_BASE =
-  process.env.PUBLIC_MEDIA_URL ||
-  process.env.NEXT_PUBLIC_MEDIA_URL ||
-  process.env.MEDIA_URL ||
-  "";
+const PUBLIC_MEDIA_URL = (process.env.PUBLIC_MEDIA_URL || "").replace(
+  /\/$/,
+  ""
+);
 
-/** Helpers */
-
+/* ---------------------------------------------
+ * NORMALIZER
+ * --------------------------------------------- */
 function normalizeFoundryContainer(raw) {
   if (!raw || typeof raw !== "object") {
     throw new Error("Invalid container JSON");
@@ -23,7 +22,7 @@ function normalizeFoundryContainer(raw) {
 
   const name = raw.name || "Unknown Container";
   const type = raw.type || "container";
-  const img = raw.img || null;
+  const img = raw.img || raw.system?.img || null;
 
   const system = raw.system ?? {};
   const effects = Array.isArray(raw.effects) ? raw.effects : [];
@@ -37,38 +36,37 @@ function normalizeFoundryContainer(raw) {
   };
 }
 
-function resolveItemImage(raw, normalized) {
-  const system = normalized.system || {};
-  let src = system.img || normalized.img || raw.img || null;
+/* ---------------------------------------------
+ * IMAGE RESOLVER (seragam dengan weapon/tool/consumable)
+ * --------------------------------------------- */
+function resolveContainerImage(systemImg, fallbackImg) {
+  let img = systemImg || fallbackImg;
+  if (!img) return null;
 
-  if (!src) return null;
-  src = String(src).trim();
-  if (!src) return null;
-
-  if (src.startsWith("http://") || src.startsWith("https://")) {
-    return src;
+  // Absolute URL
+  if (/^https?:\/\//i.test(img)) {
+    return img;
   }
 
-  let path = src.replace(/^\/+/, "");
-
-  const systemsPrefix = "systems/dnd5e/icons/";
-  if (path.startsWith(systemsPrefix)) {
-    path = path.slice(systemsPrefix.length);
+  // Kalau ada "icons/", potong dari sana
+  const cutIndex = img.indexOf("icons/");
+  if (cutIndex !== -1) {
+    img = img.substring(cutIndex);
   }
 
-  const iconsPrefix = "icons/";
-  if (path.startsWith(iconsPrefix)) {
-    path = path.slice(iconsPrefix.length);
+  // Ganti prefix "icons" → "foundryvtt"
+  img = img.replace(/^icons/, "foundryvtt");
+
+  if (PUBLIC_MEDIA_URL) {
+    return `${PUBLIC_MEDIA_URL}/${img}`;
   }
 
-  const base = MEDIA_BASE.replace(/\/+$/, "");
-  if (!base) {
-    return `/foundryvtt/${path}`;
-  }
-
-  return `${base}/foundryvtt/${path}`;
+  return img;
 }
 
+/* ---------------------------------------------
+ * HELPERS: compendium / source / price
+ * --------------------------------------------- */
 function getCompendiumSource(rawItem) {
   return rawItem?._stats?.compendiumSource ?? null;
 }
@@ -77,42 +75,86 @@ function getSourceBook(system) {
   return system?.source?.book ?? null;
 }
 
-function getPriceInCp(system) {
+function formatPrice(system) {
   const price = system?.price;
   if (!price) return null;
 
   const value = Number(price.value ?? 0);
   if (!Number.isFinite(value)) return null;
 
-  const denom = (price.denomination || "cp").toLowerCase();
-
-  let multiplier;
-  switch (denom) {
-    case "cp":
-      multiplier = 1;
-      break;
-    case "sp":
-      multiplier = 10;
-      break;
-    case "ep":
-      multiplier = 50;
-      break;
-    case "gp":
-      multiplier = 100;
-      break;
-    case "pp":
-      multiplier = 1000;
-      break;
-    default:
-      multiplier = 1;
-  }
-
-  return value * multiplier;
+  // if (value < 10) {
+  //   return `${value} cp`;
+  // }
+  // if (value < 100) {
+  //   const sp = value / 10;
+  //   return `${sp} sp`;
+  // }
+  // const gp = value / 100;
+  // return `${gp} gp`;
+  return value;
 }
 
-/**
+/* ---------------------------------------------
+ * BUILD PAYLOADS (mirip weapon/tool/consumable)
+ * --------------------------------------------- */
+function buildContainerPayloads(rawItems) {
+  const payloads = [];
+  const errors = [];
+
+  for (const raw of rawItems) {
+    try {
+      const normalized = normalizeFoundryContainer(raw);
+      const { name, type, system, img } = normalized;
+
+      if (type !== "container") {
+        errors.push({
+          name: raw?.name || null,
+          error: `Item type must be "container", got "${type}"`,
+        });
+        continue;
+      }
+
+      const weight = system?.weight?.value ?? null;
+      const image = resolveContainerImage(system?.img, img);
+
+      const compendium_source = getCompendiumSource(raw);
+      const price = formatPrice(system);
+      const source_book = getSourceBook(system);
+
+      payloads.push({
+        name,
+        type,
+
+        raw_data: raw,
+        format_data: normalized,
+
+        properties: system?.properties ?? null,
+        weight,
+        rarity: system?.rarity ?? null,
+
+        compendium_source,
+        price,
+        source_book,
+
+        attunement: system?.attunement ?? null,
+        image,
+      });
+    } catch (err) {
+      console.error("💥 Normalisasi container gagal:", err);
+      errors.push({
+        name: raw?.name || null,
+        error: err.message,
+      });
+    }
+  }
+
+  return { payloads, errors };
+}
+
+/* ---------------------------------------------
+ * IMPORT VIA BODY JSON
  * POST /foundry/containers/import
- */
+ * --------------------------------------------- */
 export const importFoundryContainers = async (req, res) => {
   try {
     const body = req.body;
@@ -130,55 +172,7 @@ export const importFoundryContainers = async (req, res) => {
       return res.status(400).json({ error: "Tidak ada item untuk diimport" });
     }
 
-    const payloads = [];
-    const errors = [];
-
-    for (const raw of items) {
-      try {
-        const normalized = normalizeFoundryContainer(raw);
-        const { name, type, system } = normalized;
-
-        if (type !== "container") {
-          errors.push({
-            name,
-            error: `Invalid type "${type}", only "container" is allowed`,
-          });
-          continue;
-        }
-
-        const weight = system?.weight?.value ?? null;
-        const image = resolveItemImage(raw, normalized);
-
-        const compendium_source = getCompendiumSource(raw);
-        const price = getPriceInCp(system);
-        const source_book = getSourceBook(system);
-
-        payloads.push({
-          name,
-          type,
-
-          raw_data: raw,
-          format_data: normalized,
-
-          properties: system?.properties ?? null,
-          weight,
-          rarity: system?.rarity ?? null,
-
-          compendium_source,
-          price,
-          source_book,
-
-          attunement: system?.attunement ?? null,
-          image,
-        });
-      } catch (err) {
-        console.error("💥 Normalisasi container gagal:", err);
-        errors.push({
-          name: raw?.name || null,
-          error: err.message,
-        });
-      }
-    }
+    const { payloads, errors } = buildContainerPayloads(items);
 
     let inserted = [];
     if (payloads.length) {
@@ -199,9 +193,79 @@ export const importFoundryContainers = async (req, res) => {
   }
 };
 
-/**
+/* ---------------------------------------------
+ * IMPORT VIA FILES (mass import)
+ * POST /foundry/containers/import-files
+ * --------------------------------------------- */
+export const importFoundryContainersFromFiles = async (req, res) => {
+  try {
+    const files = req.files || [];
+    if (!files.length) {
+      return res
+        .status(400)
+        .json({ error: "Tidak ada file yang di-upload untuk diimport" });
+    }
+
+    const rawItems = [];
+    const parseErrors = [];
+
+    for (const file of files) {
+      try {
+        const text = file.buffer.toString("utf8");
+        const parsed = JSON.parse(text);
+
+        if (Array.isArray(parsed)) {
+          rawItems.push(...parsed);
+        } else if (parsed && typeof parsed === "object") {
+          rawItems.push(parsed);
+        } else {
+          parseErrors.push({
+            file: file.originalname,
+            error: "File JSON harus berupa object atau array of object",
+          });
+        }
+      } catch (err) {
+        console.error("💥 Gagal parse file JSON:", file.originalname, err);
+        parseErrors.push({
+          file: file.originalname,
+          error: err.message,
+        });
+      }
+    }
+
+    if (!rawItems.length && !parseErrors.length) {
+      return res.status(400).json({
+        error: "Tidak ada item JSON valid yang ditemukan di file upload",
+      });
+    }
+
+    const { payloads, errors } = buildContainerPayloads(rawItems);
+
+    let inserted = [];
+    if (payloads.length) {
+      inserted = await bulkInsertFoundryContainers(payloads);
+    }
+
+    return res.json({
+      success: parseErrors.length === 0 && errors.length === 0,
+      imported: inserted.length,
+      totalFiles: files.length,
+      totalParsedItems: rawItems.length,
+      errors: [...parseErrors, ...errors],
+      items: inserted,
+    });
+  } catch (err) {
+    console.error("💥 importFoundryContainersFromFiles error:", err);
+    return res
+      .status(500)
+      .json({ error: "Failed to mass import foundry containers" });
+  }
+};
+
+/* ---------------------------------------------
+ * LIST
  * GET /foundry/containers
- */
+ * --------------------------------------------- */
 export const listFoundryContainersHandler = async (req, res) => {
   try {
     const limit = Number(req.query.limit) || 50;
@@ -219,9 +283,10 @@ export const listFoundryContainersHandler = async (req, res) => {
   }
 };
 
-/**
+/* ---------------------------------------------
+ * DETAIL
  * GET /foundry/containers/:id
- */
+ * --------------------------------------------- */
 export const getFoundryContainerHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -241,9 +306,10 @@ export const getFoundryContainerHandler = async (req, res) => {
   }
 };
 
-/**
+/* ---------------------------------------------
+ * UPDATE
  * PUT /foundry/containers/:id
- */
+ * --------------------------------------------- */
 export const updateFoundryContainerHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -263,9 +329,10 @@ export const updateFoundryContainerHandler = async (req, res) => {
   }
 };
 
-/**
+/* ---------------------------------------------
+ * DELETE
  * DELETE /foundry/containers/:id
- */
+ * --------------------------------------------- */
 export const deleteFoundryContainerHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -284,30 +351,34 @@ export const deleteFoundryContainerHandler = async (req, res) => {
   }
 };
 
-/**
+/* ---------------------------------------------
+ * EXPORT
  * GET /foundry/containers/:id/export?mode=raw|format
- */
+ * --------------------------------------------- */
 export async function exportFoundryContainerHandler(req, res) {
   try {
     const { id } = req.params;
     const { mode = "raw" } = req.query;
 
-    const row = await exportFoundryContainer(id);
+    const row = await getFoundryContainerById(id);
     if (!row) {
       return res.status(404).json({ error: "Container not found" });
     }
 
     let exported;
-    if (mode === "format") exported = row.format_data || row;
-    else exported = row.raw_data || row;
+    if (mode === "format" && row.format_data) {
+      exported = row.format_data;
+    } else if (mode === "raw" && row.raw_data) {
+      exported = row.raw_data;
+    } else {
+      exported = row;
+    }
 
     const safeMode = mode === "format" ? "format" : "raw";
-    const filename = `${row.name.replace(/\s+/g, "_")}_${safeMode}.json`;
+    const safeName = row.name?.replace(/\s+/g, "_") || "item";
+    const safeType = row.type?.toLowerCase() || "unknown";
 
-    // const safeName = row.name?.replace(/\s+/g, "_") || "item";
-    // const safeType = row.type?.toLowerCase() || "unknown";
-
-    // const filename = `${safeName}_${safeType}_${safeMode}.json`;
+    const filename = `${safeName}_${safeType}_${safeMode}.json`;
 
     res.setHeader("Content-Type", "application/json");
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);

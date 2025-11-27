@@ -7,216 +7,152 @@ import {
   updateFoundryTool,
 } from "../models/foundryToolModel.js";
 
-const MEDIA_BASE =
-  process.env.PUBLIC_MEDIA_URL ||
-  process.env.NEXT_PUBLIC_MEDIA_URL ||
-  process.env.MEDIA_URL ||
-  "";
+const PUBLIC_MEDIA_URL = (process.env.PUBLIC_MEDIA_URL || "").replace(
+  /\/$/,
+  ""
+);
 
-/**
- * Helper: normalisasi raw tool
- */
-function normalizeFoundryTool(raw) {
-  if (!raw || typeof raw !== "object") {
-    throw new Error("Invalid tool JSON");
-  }
+/* ---------------------------------------------
+ * IMAGE RESOLVER
+ * --------------------------------------------- */
+function resolveToolImage(systemImg, fallbackImg) {
+  let img = systemImg || fallbackImg;
+  if (!img) return null;
 
-  const name = raw.name || "Unknown Tool";
-  const type = raw.type || "tool";
-  const img = raw.img || null;
+  // Absolute URL → return langsung
+  if (/^https?:\/\//i.test(img)) return img;
 
-  const system = raw.system ?? {};
-  const effects = Array.isArray(raw.effects) ? raw.effects : [];
+  // Potong dari "icons/"
+  const cutIndex = img.indexOf("icons/");
+  if (cutIndex !== -1) img = img.substring(cutIndex);
 
-  return {
-    name,
-    type,
-    img,
-    system,
-    effects,
-  };
+  // prefix: icons → foundryvtt
+  img = img.replace(/^icons/, "foundryvtt");
+
+  if (PUBLIC_MEDIA_URL) return `${PUBLIC_MEDIA_URL}/${img}`;
+  return img;
 }
 
-/**
- * Helper: resolve image path ke URL
- */
-function resolveToolImage(raw, normalized) {
-  const system = normalized.system || {};
-  let src = system.img || normalized.img || raw.img || null;
-
-  if (!src) return null;
-  src = String(src).trim();
-  if (!src) return null;
-
-  // Sudah full URL
-  if (src.startsWith("http://") || src.startsWith("https://")) {
-    return src;
-  }
-
-  // Normalisasi path
-  let path = src.replace(/^\/+/, ""); // buang leading "/"
-
-  // systems/dnd5e/icons/... => buang sampai "icons/"
-  const systemsPrefix = "systems/dnd5e/icons/";
-  if (path.startsWith(systemsPrefix)) {
-    path = path.slice(systemsPrefix.length);
-  }
-
-  // icons/... => buang "icons/"
-  const iconsPrefix = "icons/";
-  if (path.startsWith(iconsPrefix)) {
-    path = path.slice(iconsPrefix.length);
-  }
-
-  const base = MEDIA_BASE.replace(/\/+$/, "");
-  if (!base) {
-    return `/foundryvtt/${path}`;
-  }
-
-  return `${base}/foundryvtt/${path}`;
-}
-
-/**
- * Helper: ambil compendiumSource dari _stats
- */
+/* ---------------------------------------------
+ * GETTERS: COMPENDIUM / SOURCE / PRICE
+ * --------------------------------------------- */
 function getCompendiumSource(rawItem) {
   return rawItem?._stats?.compendiumSource ?? null;
 }
 
-/**
- * Helper: ambil source book, contoh "DMG 2024"
- */
 function getSourceBook(system) {
   return system?.source?.book ?? null;
 }
 
-/**
- * Helper: hitung harga dalam CP
- * cp: x1, sp: x10, ep: x50, gp: x100, pp: x1000
- */
-function getPriceInCp(system) {
+// convert price to CP
+function formatPrice(system) {
   const price = system?.price;
   if (!price) return null;
 
   const value = Number(price.value ?? 0);
   if (!Number.isFinite(value)) return null;
 
-  const denom = (price.denomination || "cp").toLowerCase();
-
-  let multiplier;
-  switch (denom) {
-    case "cp":
-      multiplier = 1;
-      break;
-    case "sp":
-      multiplier = 10;
-      break;
-    case "ep":
-      multiplier = 50;
-      break;
-    case "gp":
-      multiplier = 100;
-      break;
-    case "pp":
-      multiplier = 1000;
-      break;
-    default:
-      multiplier = 1;
-  }
-
-  return value * multiplier;
+  // if (value < 10) {
+  //   return `${value} cp`;
+  // }
+  // if (value < 100) {
+  //   const sp = value / 10;
+  //   return `${sp} sp`;
+  // }
+  // const gp = value / 100;
+  // return `${gp} gp`;
+  return value;
 }
 
-/**
- * POST /foundry/tools/import
- */
+/* ---------------------------------------------
+ * NORMALIZER
+ * --------------------------------------------- */
+function normalizeFoundryTool(raw) {
+  if (!raw || typeof raw !== "object") throw new Error("Invalid tool JSON");
+
+  return {
+    name: raw.name || "Unknown Tool",
+    type: raw.type || "tool",
+    img: raw.img || raw.system?.img || null,
+    system: raw.system ?? {},
+    effects: Array.isArray(raw.effects) ? raw.effects : [],
+  };
+}
+
+/* ---------------------------------------------
+ * BUILD PAYLOAD (seragam dengan weapon)
+ * --------------------------------------------- */
+function buildToolPayloads(rawItems) {
+  const payloads = [];
+  const errors = [];
+
+  for (const raw of rawItems) {
+    try {
+      const normalized = normalizeFoundryTool(raw);
+      const { name, type, system, img } = normalized;
+
+      if (type !== "tool") {
+        errors.push({
+          name: raw?.name || null,
+          error: `Item type must be "tool", got "${type}"`,
+        });
+        continue;
+      }
+
+      const sysType = system?.type || {};
+
+      const image = resolveToolImage(system?.img, img);
+
+      payloads.push({
+        name,
+        type,
+
+        raw_data: raw,
+        format_data: normalized,
+
+        rarity: system?.rarity ?? null,
+        base_item: sysType.baseItem ?? null,
+        type_value: sysType.value ?? null,
+        properties: system?.properties ?? null,
+        weight: system?.weight?.value ?? null,
+        attunement: system?.attunement ?? null,
+
+        compendium_source: getCompendiumSource(raw),
+        price: formatPrice(system),
+        source_book: getSourceBook(system),
+
+        image,
+      });
+    } catch (err) {
+      errors.push({ name: raw?.name, error: err.message });
+    }
+  }
+
+  return { payloads, errors };
+}
+
+/* ---------------------------------------------
+ * IMPORT VIA JSON (body)
+ * --------------------------------------------- */
 export const importFoundryTools = async (req, res) => {
   try {
     const body = req.body;
 
     let items = [];
-    if (Array.isArray(body)) {
-      items = body;
-    } else if (body && typeof body === "object") {
-      items = [body];
-    } else {
+    if (Array.isArray(body)) items = body;
+    else if (body && typeof body === "object") items = [body];
+    else
       return res.status(400).json({
-        error: "Request body harus berupa 1 JSON object atau array of JSON",
+        error: "Request body harus berupa 1 JSON object atau array",
       });
-    }
 
-    if (!items.length) {
-      return res.status(400).json({ error: "Tidak ada item untuk diimport" });
-    }
+    if (!items.length)
+      return res.status(400).json({ error: "Tidak ada item untuk import" });
 
-    const payloads = [];
-    const errors = [];
-
-    for (const raw of items) {
-      try {
-        const normalized = normalizeFoundryTool(raw);
-        const { name, type, system } = normalized;
-
-        // ❌ hanya terima type "tool"
-        if (type !== "tool") {
-          errors.push({
-            name,
-            error: `Invalid type "${type}", only "tool" is allowed`,
-          });
-          continue;
-        }
-
-        const sysType = system?.type || {};
-        const image = resolveToolImage(raw, normalized);
-
-        // 🆕 kolom tambahan: compendium, price(cp), source book
-        const compendium_source = getCompendiumSource(raw);
-        const price = getPriceInCp(system); // dalam CP
-        const source_book = getSourceBook(system);
-
-        payloads.push({
-          name,
-          type,
-
-          // JSONB di DB
-          raw_data: raw,
-          format_data: normalized,
-
-          // mapping sesuai aturan:
-          // rarity    = system.rarity
-          // base_item = system.type.baseItem
-          // type_value = system.type.value
-          // properties = system.properties
-          // weight    = system.weight.value
-          // attunement= system.attunement
-          rarity: system?.rarity ?? null,
-          base_item: sysType.baseItem ?? null,
-          type_value: sysType.value ?? null,
-          properties: system?.properties ?? null,
-          weight: system?.weight?.value ?? null,
-          attunement: system?.attunement ?? null,
-
-          // kolom baru
-          compendium_source,
-          price,
-          source_book,
-
-          // kalau mau aktifkan image tinggal ganti ke image ?? null
-          image: image ?? null,
-        });
-      } catch (err) {
-        console.error("💥 Normalisasi tool gagal:", err);
-        errors.push({
-          name: raw?.name || null,
-          error: err.message,
-        });
-      }
-    }
+    const { payloads, errors } = buildToolPayloads(items);
 
     let inserted = [];
-    if (payloads.length) {
-      inserted = await bulkInsertFoundryTools(payloads);
-    }
+    if (payloads.length) inserted = await bulkInsertFoundryTools(payloads);
 
     return res.json({
       success: errors.length === 0,
@@ -226,126 +162,131 @@ export const importFoundryTools = async (req, res) => {
     });
   } catch (err) {
     console.error("💥 importFoundryTools error:", err);
-    return res.status(500).json({ error: "Failed to import foundry tools" });
+    res.status(500).json({ error: "Failed to import foundry tools" });
   }
 };
 
-/**
- * GET /foundry/tools
- * ?limit=50&offset=0
- */
+/* ---------------------------------------------
+ * IMPORT VIA FILES (mass import from upload)
+ * --------------------------------------------- */
+export const importFoundryToolsFromFiles = async (req, res) => {
+  try {
+    const files = req.files || [];
+    if (!files.length)
+      return res.status(400).json({ error: "Tidak ada file di-upload" });
+
+    const rawItems = [];
+    const parseErrors = [];
+
+    for (const file of files) {
+      try {
+        const parsed = JSON.parse(file.buffer.toString("utf8"));
+        if (Array.isArray(parsed)) rawItems.push(...parsed);
+        else if (parsed && typeof parsed === "object") rawItems.push(parsed);
+        else
+          parseErrors.push({
+            file: file.originalname,
+            error: "File harus 1 object atau array",
+          });
+      } catch (err) {
+        parseErrors.push({
+          file: file.originalname,
+          error: err.message,
+        });
+      }
+    }
+
+    if (!rawItems.length && !parseErrors.length)
+      return res
+        .status(400)
+        .json({ error: "Tidak ada item JSON valid di file upload" });
+
+    const { payloads, errors } = buildToolPayloads(rawItems);
+
+    let inserted = [];
+    if (payloads.length) inserted = await bulkInsertFoundryTools(payloads);
+
+    return res.json({
+      success: parseErrors.length === 0 && errors.length === 0,
+      imported: inserted.length,
+      totalFiles: files.length,
+      totalParsedItems: rawItems.length,
+      errors: [...parseErrors, ...errors],
+      items: inserted,
+    });
+  } catch (err) {
+    console.error("💥 importFoundryToolsFromFiles error:", err);
+    res.status(500).json({ error: "Failed to import tools (files)" });
+  }
+};
+
+/* ---------------------------------------------
+ * LIST / GET / UPDATE / DELETE / EXPORT
+ * --------------------------------------------- */
 export const listFoundryToolsHandler = async (req, res) => {
   try {
     const limit = Number(req.query.limit) || 50;
     const offset = Number(req.query.offset) || 0;
 
     const rows = await listFoundryTools({ limit, offset });
-
-    return res.json({
-      success: true,
-      items: rows,
-    });
+    res.json({ success: true, items: rows });
   } catch (err) {
-    console.error("💥 listFoundryToolsHandler error:", err);
-    return res.status(500).json({ error: "Failed to list foundry tools" });
+    res.status(500).json({ error: "Failed to list tools" });
   }
 };
 
-/**
- * GET /foundry/tools/:id
- */
 export const getFoundryToolHandler = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    const row = await getFoundryToolById(id);
-    if (!row) {
-      return res.status(404).json({ error: "Tool not found" });
-    }
-
-    return res.json({
-      success: true,
-      item: row,
-    });
+    const row = await getFoundryToolById(req.params.id);
+    if (!row) return res.status(404).json({ error: "Tool not found" });
+    res.json({ success: true, item: row });
   } catch (err) {
-    console.error("💥 getFoundryToolHandler error:", err);
-    return res.status(500).json({ error: "Failed to get foundry tool" });
+    res.status(500).json({ error: "Failed to get tool" });
   }
 };
 
-/**
- * PUT /foundry/tools/:id
- * - update data tool (rarity, base_item, type_value, dll, termasuk kolom baru)
- */
 export const updateFoundryToolHandler = async (req, res) => {
   try {
-    const { id } = req.params;
-    const payload = req.body || {};
-
-    const updated = await updateFoundryTool(id, payload);
-
-    return res.json({
-      success: true,
-      item: updated,
-    });
+    const updated = await updateFoundryTool(req.params.id, req.body || {});
+    res.json({ success: true, item: updated });
   } catch (err) {
-    console.error("💥 updateFoundryToolHandler error:", err);
-    return res.status(500).json({ error: "Failed to update foundry tool" });
+    res.status(500).json({ error: "Failed to update tool" });
   }
 };
 
-/**
- * DELETE /foundry/tools/:id
- */
 export const deleteFoundryToolHandler = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    await deleteFoundryTool(id);
-
-    return res.json({
-      success: true,
-      message: "Tool deleted",
-    });
+    await deleteFoundryTool(req.params.id);
+    res.json({ success: true, message: "Tool deleted" });
   } catch (err) {
-    console.error("💥 deleteFoundryToolHandler error:", err);
-    return res.status(500).json({ error: "Failed to delete foundry tool" });
+    res.status(500).json({ error: "Failed to delete tool" });
   }
 };
 
-/**
- * GET /foundry/tools/:id/export?mode=raw|format
- * - Kalau ada raw_data / format_data, pakai itu
- * - Fallback ke row penuh kalau nggak ada
- */
 export async function exportFoundryToolHandler(req, res) {
   try {
     const { id } = req.params;
     const { mode = "raw" } = req.query;
 
     const row = await getFoundryToolById(id);
-    if (!row) {
-      return res.status(404).json({ error: "Tool not found" });
-    }
+    if (!row) return res.status(404).json({ error: "Tool not found" });
 
-    let exported;
-    if (mode === "raw" && row.raw_data) {
-      exported = row.raw_data;
-    } else if (mode === "format" && row.format_data) {
-      exported = row.format_data;
-    } else {
-      exported = row;
-    }
+    let exported =
+      mode === "format" && row.format_data
+        ? row.format_data
+        : mode === "raw" && row.raw_data
+        ? row.raw_data
+        : row;
 
-    const safeMode = mode === "format" ? "format" : "raw";
-    const filename = `${row.name.replace(/\s+/g, "_")}_${safeMode}.json`;
+    const safeName = row.name?.replace(/\s+/g, "_") || "item";
+    const safeType = row.type?.toLowerCase() || "unknown";
+
+    const filename = `${safeName}_${safeType}_${safeMode}.json`;
 
     res.setHeader("Content-Type", "application/json");
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-
-    return res.status(200).send(JSON.stringify(exported, null, 2));
+    return res.send(JSON.stringify(exported, null, 2));
   } catch (err) {
-    console.error("❌ exportFoundryToolHandler error:", err);
     res.status(500).json({ error: err.message });
   }
 }

@@ -7,7 +7,10 @@ import {
   updateFoundryWeapon,
 } from "../models/foundryWeaponModel.js";
 
-const PUBLIC_MEDIA_URL = (process.env.PUBLIC_MEDIA_URL || "").replace(/\/$/, "");
+const PUBLIC_MEDIA_URL = (process.env.PUBLIC_MEDIA_URL || "").replace(
+  /\/$/,
+  ""
+);
 
 function resolveWeaponImage(systemImg, fallbackImg) {
   let img = systemImg || fallbackImg;
@@ -42,37 +45,23 @@ function getSourceBook(system) {
   return system?.source?.book ?? null;
 }
 
-function getPriceInCp(system) {
+function formatPrice(system) {
   const price = system?.price;
   if (!price) return null;
 
   const value = Number(price.value ?? 0);
   if (!Number.isFinite(value)) return null;
 
-  const denom = (price.denomination || "cp").toLowerCase();
-
-  let multiplier;
-  switch (denom) {
-    case "cp":
-      multiplier = 1;
-      break;
-    case "sp":
-      multiplier = 10;
-      break;
-    case "ep":
-      multiplier = 50;
-      break;
-    case "gp":
-      multiplier = 100;
-      break;
-    case "pp":
-      multiplier = 1000;
-      break;
-    default:
-      multiplier = 1;
-  }
-
-  return value * multiplier;
+  // if (value < 10) {
+  //   return `${value} cp`;
+  // }
+  // if (value < 100) {
+  //   const sp = value / 10;
+  //   return `${sp} sp`;
+  // }
+  // const gp = value / 100;
+  // return `${gp} gp`;
+  return value;
 }
 
 function normalizeFoundryWeapon(raw) {
@@ -98,12 +87,6 @@ function normalizeFoundryWeapon(raw) {
   };
 }
 
-/**
- * Helper untuk membangun payload insert dari array raw items.
- * Dipakai oleh:
- * - importFoundryWeapons (body JSON/array)
- * - importFoundryWeaponsFromFiles (banyak file JSON)
- */
 function buildWeaponPayloads(rawItems) {
   const payloads = [];
   const errors = [];
@@ -127,7 +110,7 @@ function buildWeaponPayloads(rawItems) {
       const image = resolveWeaponImage(system?.img, img);
 
       const compendium_source = getCompendiumSource(raw);
-      const price = getPriceInCp(system);
+      const price = formatPrice(system);
       const source_book = getSourceBook(system);
 
       payloads.push({
@@ -164,12 +147,7 @@ function buildWeaponPayloads(rawItems) {
   return { payloads, errors };
 }
 
-/**
- * IMPORT via body JSON (1 object atau array) — versi lama, sudah support mass import.
- * Contoh:
- *  POST /api/foundry/weapons/import
- *  body = [ {...}, {...}, ... ]
- */
+
 export const importFoundryWeapons = async (req, res) => {
   try {
     const body = req.body;
@@ -372,13 +350,13 @@ export async function exportFoundryWeaponHandler(req, res) {
     }
 
     const exported = row; // kalau mau mode 'raw' / 'format_data' tinggal di-switch di sini
-    const filename = `${row.name.replace(/\s+/g, "_")}_${mode}.json`;
+    const safeName = row.name?.replace(/\s+/g, "_") || "item";
+    const safeType = row.type?.toLowerCase() || "unknown";
+
+    const filename = `${safeName}_${safeType}_${safeMode}.json`;
 
     res.setHeader("Content-Type", "application/json");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${filename}"`
-    );
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
 
     return res.status(200).send(JSON.stringify(exported, null, 2));
   } catch (err) {

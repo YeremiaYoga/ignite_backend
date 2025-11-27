@@ -7,12 +7,19 @@ import {
   deleteFoundrySpell,
 } from "../models/foundrySpellModel.js";
 
-const PUBLIC_MEDIA_URL = (process.env.PUBLIC_MEDIA_URL || "").replace(/\/$/, "");
+const PUBLIC_MEDIA_URL = (process.env.PUBLIC_MEDIA_URL || "").replace(
+  /\/$/,
+  ""
+);
 
+/* ---------------------------------------------
+ * IMAGE RESOLVER
+ * --------------------------------------------- */
 function resolveSpellImage(systemImg, fallbackImg) {
   let img = systemImg || fallbackImg;
   if (!img) return null;
 
+  // absolute URL
   if (/^https?:\/\//i.test(img)) {
     return img;
   }
@@ -25,6 +32,9 @@ function resolveSpellImage(systemImg, fallbackImg) {
   return img;
 }
 
+/* ---------------------------------------------
+ * HELPERS: compendium / source
+ * --------------------------------------------- */
 function getCompendiumSource(rawItem) {
   return rawItem?._stats?.compendiumSource ?? null;
 }
@@ -33,6 +43,28 @@ function getSourceBook(system) {
   return system?.source?.book ?? null;
 }
 
+function formatPrice(system) {
+  const price = system?.price;
+  if (!price) return null;
+
+  const value = Number(price.value ?? 0);
+  if (!Number.isFinite(value)) return null;
+
+  // if (value < 10) {
+  //   return `${value} cp`;
+  // }
+  // if (value < 100) {
+  //   const sp = value / 10;
+  //   return `${sp} sp`;
+  // }
+  // const gp = value / 100;
+  // return `${gp} gp`;
+  return value;
+}
+
+/* ---------------------------------------------
+ * NORMALIZER
+ * --------------------------------------------- */
 function normalizeFoundrySpell(raw) {
   if (!raw || typeof raw !== "object") {
     throw new Error("Invalid spell JSON");
@@ -40,20 +72,14 @@ function normalizeFoundrySpell(raw) {
 
   const name = raw.name || "Unknown Spell";
   const type = raw.type || "spell";
-  const img = raw.img || null;
+  const img = raw.img || raw.system?.img || null;
 
   const system = raw.system ?? {};
   const effects = Array.isArray(raw.effects) ? raw.effects : [];
 
-  const description =
-    system.description?.value ??
-    system.description ??
-    "";
+  const description = system.description?.value ?? system.description ?? "";
 
-  const material =
-    system.materials?.value ??
-    system.material ??
-    "";
+  const material = system.materials?.value ?? system.material ?? "";
 
   const target = system.target?.value ?? null;
   const affected = system.target?.type ?? null;
@@ -90,8 +116,62 @@ function normalizeFoundrySpell(raw) {
   };
 }
 
-// ---- controllers ----
+/* ---------------------------------------------
+ * BUILD PAYLOADS
+ * --------------------------------------------- */
+function buildSpellPayloads(rawItems) {
+  const payloads = [];
+  const errors = [];
 
+  for (const raw of rawItems) {
+    try {
+      const normalized = normalizeFoundrySpell(raw);
+      const { name, type, img, system } = normalized;
+
+      const image = resolveSpellImage(system.img, img);
+      const compendium_source = getCompendiumSource(raw);
+      const source_book = getSourceBook(system);
+      const price = formatPrice(system); // 🔥 baru
+
+      payloads.push({
+        name,
+        type,
+
+        properties: system.properties ?? null,
+        level: system.level ?? null,
+        school: system.school ?? null,
+
+        description: normalized.description,
+        material: normalized.material,
+        target: normalized.target,
+        affected: normalized.affected,
+        range: normalized.range,
+        activation: normalized.activation,
+        duration: normalized.duration,
+
+        price, // 🔥 baru, ikut schema DB
+        image,
+        compendium_source,
+        source_book,
+
+        raw_data: raw,
+        format_data: normalized,
+      });
+    } catch (err) {
+      console.error("💥 normalize spell failed:", err);
+      errors.push({
+        name: raw?.name || null,
+        error: err.message,
+      });
+    }
+  }
+
+  return { payloads, errors };
+}
+
+/* ---------------------------------------------
+ * IMPORT VIA JSON BODY
+ * --------------------------------------------- */
 export const importFoundrySpells = async (req, res) => {
   try {
     const body = req.body;
@@ -109,49 +189,7 @@ export const importFoundrySpells = async (req, res) => {
       return res.status(400).json({ error: "No items to import" });
     }
 
-    const payloads = [];
-    const errors = [];
-
-    for (const raw of items) {
-      try {
-        const normalized = normalizeFoundrySpell(raw);
-        const { name, type, img, system } = normalized;
-
-        if (type !== "spell") {
-          // masih boleh, cuma kalau mau strict bisa di-check
-        }
-
-        const image = resolveSpellImage(system.img, img);
-        const compendium_source = getCompendiumSource(raw);
-        const source_book = getSourceBook(system);
-
-        payloads.push({
-          name,
-          type,
-          properties: system.properties ?? null,
-          level: system.level ?? null,
-          school: system.school ?? null,
-          description: normalized.description,
-          material: normalized.material,
-          target: normalized.target,
-          affected: normalized.affected,
-          range: normalized.range,
-          activation: normalized.activation,
-          duration: normalized.duration,
-          image,
-          compendium_source,
-          source_book,
-          raw_data: raw,
-          format_data: normalized,
-        });
-      } catch (err) {
-        console.error("💥 normalize spell failed:", err);
-        errors.push({
-          name: raw?.name || null,
-          error: err.message,
-        });
-      }
-    }
+    const { payloads, errors } = buildSpellPayloads(items);
 
     let inserted = [];
     if (payloads.length) {
@@ -170,6 +208,73 @@ export const importFoundrySpells = async (req, res) => {
   }
 };
 
+/* ---------------------------------------------
+ * IMPORT VIA FILES (mass import)
+ * --------------------------------------------- */
+export const importFoundrySpellsFromFiles = async (req, res) => {
+  try {
+    const files = req.files || [];
+    if (!files.length) {
+      return res.status(400).json({ error: "No files uploaded for import" });
+    }
+
+    const rawItems = [];
+    const parseErrors = [];
+
+    for (const file of files) {
+      try {
+        const text = file.buffer.toString("utf8");
+        const parsed = JSON.parse(text);
+
+        if (Array.isArray(parsed)) {
+          rawItems.push(...parsed);
+        } else if (parsed && typeof parsed === "object") {
+          rawItems.push(parsed);
+        } else {
+          parseErrors.push({
+            file: file.originalname,
+            error: "File JSON must be an object or array of objects",
+          });
+        }
+      } catch (err) {
+        console.error("💥 Failed to parse JSON file:", file.originalname, err);
+        parseErrors.push({
+          file: file.originalname,
+          error: err.message,
+        });
+      }
+    }
+
+    if (!rawItems.length && !parseErrors.length) {
+      return res.status(400).json({
+        error: "No valid JSON items found in uploaded files",
+      });
+    }
+
+    const { payloads, errors } = buildSpellPayloads(rawItems);
+
+    let inserted = [];
+    if (payloads.length) {
+      inserted = await bulkInsertFoundrySpells(payloads);
+    }
+
+    return res.json({
+      success: parseErrors.length === 0 && errors.length === 0,
+      imported: inserted.length,
+      totalFiles: files.length,
+      totalParsedItems: rawItems.length,
+      errors: [...parseErrors, ...errors],
+      items: inserted,
+    });
+  } catch (err) {
+    console.error("💥 importFoundrySpellsFromFiles error:", err);
+    return res.status(500).json({ error: "Failed to mass import spells" });
+  }
+};
+
+/* ---------------------------------------------
+ * LIST
+ * --------------------------------------------- */
 export const listFoundrySpellsHandler = async (req, res) => {
   try {
     const limit = Number(req.query.limit) || 50;
@@ -183,6 +288,9 @@ export const listFoundrySpellsHandler = async (req, res) => {
   }
 };
 
+/* ---------------------------------------------
+ * DETAIL
+ * --------------------------------------------- */
 export const getFoundrySpellHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -199,15 +307,16 @@ export const getFoundrySpellHandler = async (req, res) => {
   }
 };
 
+/* ---------------------------------------------
+ * UPDATE
+ * --------------------------------------------- */
 export const updateFoundrySpellFormatHandler = async (req, res) => {
   try {
     const { id } = req.params;
     const payload = req.body;
 
     if (!payload || typeof payload !== "object") {
-      return res
-        .status(400)
-        .json({ error: "Payload must be a JSON object" });
+      return res.status(400).json({ error: "Payload must be a JSON object" });
     }
 
     const updated = await updateFoundrySpell(id, payload);
@@ -218,6 +327,9 @@ export const updateFoundrySpellFormatHandler = async (req, res) => {
   }
 };
 
+/* ---------------------------------------------
+ * DELETE
+ * --------------------------------------------- */
 export const deleteFoundrySpellHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -230,6 +342,9 @@ export const deleteFoundrySpellHandler = async (req, res) => {
   }
 };
 
+/* ---------------------------------------------
+ * EXPORT
+ * --------------------------------------------- */
 export async function exportFoundrySpellHandler(req, res) {
   try {
     const { id } = req.params;
@@ -241,19 +356,22 @@ export async function exportFoundrySpellHandler(req, res) {
     }
 
     let exported;
-    if (mode === "format") {
-      exported = row.format_data || row.raw_data || row;
+    if (mode === "format" && row.format_data) {
+      exported = row.format_data;
+    } else if (mode === "raw" && row.raw_data) {
+      exported = row.raw_data;
     } else {
-      exported = row.raw_data || row.format_data || row;
+      exported = row;
     }
 
-    const filename = `${row.name.replace(/\s+/g, "_")}_${mode}.json`;
+    const safeMode = mode === "format" ? "format" : "raw";
+    const safeName = row.name?.replace(/\s+/g, "_") || "item";
+    const safeType = row.type?.toLowerCase() || "unknown";
+
+    const filename = `${safeName}_${safeType}_${safeMode}.json`;
 
     res.setHeader("Content-Type", "application/json");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${filename}"`
-    );
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
 
     return res.status(200).send(JSON.stringify(exported, null, 2));
   } catch (err) {

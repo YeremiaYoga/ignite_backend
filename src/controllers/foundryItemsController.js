@@ -3,21 +3,18 @@ import supabase from "../utils/db.js";
 
 const TABLES = [
   { key: "weapon", table: "foundry_weapons" },
-//   { key: "consumable", table: "foundry_consumables" },
-//   { key: "container", table: "foundry_containers" },
-//   { key: "equipment", table: "foundry_equipments" },
-//   { key: "loot", table: "foundry_loots" },
-//   { key: "tool", table: "foundry_tools" },
+  { key: "consumable", table: "foundry_consumables" },
+  { key: "container", table: "foundry_containers" },
+  { key: "equipment", table: "foundry_equipments" },
+  { key: "loot", table: "foundry_loots" },
+  { key: "tool", table: "foundry_tools" },
 ];
-
 
 export const getFoundryItems = async (req, res) => {
   try {
     const { type, search } = req.query;
     const like = search ? `%${search.toLowerCase()}%` : null;
-    const usedTables = type
-      ? TABLES.filter((t) => t.key === type)
-      : TABLES;
+    const usedTables = type ? TABLES.filter((t) => t.key === type) : TABLES;
 
     let items = [];
 
@@ -33,7 +30,7 @@ export const getFoundryItems = async (req, res) => {
         __type: t.key,
         __table: t.table,
         __global_id: `${t.key}-${row.id}`,
-        ...row, 
+        ...row,
       }));
 
       items = items.concat(mapped);

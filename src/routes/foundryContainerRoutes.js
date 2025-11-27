@@ -1,7 +1,9 @@
 // routes/foundryContainerRoutes.js
 import express from "express";
+import multer from "multer";
 import {
   importFoundryContainers,
+  importFoundryContainersFromFiles,
   listFoundryContainersHandler,
   getFoundryContainerHandler,
   updateFoundryContainerHandler,
@@ -11,10 +13,17 @@ import {
 import { verifyUserFullAuth } from "../middlewares/verifyUserFullAuth.js";
 
 const router = express.Router();
+const upload = multer();
 
 router.use(verifyUserFullAuth);
 
 router.post("/import", importFoundryContainers);
+router.post(
+  "/import-files",
+  upload.array("files"),
+  importFoundryContainersFromFiles
+);
+
 router.get("/", listFoundryContainersHandler);
 router.get("/:id", getFoundryContainerHandler);
 router.put("/:id", updateFoundryContainerHandler);

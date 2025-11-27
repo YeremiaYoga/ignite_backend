@@ -1,7 +1,10 @@
 // routes/foundryToolRoutes.js
 import express from "express";
+import multer from "multer";
+
 import {
-  importFoundryTools,
+  importFoundryTools,               
+  importFoundryToolsFromFiles,     
   listFoundryToolsHandler,
   getFoundryToolHandler,
   updateFoundryToolHandler,
@@ -11,16 +14,26 @@ import {
 import { verifyUserFullAuth } from "../middlewares/verifyUserFullAuth.js";
 
 const router = express.Router();
+const upload = multer(); 
 
 router.use(verifyUserFullAuth);
 
 router.post("/import", importFoundryTools);
+
+router.post(
+  "/import-files",
+  upload.array("files"),
+  importFoundryToolsFromFiles
+);
+
 router.get("/", listFoundryToolsHandler);
+
 router.get("/:id", getFoundryToolHandler);
+
 router.put("/:id", updateFoundryToolHandler);
+
 router.delete("/:id", deleteFoundryToolHandler);
 
-// 🆕 Export tool
 router.get("/:id/export", exportFoundryToolHandler);
 
 export default router;

@@ -1,7 +1,9 @@
 // routes/foundryConsumableRoutes.js
 import express from "express";
+import multer from "multer";
 import {
   importFoundryConsumables,
+  importFoundryConsumablesFromFiles,
   listFoundryConsumablesHandler,
   getFoundryConsumableHandler,
   updateFoundryConsumableHandler,
@@ -11,10 +13,18 @@ import {
 import { verifyUserFullAuth } from "../middlewares/verifyUserFullAuth.js";
 
 const router = express.Router();
+const upload = multer(); // memory storage
 
 router.use(verifyUserFullAuth);
 
 router.post("/import", importFoundryConsumables);
+
+router.post(
+  "/import-files",
+  upload.array("files"),
+  importFoundryConsumablesFromFiles
+);
+
 router.get("/", listFoundryConsumablesHandler);
 router.get("/:id", getFoundryConsumableHandler);
 router.put("/:id", updateFoundryConsumableHandler);
