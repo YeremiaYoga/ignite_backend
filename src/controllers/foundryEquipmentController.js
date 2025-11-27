@@ -79,21 +79,14 @@ function formatPrice(system) {
   const value = Number(price.value ?? 0);
   if (!Number.isFinite(value)) return null;
 
-  // if (value < 10) {
-  //   return `${value} cp`;
-  // }
-  // if (value < 100) {
-  //   const sp = value / 10;
-  //   return `${sp} sp`;
-  // }
-  // const gp = value / 100;
-  // return `${gp} gp`;
-  return value;
+  const denom = (price.denomination || "cp").toLowerCase();
+  const table = { cp: 1, sp: 10, ep: 50, gp: 100, pp: 1000 };
+  const mult = table[denom] ?? 1;
+
+  return value * mult;
 }
 
-/* ---------------------------------------------
- * BUILD PAYLOADS
- * --------------------------------------------- */
+
 function buildEquipmentPayloads(rawItems) {
   const payloads = [];
   const errors = [];
@@ -151,10 +144,6 @@ function buildEquipmentPayloads(rawItems) {
   return { payloads, errors };
 }
 
-/* ---------------------------------------------
- * IMPORT VIA BODY JSON
- * POST /foundry/equipments/import
- * --------------------------------------------- */
 export const importFoundryEquipments = async (req, res) => {
   try {
     const body = req.body;
@@ -193,10 +182,7 @@ export const importFoundryEquipments = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * IMPORT VIA FILES (mass import)
- * POST /foundry/equipments/import-files
- * --------------------------------------------- */
+
 export const importFoundryEquipmentsFromFiles = async (req, res) => {
   try {
     const files = req.files || [];
