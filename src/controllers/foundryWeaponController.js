@@ -52,16 +52,11 @@ function formatPrice(system) {
   const value = Number(price.value ?? 0);
   if (!Number.isFinite(value)) return null;
 
-  // if (value < 10) {
-  //   return `${value} cp`;
-  // }
-  // if (value < 100) {
-  //   const sp = value / 10;
-  //   return `${sp} sp`;
-  // }
-  // const gp = value / 100;
-  // return `${gp} gp`;
-  return value;
+  const denom = (price.denomination || "cp").toLowerCase();
+  const table = { cp: 1, sp: 10, ep: 50, gp: 100, pp: 1000 };
+  const mult = table[denom] ?? 1;
+
+  return value * mult;
 }
 
 function normalizeFoundryWeapon(raw) {
@@ -146,7 +141,6 @@ function buildWeaponPayloads(rawItems) {
 
   return { payloads, errors };
 }
-
 
 export const importFoundryWeapons = async (req, res) => {
   try {
@@ -349,7 +343,7 @@ export async function exportFoundryWeaponHandler(req, res) {
       return res.status(404).json({ error: "Weapon not found" });
     }
 
-    const exported = row; // kalau mau mode 'raw' / 'format_data' tinggal di-switch di sini
+    const exported = row;
     const safeName = row.name?.replace(/\s+/g, "_") || "item";
     const safeType = row.type?.toLowerCase() || "unknown";
 
