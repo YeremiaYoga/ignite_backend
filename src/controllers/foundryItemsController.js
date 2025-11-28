@@ -141,7 +141,7 @@ export const toggleFavoriteFoundryItem = async (req, res) => {
 
     return res.json({
       success: true,
-      action, // "favorite" atau "unfavorite"
+      action, 
       favorites_count,
       item: updated,
     });
