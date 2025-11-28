@@ -9,9 +9,7 @@ import {
 
 const PUBLIC_MEDIA_URL = (process.env.PUBLIC_MEDIA_URL || "").replace(/\/$/, "");
 
-/* ---------------------------------------------
- * NORMALIZER
- * --------------------------------------------- */
+
 function normalizeFoundryEquipment(raw) {
   if (!raw || typeof raw !== "object") {
     throw new Error("Invalid equipment JSON");
@@ -33,25 +31,20 @@ function normalizeFoundryEquipment(raw) {
   };
 }
 
-/* ---------------------------------------------
- * IMAGE RESOLVER (seragam dengan lainnya)
- * --------------------------------------------- */
+
 function resolveEquipmentImage(systemImg, fallbackImg) {
   let img = systemImg || fallbackImg;
   if (!img) return null;
 
-  // Absolute URL
   if (/^https?:\/\//i.test(img)) {
     return img;
   }
 
-  // Kalau ada "icons/", potong dari sana
   const cutIndex = img.indexOf("icons/");
   if (cutIndex !== -1) {
     img = img.substring(cutIndex);
   }
 
-  // Ganti prefix "icons" → "foundryvtt"
   img = img.replace(/^icons/, "foundryvtt");
 
   if (PUBLIC_MEDIA_URL) {
@@ -61,9 +54,7 @@ function resolveEquipmentImage(systemImg, fallbackImg) {
   return img;
 }
 
-/* ---------------------------------------------
- * HELPERS: compendium / source / price
- * --------------------------------------------- */
+
 function getCompendiumSource(rawItem) {
   return rawItem?._stats?.compendiumSource ?? null;
 }
@@ -248,10 +239,7 @@ export const importFoundryEquipmentsFromFiles = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * LIST
- * GET /foundry/equipments
- * --------------------------------------------- */
+
 export const listFoundryEquipmentsHandler = async (req, res) => {
   try {
     const limit = Number(req.query.limit) || 50;
@@ -269,10 +257,7 @@ export const listFoundryEquipmentsHandler = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * DETAIL
- * GET /foundry/equipments/:id
- * --------------------------------------------- */
+
 export const getFoundryEquipmentHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -292,10 +277,7 @@ export const getFoundryEquipmentHandler = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * UPDATE
- * PUT /foundry/equipments/:id
- * --------------------------------------------- */
+
 export const updateFoundryEquipmentHandler = async (req, res) => {
   try {
     const { id } = req.params;

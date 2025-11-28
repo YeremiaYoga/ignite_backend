@@ -12,25 +12,22 @@ const PUBLIC_MEDIA_URL = (process.env.PUBLIC_MEDIA_URL || "").replace(
   ""
 );
 
-/* ---------------------------------------------
- * IMAGE RESOLVER
- * --------------------------------------------- */
+
 function resolveFeatureImage(systemImg, fallbackImg) {
   let img = systemImg || fallbackImg;
   if (!img) return null;
 
-  // Kalau sudah URL absolut, pakai apa adanya
+
   if (/^https?:\/\//i.test(img)) {
     return img;
   }
 
-  // Potong dari "icons/..." kalau ada
+
   const cutIndex = img.indexOf("icons/");
   if (cutIndex !== -1) {
     img = img.substring(cutIndex);
   }
 
-  // Ganti prefix "icons" → "foundryvtt"
   img = img.replace(/^icons/, "foundryvtt");
 
   if (PUBLIC_MEDIA_URL) {
@@ -48,12 +45,7 @@ function getSourceBook(system) {
   return system?.source?.book ?? null;
 }
 
-/**
- * Price format baru:
- * 1–9   -> "X cp"
- * 10–99 -> (value/10) "sp"
- * >=100 -> (value/100) "gp"
- */
+
 function formatPrice(system) {
   const price = system?.price;
   if (!price) return null;
@@ -68,9 +60,7 @@ function formatPrice(system) {
   return value * mult;
 }
 
-/* ---------------------------------------------
- * NORMALISASI FEATURE
- * --------------------------------------------- */
+
 function normalizeFoundryFeature(raw) {
   if (!raw || typeof raw !== "object") {
     throw new Error("Invalid feature JSON");
@@ -92,12 +82,7 @@ function normalizeFoundryFeature(raw) {
   };
 }
 
-/**
- * Helper untuk membangun payload insert dari array raw items.
- * Dipakai oleh:
- * - importFoundryFeatures (body JSON/array)
- * - importFoundryFeaturesFromFiles (banyak file JSON)
- */
+
 function buildFeaturePayloads(rawItems) {
   const payloads = [];
   const errors = [];
@@ -107,8 +92,6 @@ function buildFeaturePayloads(rawItems) {
       const normalized = normalizeFoundryFeature(raw);
       const { name, type, system, img } = normalized;
 
-      // kalau mau strict type bisa aktifkan ini:
-      // if (type !== "feature") { ... }
 
       const sysType = system?.type || {};
 
@@ -149,10 +132,7 @@ function buildFeaturePayloads(rawItems) {
   return { payloads, errors };
 }
 
-/* ---------------------------------------------
- * IMPORT via body JSON (1 object / array)
- * POST /foundry/features/import
- * --------------------------------------------- */
+
 export const importFoundryFeatures = async (req, res) => {
   try {
     const body = req.body;
@@ -191,10 +171,7 @@ export const importFoundryFeatures = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * IMPORT via banyak file JSON (mass import)
- * POST /foundry/features/import-files
- * --------------------------------------------- */
+
 export const importFoundryFeaturesFromFiles = async (req, res) => {
   try {
     const files = req.files || [];
@@ -259,10 +236,7 @@ export const importFoundryFeaturesFromFiles = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * LIST
- * GET /foundry/features
- * --------------------------------------------- */
+
 export const listFoundryFeaturesHandler = async (req, res) => {
   try {
     const limit = Number(req.query.limit) || 50;
@@ -280,10 +254,7 @@ export const listFoundryFeaturesHandler = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * DETAIL
- * GET /foundry/features/:id
- * --------------------------------------------- */
+
 export const getFoundryFeatureHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -303,10 +274,7 @@ export const getFoundryFeatureHandler = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * UPDATE FORMAT
- * PUT /foundry/features/:id/format
- * --------------------------------------------- */
+
 export const updateFoundryFeatureFormatHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -330,10 +298,7 @@ export const updateFoundryFeatureFormatHandler = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * DELETE
- * DELETE /foundry/features/:id
- * --------------------------------------------- */
+
 export const deleteFoundryFeatureHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -350,10 +315,7 @@ export const deleteFoundryFeatureHandler = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * EXPORT
- * GET /foundry/features/:id/export?mode=raw|format
- * --------------------------------------------- */
+
 export async function exportFoundryFeatureHandler(req, res) {
   try {
     const { id } = req.params;

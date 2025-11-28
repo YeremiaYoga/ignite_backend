@@ -12,14 +12,11 @@ const PUBLIC_MEDIA_URL = (process.env.PUBLIC_MEDIA_URL || "").replace(
   ""
 );
 
-/* ---------------------------------------------
- * IMAGE RESOLVER
- * --------------------------------------------- */
+
 function resolveSpellImage(systemImg, fallbackImg) {
   let img = systemImg || fallbackImg;
   if (!img) return null;
 
-  // absolute URL
   if (/^https?:\/\//i.test(img)) {
     return img;
   }
@@ -32,9 +29,7 @@ function resolveSpellImage(systemImg, fallbackImg) {
   return img;
 }
 
-/* ---------------------------------------------
- * HELPERS: compendium / source
- * --------------------------------------------- */
+
 function getCompendiumSource(rawItem) {
   return rawItem?._stats?.compendiumSource ?? null;
 }
@@ -57,9 +52,7 @@ function formatPrice(system) {
   return value * mult;
 }
 
-/* ---------------------------------------------
- * NORMALIZER
- * --------------------------------------------- */
+
 function normalizeFoundrySpell(raw) {
   if (!raw || typeof raw !== "object") {
     throw new Error("Invalid spell JSON");
@@ -111,9 +104,7 @@ function normalizeFoundrySpell(raw) {
   };
 }
 
-/* ---------------------------------------------
- * BUILD PAYLOADS
- * --------------------------------------------- */
+
 function buildSpellPayloads(rawItems) {
   const payloads = [];
   const errors = [];
@@ -144,7 +135,7 @@ function buildSpellPayloads(rawItems) {
         activation: normalized.activation,
         duration: normalized.duration,
 
-        price, // 🔥 baru, ikut schema DB
+        price, 
         image,
         compendium_source,
         source_book,
@@ -164,9 +155,7 @@ function buildSpellPayloads(rawItems) {
   return { payloads, errors };
 }
 
-/* ---------------------------------------------
- * IMPORT VIA JSON BODY
- * --------------------------------------------- */
+
 export const importFoundrySpells = async (req, res) => {
   try {
     const body = req.body;
@@ -203,9 +192,7 @@ export const importFoundrySpells = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * IMPORT VIA FILES (mass import)
- * --------------------------------------------- */
+
 export const importFoundrySpellsFromFiles = async (req, res) => {
   try {
     const files = req.files || [];
@@ -267,9 +254,7 @@ export const importFoundrySpellsFromFiles = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * LIST
- * --------------------------------------------- */
+
 export const listFoundrySpellsHandler = async (req, res) => {
   try {
     const limit = Number(req.query.limit) || 50;
@@ -283,9 +268,7 @@ export const listFoundrySpellsHandler = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * DETAIL
- * --------------------------------------------- */
+
 export const getFoundrySpellHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -302,9 +285,7 @@ export const getFoundrySpellHandler = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * UPDATE
- * --------------------------------------------- */
+
 export const updateFoundrySpellFormatHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -322,9 +303,7 @@ export const updateFoundrySpellFormatHandler = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * DELETE
- * --------------------------------------------- */
+
 export const deleteFoundrySpellHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -337,9 +316,7 @@ export const deleteFoundrySpellHandler = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * EXPORT
- * --------------------------------------------- */
+
 export async function exportFoundrySpellHandler(req, res) {
   try {
     const { id } = req.params;

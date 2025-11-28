@@ -12,9 +12,7 @@ const PUBLIC_MEDIA_URL = (process.env.PUBLIC_MEDIA_URL || "").replace(
   ""
 );
 
-/* ---------------------------------------------
- * NORMALIZER
- * --------------------------------------------- */
+
 function normalizeFoundryConsumable(raw) {
   if (!raw || typeof raw !== "object") {
     throw new Error("Invalid consumable JSON");
@@ -36,9 +34,7 @@ function normalizeFoundryConsumable(raw) {
   };
 }
 
-/* ---------------------------------------------
- * IMAGE RESOLVER (seragam dengan weapon/tool)
- * --------------------------------------------- */
+
 function resolveConsumableImage(systemImg, fallbackImg) {
   let img = systemImg || fallbackImg;
   if (!img) return null;
@@ -48,13 +44,12 @@ function resolveConsumableImage(systemImg, fallbackImg) {
     return img;
   }
 
-  // kalau mengandung "icons/", potong dari sana
   const cutIndex = img.indexOf("icons/");
   if (cutIndex !== -1) {
     img = img.substring(cutIndex);
   }
 
-  // ganti prefix "icons" → "foundryvtt"
+
   img = img.replace(/^icons/, "foundryvtt");
 
   if (PUBLIC_MEDIA_URL) {
@@ -64,9 +59,7 @@ function resolveConsumableImage(systemImg, fallbackImg) {
   return img;
 }
 
-/* ---------------------------------------------
- * HELPERS: compendium, source, price
- * --------------------------------------------- */
+
 function getCompendiumSource(rawItem) {
   return rawItem?._stats?.compendiumSource ?? null;
 }
@@ -89,9 +82,7 @@ function formatPrice(system) {
   return value * mult;
 }
 
-/* ---------------------------------------------
- * BUILD PAYLOADS (mirip weapon/tool)
- * --------------------------------------------- */
+
 function buildConsumablePayloads(rawItems) {
   const payloads = [];
   const errors = [];
@@ -149,10 +140,7 @@ function buildConsumablePayloads(rawItems) {
   return { payloads, errors };
 }
 
-/* ---------------------------------------------
- * IMPORT VIA BODY JSON
- * POST /foundry/consumables/import
- * --------------------------------------------- */
+
 export const importFoundryConsumables = async (req, res) => {
   try {
     const body = req.body;
@@ -191,10 +179,7 @@ export const importFoundryConsumables = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * IMPORT VIA FILES (mass import)
- * POST /foundry/consumables/import-files
- * --------------------------------------------- */
+
 export const importFoundryConsumablesFromFiles = async (req, res) => {
   try {
     const files = req.files || [];
@@ -260,10 +245,7 @@ export const importFoundryConsumablesFromFiles = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * LIST
- * GET /foundry/consumables
- * --------------------------------------------- */
+
 export const listFoundryConsumablesHandler = async (req, res) => {
   try {
     const limit = Number(req.query.limit) || 50;
@@ -283,10 +265,7 @@ export const listFoundryConsumablesHandler = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * DETAIL
- * GET /foundry/consumables/:id
- * --------------------------------------------- */
+
 export const getFoundryConsumableHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -306,10 +285,7 @@ export const getFoundryConsumableHandler = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * UPDATE
- * PUT /foundry/consumables/:id
- * --------------------------------------------- */
+
 export const updateFoundryConsumableHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -329,10 +305,7 @@ export const updateFoundryConsumableHandler = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * DELETE
- * DELETE /foundry/consumables/:id
- * --------------------------------------------- */
+
 export const deleteFoundryConsumableHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -351,10 +324,7 @@ export const deleteFoundryConsumableHandler = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * EXPORT
- * GET /foundry/consumables/:id/export?mode=raw|format
- * --------------------------------------------- */
+
 export async function exportFoundryConsumableHandler(req, res) {
   try {
     const { id } = req.params;

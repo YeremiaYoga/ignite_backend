@@ -12,9 +12,7 @@ const PUBLIC_MEDIA_URL = (process.env.PUBLIC_MEDIA_URL || "").replace(
   ""
 );
 
-/* ---------------------------------------------
- * NORMALIZER
- * --------------------------------------------- */
+
 function normalizeFoundryContainer(raw) {
   if (!raw || typeof raw !== "object") {
     throw new Error("Invalid container JSON");
@@ -36,25 +34,20 @@ function normalizeFoundryContainer(raw) {
   };
 }
 
-/* ---------------------------------------------
- * IMAGE RESOLVER (seragam dengan weapon/tool/consumable)
- * --------------------------------------------- */
+
 function resolveContainerImage(systemImg, fallbackImg) {
   let img = systemImg || fallbackImg;
   if (!img) return null;
 
-  // Absolute URL
   if (/^https?:\/\//i.test(img)) {
     return img;
   }
 
-  // Kalau ada "icons/", potong dari sana
   const cutIndex = img.indexOf("icons/");
   if (cutIndex !== -1) {
     img = img.substring(cutIndex);
   }
 
-  // Ganti prefix "icons" → "foundryvtt"
   img = img.replace(/^icons/, "foundryvtt");
 
   if (PUBLIC_MEDIA_URL) {
@@ -64,9 +57,7 @@ function resolveContainerImage(systemImg, fallbackImg) {
   return img;
 }
 
-/* ---------------------------------------------
- * HELPERS: compendium / source / price
- * --------------------------------------------- */
+
 function getCompendiumSource(rawItem) {
   return rawItem?._stats?.compendiumSource ?? null;
 }
@@ -89,9 +80,7 @@ function formatPrice(system) {
   return value * mult;
 }
 
-/* ---------------------------------------------
- * BUILD PAYLOADS (mirip weapon/tool/consumable)
- * --------------------------------------------- */
+
 function buildContainerPayloads(rawItems) {
   const payloads = [];
   const errors = [];
@@ -146,10 +135,7 @@ function buildContainerPayloads(rawItems) {
   return { payloads, errors };
 }
 
-/* ---------------------------------------------
- * IMPORT VIA BODY JSON
- * POST /foundry/containers/import
- * --------------------------------------------- */
+
 export const importFoundryContainers = async (req, res) => {
   try {
     const body = req.body;
@@ -188,10 +174,7 @@ export const importFoundryContainers = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * IMPORT VIA FILES (mass import)
- * POST /foundry/containers/import-files
- * --------------------------------------------- */
+
 export const importFoundryContainersFromFiles = async (req, res) => {
   try {
     const files = req.files || [];
@@ -257,10 +240,7 @@ export const importFoundryContainersFromFiles = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * LIST
- * GET /foundry/containers
- * --------------------------------------------- */
+
 export const listFoundryContainersHandler = async (req, res) => {
   try {
     const limit = Number(req.query.limit) || 50;
@@ -278,10 +258,7 @@ export const listFoundryContainersHandler = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * DETAIL
- * GET /foundry/containers/:id
- * --------------------------------------------- */
+
 export const getFoundryContainerHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -301,10 +278,7 @@ export const getFoundryContainerHandler = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * UPDATE
- * PUT /foundry/containers/:id
- * --------------------------------------------- */
+
 export const updateFoundryContainerHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -324,10 +298,7 @@ export const updateFoundryContainerHandler = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * DELETE
- * DELETE /foundry/containers/:id
- * --------------------------------------------- */
+
 export const deleteFoundryContainerHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -346,10 +317,7 @@ export const deleteFoundryContainerHandler = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * EXPORT
- * GET /foundry/containers/:id/export?mode=raw|format
- * --------------------------------------------- */
+
 export async function exportFoundryContainerHandler(req, res) {
   try {
     const { id } = req.params;
