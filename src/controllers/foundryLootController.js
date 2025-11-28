@@ -12,19 +12,15 @@ const PUBLIC_MEDIA_URL = (process.env.PUBLIC_MEDIA_URL || "").replace(
   ""
 );
 
-/* ---------------------------------------------
- * IMAGE RESOLVER
- * --------------------------------------------- */
+
 function resolveLootImage(systemImg, fallbackImg) {
   let img = systemImg || fallbackImg;
   if (!img) return null;
 
-  // absolute URL
   if (/^https?:\/\//i.test(img)) {
     return img;
   }
 
-  // potong dari "icons/"
   const cutIndex = img.indexOf("icons/");
   if (cutIndex !== -1) img = img.substring(cutIndex);
 
@@ -34,9 +30,7 @@ function resolveLootImage(systemImg, fallbackImg) {
   return img;
 }
 
-/* ---------------------------------------------
- * HELPERS: compendium / source / price
- * --------------------------------------------- */
+
 function getCompendiumSource(rawItem) {
   return rawItem?._stats?.compendiumSource ?? null;
 }
@@ -59,9 +53,7 @@ function formatPrice(system) {
   return value * mult;
 }
 
-/* ---------------------------------------------
- * NORMALIZER
- * --------------------------------------------- */
+
 function normalizeFoundryLoot(raw) {
   if (!raw || typeof raw !== "object") {
     throw new Error("Invalid loot JSON");
@@ -83,9 +75,7 @@ function normalizeFoundryLoot(raw) {
   };
 }
 
-/* ---------------------------------------------
- * BUILD PAYLOADS
- * --------------------------------------------- */
+
 function buildLootPayloads(rawItems) {
   const payloads = [];
   const errors = [];
@@ -129,10 +119,7 @@ function buildLootPayloads(rawItems) {
   return { payloads, errors };
 }
 
-/* ---------------------------------------------
- * IMPORT VIA JSON BODY
- * POST /foundry/loots/import
- * --------------------------------------------- */
+
 export const importFoundryLoots = async (req, res) => {
   try {
     const body = req.body;
@@ -168,10 +155,7 @@ export const importFoundryLoots = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * IMPORT VIA FILE UPLOADS
- * POST /foundry/loots/import-files
- * --------------------------------------------- */
+
 export const importFoundryLootsFromFiles = async (req, res) => {
   try {
     const files = req.files || [];
@@ -229,10 +213,7 @@ export const importFoundryLootsFromFiles = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * LIST
- * GET /foundry/loots
- * --------------------------------------------- */
+
 export const listFoundryLootsHandler = async (req, res) => {
   try {
     const limit = Number(req.query.limit) || 50;
@@ -246,10 +227,7 @@ export const listFoundryLootsHandler = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * DETAIL
- * GET /foundry/loots/:id
- * --------------------------------------------- */
+
 export const getFoundryLootHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -264,10 +242,7 @@ export const getFoundryLootHandler = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * UPDATE
- * PUT /foundry/loots/:id/format
- * --------------------------------------------- */
+
 export const updateFoundryLootFormatHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -285,10 +260,7 @@ export const updateFoundryLootFormatHandler = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * DELETE
- * DELETE /foundry/loots/:id
- * --------------------------------------------- */
+
 export const deleteFoundryLootHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -301,10 +273,7 @@ export const deleteFoundryLootHandler = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * EXPORT
- * GET /foundry/loots/:id/export?mode=raw|format
- * --------------------------------------------- */
+
 export async function exportFoundryLootHandler(req, res) {
   try {
     const { id } = req.params;

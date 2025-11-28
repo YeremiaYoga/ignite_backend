@@ -15,19 +15,13 @@ const PUBLIC_MEDIA_URL = (process.env.PUBLIC_MEDIA_URL || "").replace(
 function resolveWeaponImage(systemImg, fallbackImg) {
   let img = systemImg || fallbackImg;
   if (!img) return null;
-
-  // Kalau sudah URL absolut, pakai apa adanya
   if (/^https?:\/\//i.test(img)) {
     return img;
   }
-
-  // Potong dari "icons/..." kalau ada
   const cutIndex = img.indexOf("icons/");
   if (cutIndex !== -1) {
     img = img.substring(cutIndex);
   }
-
-  // Ganti prefix "icons" → "foundryvtt"
   img = img.replace(/^icons/, "foundryvtt");
 
   if (PUBLIC_MEDIA_URL) {
@@ -180,20 +174,6 @@ export const importFoundryWeapons = async (req, res) => {
   }
 };
 
-/**
- * IMPORT via banyak file JSON (mass import via upload).
- * - Diasumsikan pakai multer: upload.array("files")
- * - Tiap file bisa:
- *    - 1 weapon object
- *    - atau array weapon objects (export-an Foundry)
- *
- * Contoh router:
- *   router.post(
- *     "/api/foundry/weapons/import-files",
- *     upload.array("files"),
- *     importFoundryWeaponsFromFiles
- *   );
- */
 export const importFoundryWeaponsFromFiles = async (req, res) => {
   try {
     const files = req.files || [];

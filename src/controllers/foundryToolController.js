@@ -12,30 +12,23 @@ const PUBLIC_MEDIA_URL = (process.env.PUBLIC_MEDIA_URL || "").replace(
   ""
 );
 
-/* ---------------------------------------------
- * IMAGE RESOLVER
- * --------------------------------------------- */
+
 function resolveToolImage(systemImg, fallbackImg) {
   let img = systemImg || fallbackImg;
   if (!img) return null;
 
-  // Absolute URL → return langsung
   if (/^https?:\/\//i.test(img)) return img;
 
-  // Potong dari "icons/"
   const cutIndex = img.indexOf("icons/");
   if (cutIndex !== -1) img = img.substring(cutIndex);
 
-  // prefix: icons → foundryvtt
   img = img.replace(/^icons/, "foundryvtt");
 
   if (PUBLIC_MEDIA_URL) return `${PUBLIC_MEDIA_URL}/${img}`;
   return img;
 }
 
-/* ---------------------------------------------
- * GETTERS: COMPENDIUM / SOURCE / PRICE
- * --------------------------------------------- */
+
 function getCompendiumSource(rawItem) {
   return rawItem?._stats?.compendiumSource ?? null;
 }
@@ -44,7 +37,6 @@ function getSourceBook(system) {
   return system?.source?.book ?? null;
 }
 
-// convert price to CP
 function formatPrice(system) {
   const price = system?.price;
   if (!price) return null;
@@ -59,9 +51,7 @@ function formatPrice(system) {
   return value * mult;
 }
 
-/* ---------------------------------------------
- * NORMALIZER
- * --------------------------------------------- */
+
 function normalizeFoundryTool(raw) {
   if (!raw || typeof raw !== "object") throw new Error("Invalid tool JSON");
 
@@ -74,9 +64,7 @@ function normalizeFoundryTool(raw) {
   };
 }
 
-/* ---------------------------------------------
- * BUILD PAYLOAD (seragam dengan weapon)
- * --------------------------------------------- */
+
 function buildToolPayloads(rawItems) {
   const payloads = [];
   const errors = [];
@@ -126,9 +114,7 @@ function buildToolPayloads(rawItems) {
   return { payloads, errors };
 }
 
-/* ---------------------------------------------
- * IMPORT VIA JSON (body)
- * --------------------------------------------- */
+
 export const importFoundryTools = async (req, res) => {
   try {
     const body = req.body;
@@ -161,9 +147,7 @@ export const importFoundryTools = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * IMPORT VIA FILES (mass import from upload)
- * --------------------------------------------- */
+
 export const importFoundryToolsFromFiles = async (req, res) => {
   try {
     const files = req.files || [];
@@ -215,9 +199,7 @@ export const importFoundryToolsFromFiles = async (req, res) => {
   }
 };
 
-/* ---------------------------------------------
- * LIST / GET / UPDATE / DELETE / EXPORT
- * --------------------------------------------- */
+
 export const listFoundryToolsHandler = async (req, res) => {
   try {
     const limit = Number(req.query.limit) || 50;
