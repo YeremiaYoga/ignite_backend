@@ -87,7 +87,6 @@ export const toggleFavoriteFoundryItem = async (req, res) => {
     const username =
       user.username || user.name || user.full_name || user.email || "Unknown";
 
-    // 1. Ambil item
     const { data: item, error: fetchError } = await supabase
       .from(tableInfo.table)
       .select("id, favorites, favorites_count")
@@ -108,11 +107,9 @@ export const toggleFavoriteFoundryItem = async (req, res) => {
 
     let action = "";
     if (already) {
-      // UNFAVORITE (toggle)
       favorites = favorites.filter((f) => String(f.user_id) !== userId);
       action = "unfavorite";
     } else {
-      // FAVORITE
       favorites.push({
         user_id: userId,
         username,
@@ -123,7 +120,6 @@ export const toggleFavoriteFoundryItem = async (req, res) => {
 
     const favorites_count = favorites.length;
 
-    // 2. Update row
     const { data: updated, error: updateError } = await supabase
       .from(tableInfo.table)
       .update({
