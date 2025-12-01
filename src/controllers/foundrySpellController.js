@@ -12,7 +12,6 @@ const PUBLIC_MEDIA_URL = (process.env.PUBLIC_MEDIA_URL || "").replace(
   ""
 );
 
-
 function resolveSpellImage(systemImg, fallbackImg) {
   let img = systemImg || fallbackImg;
   if (!img) return null;
@@ -28,7 +27,6 @@ function resolveSpellImage(systemImg, fallbackImg) {
   if (PUBLIC_MEDIA_URL) return `${PUBLIC_MEDIA_URL}/${img}`;
   return img;
 }
-
 
 function getCompendiumSource(rawItem) {
   return rawItem?._stats?.compendiumSource ?? null;
@@ -52,7 +50,11 @@ function formatPrice(system) {
   return value * mult;
 }
 
-
+/**
+ * Normalisasi 1 spell dari Foundry → bentuk yang siap jadi payload DB.
+ * Bagian kompleks (activation, range, template, materials, duration)
+ * kita simpan sebagai objek mentah (raw) dari system.
+ */
 function normalizeFoundrySpell(raw) {
   if (!raw || typeof raw !== "object") {
     throw new Error("Invalid spell JSON");
@@ -66,27 +68,14 @@ function normalizeFoundrySpell(raw) {
   const effects = Array.isArray(raw.effects) ? raw.effects : [];
 
   const description = system.description?.value ?? system.description ?? "";
+  const affects = system.target?.affects ?? null;
 
-  const material = system.materials?.value ?? system.material ?? "";
-
-  const target = system.target?.value ?? null;
-  const affected = system.target?.type ?? null;
-
-  let range = null;
-  if (system.range?.value != null) {
-    range = `${system.range.value} ${system.range.units || ""}`.trim();
-  } else if (typeof system.range === "string") {
-    range = system.range;
-  }
-
-  let duration = null;
-  if (system.duration?.value != null) {
-    duration = `${system.duration.value} ${system.duration.units || ""}`.trim();
-  } else if (typeof system.duration === "string") {
-    duration = system.duration;
-  }
-
-  const activation = system.activation?.type ?? null;
+  // langsung ambil objek mentahnya
+  const activation = system.activation ?? null;
+  const range = system.range ?? null;
+  const template = system.target?.template ?? null;
+  const materials = system.materials ?? null;
+  const duration = system.duration ?? null;
 
   return {
     name,
@@ -95,16 +84,18 @@ function normalizeFoundrySpell(raw) {
     system,
     effects,
     description,
-    material,
-    target,
-    affected,
-    range,
+    affects,
     activation,
+    range,
+    template,
+    materials,
     duration,
   };
 }
 
-
+/**
+ * Build payload array untuk insert ke DB
+ */
 function buildSpellPayloads(rawItems) {
   const payloads = [];
   const errors = [];
@@ -112,30 +103,43 @@ function buildSpellPayloads(rawItems) {
   for (const raw of rawItems) {
     try {
       const normalized = normalizeFoundrySpell(raw);
-      const { name, type, img, system } = normalized;
+      const {
+        name,
+        type,
+        img,
+        system,
+        description,
+        affects,
+        activation,
+        range,
+        template,
+        materials,
+        duration,
+      } = normalized;
 
       const image = resolveSpellImage(system.img, img);
       const compendium_source = getCompendiumSource(raw);
       const source_book = getSourceBook(system);
-      const price = formatPrice(system); // 🔥 baru
+      const price = formatPrice(system);
 
       payloads.push({
         name,
         type,
-
         properties: system.properties ?? null,
         level: system.level ?? null,
         school: system.school ?? null,
 
-        description: normalized.description,
-        material: normalized.material,
-        target: normalized.target,
-        affected: normalized.affected,
-        range: normalized.range,
-        activation: normalized.activation,
-        duration: normalized.duration,
+        description,
+        affects,
 
-        price, 
+        // objek langsung → JSONB
+        activation,
+        range,
+        template,
+        materials,
+        duration,
+
+        price,
         image,
         compendium_source,
         source_book,
@@ -155,7 +159,9 @@ function buildSpellPayloads(rawItems) {
   return { payloads, errors };
 }
 
-
+/**
+ * Import dari JSON body
+ */
 export const importFoundrySpells = async (req, res) => {
   try {
     const body = req.body;
@@ -192,7 +198,9 @@ export const importFoundrySpells = async (req, res) => {
   }
 };
 
-
+/**
+ * Import dari file upload
+ */
 export const importFoundrySpellsFromFiles = async (req, res) => {
   try {
     const files = req.files || [];
@@ -254,7 +262,6 @@ export const importFoundrySpellsFromFiles = async (req, res) => {
   }
 };
 
-
 export const listFoundrySpellsHandler = async (req, res) => {
   try {
     const limit = Number(req.query.limit) || 50;
@@ -267,7 +274,6 @@ export const listFoundrySpellsHandler = async (req, res) => {
     return res.status(500).json({ error: "Failed to list foundry spells" });
   }
 };
-
 
 export const getFoundrySpellHandler = async (req, res) => {
   try {
@@ -284,7 +290,6 @@ export const getFoundrySpellHandler = async (req, res) => {
     return res.status(500).json({ error: "Failed to get foundry spell" });
   }
 };
-
 
 export const updateFoundrySpellFormatHandler = async (req, res) => {
   try {
@@ -303,7 +308,6 @@ export const updateFoundrySpellFormatHandler = async (req, res) => {
   }
 };
 
-
 export const deleteFoundrySpellHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -315,7 +319,6 @@ export const deleteFoundrySpellHandler = async (req, res) => {
     return res.status(500).json({ error: "Failed to delete spell" });
   }
 };
-
 
 export async function exportFoundrySpellHandler(req, res) {
   try {
