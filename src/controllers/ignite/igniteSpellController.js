@@ -1,5 +1,5 @@
 // controllers/igniteSpellController.js
-import supabase from "../utils/db.js";
+import supabase from "../../utils/db.js";
 
 const SPELL_TABLE = "foundry_spells";
 

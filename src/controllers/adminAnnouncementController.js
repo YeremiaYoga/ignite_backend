@@ -10,7 +10,6 @@ import {
 } from "../models/announcementModel.js";
 import { uploadToMedia } from "../utils/uploadToMedia.js";
 
-// --- helpers ---
 function toBool(v, fallback = true) {
   if (typeof v === "boolean") return v;
   if (typeof v === "string") return v === "true";
@@ -51,18 +50,16 @@ function normalizePayload(body, { partial = false } = {}) {
         ? undefined
         : 24,
 
-    // 🔹 NEW: icon_color
     icon_color: body.icon_color ?? (partial ? undefined : null),
   };
 
-  // required checks (only when not partial)
   if (!partial) {
     if (!payload.name) throw new Error("name is required");
     if (!["left", "right"].includes(payload.position)) {
       throw new Error("position must be 'left' or 'right'");
     }
   } else {
-    // if provided in partial, still validate position value
+
     if (
       payload.position !== undefined &&
       !["left", "right"].includes(payload.position)
@@ -71,7 +68,7 @@ function normalizePayload(body, { partial = false } = {}) {
     }
   }
 
-  // remove undefined keys in partial mode
+
   if (partial) {
     Object.keys(payload).forEach(
       (k) => payload[k] === undefined && delete payload[k]
@@ -81,7 +78,6 @@ function normalizePayload(body, { partial = false } = {}) {
   return payload;
 }
 
-// ===== PUBLIC =====
 export const getAnnouncementPublic = async (req, res) => {
   try {
     const position = (req.query.position || "").toLowerCase();
@@ -96,9 +92,7 @@ export const getAnnouncementPublic = async (req, res) => {
   }
 };
 
-// ===== ADMIN =====
 
-/** GET /admin/announcements */
 export const adminListAnnouncements = async (req, res) => {
   try {
     const { q, position, active, from, to, page, pageSize } = req.query;
@@ -115,7 +109,6 @@ export const adminListAnnouncements = async (req, res) => {
       pageSize: pageSize ? Number(pageSize) : 20,
     });
 
-    // frontend expects { data: [...] }
     return res.json(result);
   } catch (err) {
     console.error("adminListAnnouncements error:", err.message);
@@ -123,7 +116,6 @@ export const adminListAnnouncements = async (req, res) => {
   }
 };
 
-/** POST /admin/announcements  (supports multipart image) */
 export const adminCreateAnnouncement = async (req, res) => {
   try {
     const parsed =
@@ -168,7 +160,6 @@ export const adminCreateAnnouncement = async (req, res) => {
       throw new Error("Failed to create announcement: missing id");
     }
 
-    // 🔥 Kalau announcement ini aktif → nonaktifkan semua yg lain di posisi sama
     if (payload.active) {
       await deactivateOtherAnnouncements(payload.position, created.id);
     }
@@ -181,18 +172,16 @@ export const adminCreateAnnouncement = async (req, res) => {
 };
 
 
-/** PUT /admin/announcements/:id  (full update; supports new image) */
 export const adminUpdateAnnouncement = async (req, res) => {
   try {
     const { id } = req.params;
     const token = req.headers.authorization?.split(" ")[1] || null;
 
-    // ⬇⬇⬇ ini yang penting: pakai partial: true
     const payload = normalizePayload({ ...req.body }, { partial: true });
 
     let uploadedUrl = null;
     if (req.files?.image?.[0]) {
-      // folderName masih coba pakai nama baru kalau ada, kalau tidak pakai default
+
       const folderSafeName =
         (payload.name || req.body.name || "announcement").replace(/\s+/g, "_");
 
@@ -209,7 +198,6 @@ export const adminUpdateAnnouncement = async (req, res) => {
       image: uploadedUrl ?? payload.image ?? null,
     });
 
-    // 🔥 Kalau setelah update dia aktif → nonaktifkan semua yang lain di posisi sama
     if (updated?.active) {
       await deactivateOtherAnnouncements(updated.position, updated.id);
     }
@@ -222,7 +210,6 @@ export const adminUpdateAnnouncement = async (req, res) => {
 };
 
 
-/** PATCH /admin/announcements/:id/toggle  (active only) */
 export const adminToggleAnnouncement = async (req, res) => {
   try {
     const { id } = req.params;
@@ -231,7 +218,6 @@ export const adminToggleAnnouncement = async (req, res) => {
         ? req.body.active
         : req.body.active === "true";
 
-    // ambil dulu buat tahu position
     const existing = await getAnnouncementById(id);
     if (!existing) {
       return res.status(404).json({ error: "Announcement not found" });
@@ -239,7 +225,6 @@ export const adminToggleAnnouncement = async (req, res) => {
 
     const updated = await updateAnnouncement(id, { active });
 
-    // 🔥 kalau di-set active = true → matikan semua yg lain di posisi sama
     if (active && updated?.position) {
       await deactivateOtherAnnouncements(updated.position, id);
     }
@@ -251,7 +236,6 @@ export const adminToggleAnnouncement = async (req, res) => {
   }
 };
 
-/** DELETE /admin/announcements/:id */
 export const adminDeleteAnnouncement = async (req, res) => {
   try {
     const { id } = req.params;

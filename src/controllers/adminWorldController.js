@@ -9,7 +9,6 @@ import {
 import { uploadToMedia } from "../utils/uploadToMedia.js";
 import { deleteMediaFile } from "../utils/deleteMediaFile.js";
 
-// helper slug sederhana buat folderName
 function slugifyName(name = "") {
   return (
     name
@@ -21,7 +20,6 @@ function slugifyName(name = "") {
   );
 }
 
-// GET /admin/worlds
 export const listWorldsAdmin = async (req, res) => {
   try {
     const worlds = await getWorlds();
@@ -35,7 +33,6 @@ export const listWorldsAdmin = async (req, res) => {
   }
 };
 
-// GET /admin/worlds/:id
 export const getWorldAdmin = async (req, res) => {
   try {
     const { id } = req.params;
@@ -55,7 +52,6 @@ export const getWorldAdmin = async (req, res) => {
   }
 };
 
-// POST /admin/worlds
 export const addWorldAdmin = async (req, res) => {
   try {
     console.log("🧩 [addWorldAdmin] raw body:", req.body);
@@ -75,7 +71,6 @@ export const addWorldAdmin = async (req, res) => {
     const folderName = slugifyName(parsed.name);
     const token = req.headers.authorization?.split(" ")[1] || null;
 
-    // upload icon & banner to ignite-media
     const iconUrl = await uploadToMedia({
       file: req.files?.["icon"]?.[0],
       path: "worlds",
@@ -110,7 +105,7 @@ export const addWorldAdmin = async (req, res) => {
         parsed.private === true ||
         parsed.private === "true" ||
         parsed.private === 1,
-      heralds: true, // admin = always heralds
+      heralds: true, 
       platforms: Array.isArray(parsed.platforms) ? parsed.platforms : [],
       game_systems: Array.isArray(parsed.game_systems) ? parsed.game_systems : [],
       languages: Array.isArray(parsed.languages) ? parsed.languages : [],
@@ -141,14 +136,12 @@ export const addWorldAdmin = async (req, res) => {
   }
 };
 
-// PATCH /admin/worlds/:id
 export const editWorldAdmin = async (req, res) => {
   try {
     console.log("🛠 [ADMIN] editWorldAdmin invoked");
     const { id } = req.params;
     const MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
 
-    // 1️⃣ Ambil existing world
     let existing;
     try {
       existing = await getWorldById(id);
@@ -167,14 +160,11 @@ export const editWorldAdmin = async (req, res) => {
       return res.status(404).json({ success: false, error: "World not found" });
     }
 
-    // 2️⃣ Parse body (support multipart/form-data)
     const parsed =
       typeof req.body.data === "string" ? JSON.parse(req.body.data) : req.body;
 
-    // 3️⃣ Folder name untuk media (berdasarkan name baru atau lama)
     const folderName = slugifyName(parsed.name || existing.name);
 
-    // 4️⃣ Ambil token sekali
     const token =
       req.cookies?.ignite_access_token ||
       req.user?.jwt?.token ||
@@ -183,7 +173,6 @@ export const editWorldAdmin = async (req, res) => {
 
     const files = req.files || {};
 
-    // 5️⃣ Handle ICON
     let iconPath = existing.icon || null;
     if (files["icon"] && files["icon"][0]) {
       const newUrl = await uploadToMedia({
@@ -195,7 +184,6 @@ export const editWorldAdmin = async (req, res) => {
       });
 
       if (newUrl) {
-        // hapus icon lama kalau beda
         if (existing.icon && existing.icon !== newUrl) {
           await deleteMediaFile(existing.icon, MEDIA_URL, token);
         }
@@ -203,7 +191,6 @@ export const editWorldAdmin = async (req, res) => {
       }
     }
 
-    // 6️⃣ Handle BANNER
     let bannerPath = existing.banner || null;
     if (files["banner"] && files["banner"][0]) {
       const newUrl = await uploadToMedia({
@@ -215,7 +202,6 @@ export const editWorldAdmin = async (req, res) => {
       });
 
       if (newUrl) {
-        // hapus banner lama kalau beda
         if (existing.banner && existing.banner !== newUrl) {
           await deleteMediaFile(existing.banner, MEDIA_URL, token);
         }
@@ -223,7 +209,6 @@ export const editWorldAdmin = async (req, res) => {
       }
     }
 
-    // 7️⃣ Bersihkan field yang TIDAK boleh diubah client
     const forbiddenFields = [
       "id",
       "world_id",
@@ -233,7 +218,6 @@ export const editWorldAdmin = async (req, res) => {
     ];
     forbiddenFields.forEach((f) => delete parsed[f]);
 
-    // 8️⃣ Normalisasi boolean
     const privateValue =
       parsed.private !== undefined
         ? parsed.private === true ||
@@ -243,7 +227,6 @@ export const editWorldAdmin = async (req, res) => {
 
     const heraldsValue = true;
 
-    // 9️⃣ Build final payload
     const updatedData = {
       ...existing,
       ...parsed,
@@ -251,12 +234,11 @@ export const editWorldAdmin = async (req, res) => {
       banner: bannerPath ?? parsed.banner ?? existing.banner ?? null,
       private: privateValue,
       heralds: heraldsValue,
-      world_id: existing.world_id, // lock
-      public_id: existing.public_id, // lock
+      world_id: existing.world_id, 
+      public_id: existing.public_id, 
       updated_at: new Date().toISOString(),
     };
 
-    // 🔟 Update ke DB
     const result = await updateWorld(id, updatedData);
 
     console.log("✅ World updated:", result?.id, result?.name);
@@ -271,7 +253,6 @@ export const editWorldAdmin = async (req, res) => {
   }
 };
 
-// DELETE /admin/worlds/:id
 export const deleteWorldAdmin = async (req, res) => {
   try {
     const { id } = req.params;
@@ -294,14 +275,12 @@ export const deleteWorldAdmin = async (req, res) => {
       return res.status(404).json({ success: false, error: "World not found" });
     }
 
-    // 2️⃣ Ambil token sekali (sama seperti edit)
     const token =
       req.cookies?.ignite_access_token ||
       req.user?.jwt?.token ||
       req.headers.authorization?.split(" ")[1] ||
       null;
 
-    // 3️⃣ Hapus media (best effort)
     const tasks = [];
 
     if (existing.icon) {
@@ -325,7 +304,6 @@ export const deleteWorldAdmin = async (req, res) => {
 
     await Promise.all(tasks);
 
-    // 4️⃣ Delete row di DB
     await deleteWorld(id);
 
     res.json({

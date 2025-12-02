@@ -3,7 +3,7 @@ import express from "express";
 import {
   getIgniteSpells,
   toggleFavoriteIgniteSpell,
-} from "../controllers/igniteSpellController.js";
+} from "../controllers/ignite/igniteSpellController.js";
 
 import { verifyUserIgnite } from "../middlewares/verifyUserIgnite.js";
 

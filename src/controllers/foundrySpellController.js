@@ -50,11 +50,7 @@ function formatPrice(system) {
   return value * mult;
 }
 
-/**
- * Normalisasi 1 spell dari Foundry → bentuk yang siap jadi payload DB.
- * Bagian kompleks (activation, range, template, materials, duration)
- * kita simpan sebagai objek mentah (raw) dari system.
- */
+
 function normalizeFoundrySpell(raw) {
   if (!raw || typeof raw !== "object") {
     throw new Error("Invalid spell JSON");
@@ -70,7 +66,6 @@ function normalizeFoundrySpell(raw) {
   const description = system.description?.value ?? system.description ?? "";
   const affects = system.target?.affects ?? null;
 
-  // langsung ambil objek mentahnya
   const activation = system.activation ?? null;
   const range = system.range ?? null;
   const template = system.target?.template ?? null;
@@ -93,9 +88,7 @@ function normalizeFoundrySpell(raw) {
   };
 }
 
-/**
- * Build payload array untuk insert ke DB
- */
+
 function buildSpellPayloads(rawItems) {
   const payloads = [];
   const errors = [];
@@ -132,7 +125,6 @@ function buildSpellPayloads(rawItems) {
         description,
         affects,
 
-        // objek langsung → JSONB
         activation,
         range,
         template,
@@ -159,9 +151,7 @@ function buildSpellPayloads(rawItems) {
   return { payloads, errors };
 }
 
-/**
- * Import dari JSON body
- */
+
 export const importFoundrySpells = async (req, res) => {
   try {
     const body = req.body;
@@ -198,9 +188,7 @@ export const importFoundrySpells = async (req, res) => {
   }
 };
 
-/**
- * Import dari file upload
- */
+
 export const importFoundrySpellsFromFiles = async (req, res) => {
   try {
     const files = req.files || [];

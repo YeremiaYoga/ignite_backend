@@ -8,17 +8,14 @@ import {
 } from "../models/speciesModel.js";
 import { uploadToMedia } from "../utils/uploadToMedia.js";
 
-/** 🔤 Utility buat slugify */
 const slugify = (text = "") =>
   text
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9]+/g, "-") // semua simbol/spasi jadi "-"
-    .replace(/^-+|-+$/g, ""); // hapus strip di awal/akhir
+    .replace(/[^a-z0-9]+/g, "-") 
+    .replace(/^-+|-+$/g, ""); 
 
-/**
- * ✅ GET all species (admin)
- */
+
 export const fetchAllSpeciesAdmin = async (req, res) => {
   try {
     const { data, error } = await getAllSpecies();
@@ -30,9 +27,7 @@ export const fetchAllSpeciesAdmin = async (req, res) => {
   }
 };
 
-/**
- * ✅ GET one species by ID
- */
+
 export const fetchSpeciesByIdAdmin = async (req, res) => {
   try {
     const { id } = req.params;
@@ -45,9 +40,7 @@ export const fetchSpeciesByIdAdmin = async (req, res) => {
   }
 };
 
-/**
- * ✅ GET one species by SLUG (untuk halaman traits)
- */
+
 export const fetchSpeciesBySlugAdmin = async (req, res) => {
   try {
     const { slug } = req.params;
@@ -61,9 +54,7 @@ export const fetchSpeciesBySlugAdmin = async (req, res) => {
   }
 };
 
-/**
- * ✅ CREATE species
- */
+
 export const addSpeciesAdmin = async (req, res) => {
   try {
     const parsed =
@@ -76,7 +67,6 @@ export const addSpeciesAdmin = async (req, res) => {
     const token = req.headers.authorization?.split(" ")[1] || null;
     const speciesName = slug.replace(/-/g, "_");
 
-    // Upload media
     const iconUrl = await uploadToMedia({
       file: req.files?.["icon"]?.[0],
       path: "species",
@@ -153,9 +143,7 @@ export const addSpeciesAdmin = async (req, res) => {
   }
 };
 
-/**
- * ✅ UPDATE species by ID
- */
+
 export const editSpeciesAdmin = async (req, res) => {
   try {
     const { id } = req.params;
@@ -171,7 +159,6 @@ export const editSpeciesAdmin = async (req, res) => {
     const token = req.headers.authorization?.split(" ")[1] || null;
     const speciesName = slug.replace(/-/g, "_");
 
-    // Upload baru (kalau ada)
     const newIcon = await uploadToMedia({
       file: req.files?.["icon"]?.[0],
       path: "species",
@@ -222,9 +209,7 @@ export const editSpeciesAdmin = async (req, res) => {
   }
 };
 
-/**
- * ✅ DELETE species
- */
+
 export const removeSpeciesAdmin = async (req, res) => {
   try {
     const { id } = req.params;
