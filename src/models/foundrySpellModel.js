@@ -1,6 +1,14 @@
 // models/foundrySpellModel.js
 import supabase from "../utils/db.js";
 
+// 🔥 Normalizer supaya ratings_score SELALU STRING
+function normalizeRatingScore(v) {
+  if (v == null) return "";
+  if (typeof v === "number") return String(v);
+  if (typeof v === "string") return v.trim();
+  return "";
+}
+
 export async function insertFoundrySpell(payload) {
   const {
     name,
@@ -25,7 +33,7 @@ export async function insertFoundrySpell(payload) {
     favorites,
     favorites_count,
     ratings,
-    ratings_count,
+    ratings_score,
 
     raw_data,
     format_data,
@@ -41,8 +49,9 @@ export async function insertFoundrySpell(payload) {
 
   const favCount =
     typeof favorites_count === "number" ? favorites_count : favArr.length;
-  const rateCount =
-    typeof ratings_count === "number" ? ratings_count : rateArr.length;
+
+  // 🔥 PENTING: ratings_score selalu string
+  const rateScore = normalizeRatingScore(ratings_score);
 
   const { data, error } = await supabase
     .from("foundry_spells")
@@ -60,16 +69,16 @@ export async function insertFoundrySpell(payload) {
       source_book,
       price: price ?? null,
 
-      activation: activation ?? null, // 🔥 JSONB
-      range: range ?? null, // 🔥 JSONB
-      template: template ?? null, // 🔥 JSONB
-      materials: materials ?? null, // 🔥 JSONB
-      duration: duration ?? null, // 🔥 JSONB
+      activation: activation ?? null,
+      range: range ?? null,
+      template: template ?? null,
+      materials: materials ?? null,
+      duration: duration ?? null,
 
       favorites: favArr,
       favorites_count: favCount,
       ratings: rateArr,
-      ratings_count: rateCount,
+      ratings_score: rateScore, // ⬅ string kosong default
 
       raw_data: raw_data ?? {},
       format_data: format_data ?? {},
@@ -102,10 +111,7 @@ export async function bulkInsertFoundrySpells(items) {
         ? it.favorites_count
         : favArr.length;
 
-    const rateCount =
-      typeof it.ratings_count === "number"
-        ? it.ratings_count
-        : rateArr.length;
+    const rateScore = normalizeRatingScore(it.ratings_score);
 
     return {
       name: it.name,
@@ -130,12 +136,11 @@ export async function bulkInsertFoundrySpells(items) {
       favorites: favArr,
       favorites_count: favCount,
       ratings: rateArr,
-      ratings_count: rateCount,
+      ratings_score: rateScore,
 
       raw_data: it.raw_data ?? {},
       format_data: it.format_data ?? {},
 
-      // 🔥 NEW FIELDS (wajib ada)
       classes: Array.isArray(it.classes) ? it.classes : [],
       damage_type: Array.isArray(it.damage_type) ? it.damage_type : [],
       subclasses: Array.isArray(it.subclasses) ? it.subclasses : [],
@@ -156,7 +161,6 @@ export async function bulkInsertFoundrySpells(items) {
 
   return data;
 }
-
 
 export async function listFoundrySpells({ limit = 50, offset = 0 } = {}) {
   const { data, error } = await supabase
@@ -205,7 +209,10 @@ export async function updateFoundrySpell(id, payload) {
 }
 
 export async function deleteFoundrySpell(id) {
-  const { error } = await supabase.from("foundry_spells").delete().eq("id", id);
+  const { error } = await supabase
+    .from("foundry_spells")
+    .delete()
+    .eq("id", id);
 
   if (error) {
     console.error("❌ deleteFoundrySpell error:", error.message);

@@ -11,12 +11,9 @@ import { verifyUserIgnite } from "../middlewares/verifyUserIgnite.js";
 
 const router = express.Router();
 
-
 router.get("/all", getIgniteSpells);
 
-
 router.post("/:id/favorite", verifyUserIgnite, toggleFavoriteIgniteSpell);
-
 
 router.post("/:id/rate", verifyUserIgnite, rateIgniteSpell);
 

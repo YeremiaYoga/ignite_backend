@@ -20,6 +20,12 @@ function normalizeRating(val) {
   return RATING_VALUES.includes(upper) ? upper : null;
 }
 
+/**
+ * Hitung rata-rata rating:
+ * - avgLetter → huruf (S/A/B/...) dari skor rata-rata yang dibulatkan ke bawah
+ * - avgScore  → angka rata-rata yang SUDAH dibulatkan ke bawah (int)
+ * - count     → total rating valid
+ */
 function computeAverageRating(ratings) {
   const arr = Array.isArray(ratings) ? ratings : [];
   if (!arr.length) return { avgLetter: null, avgScore: null, count: 0 };
@@ -31,22 +37,23 @@ function computeAverageRating(ratings) {
     const letter = normalizeRating(r.rating);
     if (!letter) continue;
 
-    sum += (RATING_SCORES[letter] || 0);
+    sum += RATING_SCORES[letter] || 0;
     count++;
   }
 
   if (!count) return { avgLetter: null, avgScore: null, count: 0 };
 
-  const avgScore = sum / count;
-  const rounded = Math.floor(avgScore);
+  const avgRaw = sum / count;
+  const avgFloor = Math.floor(avgRaw); // dibulatkan ke bawah
 
   const avgLetter =
-    Object.entries(RATING_SCORES).find(([, score]) => score === rounded)?.[0] ||
-    null;
+    Object.entries(RATING_SCORES).find(
+      ([, score]) => score === avgFloor
+    )?.[0] || null;
 
   return {
     avgLetter,
-    avgScore,
+    avgScore: avgFloor, // simpan versi dibulatkan
     count,
   };
 }
@@ -55,52 +62,80 @@ function computeAverageRating(ratings) {
 export const getIgniteSpells = async (req, res) => {
   try {
     const { search, school, level } = req.query;
+
     const userId = req.user?.id || null;
+    console.log(userId);
 
     let query = supabase.from(SPELL_TABLE).select("*");
 
-    if (search) query = query.ilike("name", `%${search.toLowerCase()}%`);
-    if (school) query = query.ilike("school", school);
-    if (level !== undefined) query = query.eq("level", Number(level));
+    if (search) {
+      const like = `%${search.toLowerCase()}%`;
+      query = query.ilike("name", like);
+    }
+
+    if (school) {
+      query = query.ilike("school", school);
+    }
+
+    if (level !== undefined) {
+      const lvl = Number(level);
+      if (!isNaN(lvl)) query = query.eq("level", lvl);
+    }
 
     const { data, error } = await query;
     if (error) throw error;
 
     const spells = (data || []).map((row) => {
-      const favorites = row.favorites || [];
-      const ratings = row.ratings || [];
+      // ===== FAVORITES =====
+      const favorites = Array.isArray(row.favorites) ? row.favorites : [];
+      const favorites_count =
+        typeof row.favorites_count === "number"
+          ? row.favorites_count
+          : favorites.length;
 
-      const is_favorite = userId
-        ? favorites.some((f) => String(f.user_id) === String(userId))
-        : false;
+      const is_favorite =
+        userId != null
+          ? favorites.some((f) => String(f.user_id) === userId)
+          : false;
+
+      // ===== RATINGS =====
+      const ratings = Array.isArray(row.ratings) ? row.ratings : [];
+
+      let my_rating = null;
+      if (userId != null) {
+        console.log(userId);
+        const found = ratings.find((r) => String(r.user_id) === userId);
+        if (found && found.rating) {
+          my_rating = { rating: String(found.rating).toUpperCase() };
+        }
+      }
+
+      // hitung rata-rata + total dari helper
       const { avgLetter, avgScore, count } = computeAverageRating(ratings);
 
-      const my_rating = userId
-        ? ratings.find((r) => String(r.user_id) === String(userId)) || null
-        : null;
+      const rating_average_score =
+        typeof avgScore === "number" ? avgScore : null; // int (floor)
+      const rating_average_letter = avgLetter || "";
+      const rating_total = count;
 
       return {
         __type: "spell",
         __table: SPELL_TABLE,
         __global_id: `spell-${row.id}`,
 
-        ...row,
-
-        favorites,
-        favorites_count: favorites.length,
+        favorites_count,
         is_favorite,
 
-        ratings,
-        ratings_score: row.ratings_score || avgScore || null,
-
-        rating_average_letter: avgLetter,
-        rating_average_score: avgScore,
-        rating_total: count,
         my_rating,
+        rating_average_score,
+        rating_average_letter,
+        rating_total,
+
+        ...row,
       };
     });
 
-    spells.sort((a, b) => a.name.localeCompare(b.name));
+    spells.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
     return res.json({
       success: true,
@@ -121,19 +156,22 @@ export const toggleFavoriteIgniteSpell = async (req, res) => {
     const user = req.user;
     if (!user?.id) return res.status(401).json({ error: "Unauthorized" });
 
-    const { data: spell } = await supabase
+    const { data: spell, error: fetchError } = await supabase
       .from(SPELL_TABLE)
       .select("favorites")
       .eq("id", id)
       .single();
 
+    if (fetchError) throw fetchError;
     if (!spell) return res.status(404).json({ error: "Spell not found" });
 
-    let favorites = spell.favorites || [];
+    let favorites = Array.isArray(spell.favorites) ? spell.favorites : [];
     const exists = favorites.some((f) => String(f.user_id) === String(user.id));
 
     if (exists) {
-      favorites = favorites.filter((f) => String(f.user_id) !== String(user.id));
+      favorites = favorites.filter(
+        (f) => String(f.user_id) !== String(user.id)
+      );
     } else {
       favorites.push({
         user_id: String(user.id),
@@ -175,40 +213,42 @@ export const rateIgniteSpell = async (req, res) => {
     const user = req.user;
     if (!user?.id) return res.status(401).json({ error: "Unauthorized" });
 
-    const normalized = normalizeRating(rating);
+    const normalized = normalizeRating(rating); // bisa null → hapus rating
 
-    const { data: spell } = await supabase
+    const { data: spell, error: fetchError } = await supabase
       .from(SPELL_TABLE)
       .select("ratings")
       .eq("id", id)
       .single();
 
+    if (fetchError) throw fetchError;
     if (!spell) return res.status(404).json({ error: "Spell not found" });
 
     let ratings = Array.isArray(spell.ratings) ? spell.ratings : [];
-
     const idx = ratings.findIndex((r) => String(r.user_id) === String(user.id));
 
-    // ========================= DELETE RATING =========================
+    // ========================= DELETE RATING (NONE) =========================
     if (!normalized) {
       if (idx >= 0) ratings.splice(idx, 1);
 
       const { avgLetter, avgScore, count } = computeAverageRating(ratings);
 
-      const { data: updated } = await supabase
+      const { data: updated, error: delError } = await supabase
         .from(SPELL_TABLE)
         .update({
           ratings,
-          ratings_score: avgScore,
+          ratings_score: avgScore, // bisa null kalau count=0
         })
         .eq("id", id)
         .select()
         .single();
 
+      if (delError) throw delError;
+
       return res.json({
         success: true,
         action: "delete",
-        rating_average_letter: avgLetter,
+        rating_average_letter: avgLetter || "",
         rating_average_score: avgScore,
         rating_total: count,
         spell: updated,
@@ -227,7 +267,7 @@ export const rateIgniteSpell = async (req, res) => {
     };
 
     if (idx >= 0) {
-      ratings[idx] = ratingObj; // update
+      ratings[idx] = ratingObj; // update existing
     } else {
       ratings.push(ratingObj); // new rating
     }
@@ -238,7 +278,7 @@ export const rateIgniteSpell = async (req, res) => {
       .from(SPELL_TABLE)
       .update({
         ratings,
-        ratings_score: avgScore, // simpan score rata-rata ke kolom
+        ratings_score: avgScore, // simpan skor rata-rata (floor)
       })
       .eq("id", id)
       .select()
@@ -250,7 +290,7 @@ export const rateIgniteSpell = async (req, res) => {
       success: true,
       action: idx >= 0 ? "update" : "add",
       my_rating: ratingObj,
-      rating_average_letter: avgLetter,
+      rating_average_letter: avgLetter || "",
       rating_average_score: avgScore,
       rating_total: count,
       spell: updated,
