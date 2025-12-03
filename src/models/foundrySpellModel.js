@@ -9,19 +9,18 @@ export async function insertFoundrySpell(payload) {
     level,
     school,
     description,
-    affects,          // text
+    affects,
 
     image,
     compendium_source,
     source_book,
     price,
 
-    // JSONB objek penuh
-    activation,       // { value, type, condition }
-    range,            // { value, units }
-    template,         // { size, type, units }
-    materials,        // { cost, value, consume }
-    duration,         // { value, units }
+    activation,
+    range,
+    template,
+    materials,
+    duration,
 
     favorites,
     favorites_count,
@@ -30,6 +29,11 @@ export async function insertFoundrySpell(payload) {
 
     raw_data,
     format_data,
+    classes,
+    damage_type,
+    subclasses,
+    species,
+    subspecies,
   } = payload;
 
   const favArr = Array.isArray(favorites) ? favorites : [];
@@ -56,11 +60,11 @@ export async function insertFoundrySpell(payload) {
       source_book,
       price: price ?? null,
 
-      activation: activation ?? null,   // 🔥 JSONB
-      range: range ?? null,             // 🔥 JSONB
-      template: template ?? null,       // 🔥 JSONB
-      materials: materials ?? null,     // 🔥 JSONB
-      duration: duration ?? null,       // 🔥 JSONB
+      activation: activation ?? null, // 🔥 JSONB
+      range: range ?? null, // 🔥 JSONB
+      template: template ?? null, // 🔥 JSONB
+      materials: materials ?? null, // 🔥 JSONB
+      duration: duration ?? null, // 🔥 JSONB
 
       favorites: favArr,
       favorites_count: favCount,
@@ -69,6 +73,11 @@ export async function insertFoundrySpell(payload) {
 
       raw_data: raw_data ?? {},
       format_data: format_data ?? {},
+      classes: classes ?? [],
+      damage_type: damage_type ?? [],
+      subclasses: subclasses ?? [],
+      species: species ?? [],
+      subspecies: subspecies ?? [],
     })
     .select()
     .single();
@@ -92,6 +101,7 @@ export async function bulkInsertFoundrySpells(items) {
       typeof it.favorites_count === "number"
         ? it.favorites_count
         : favArr.length;
+
     const rateCount =
       typeof it.ratings_count === "number"
         ? it.ratings_count
@@ -111,7 +121,7 @@ export async function bulkInsertFoundrySpells(items) {
       source_book: it.source_book ?? null,
       price: it.price ?? null,
 
-      activation: it.activation ?? null,   // objek langsung
+      activation: it.activation ?? null,
       range: it.range ?? null,
       template: it.template ?? null,
       materials: it.materials ?? null,
@@ -124,6 +134,13 @@ export async function bulkInsertFoundrySpells(items) {
 
       raw_data: it.raw_data ?? {},
       format_data: it.format_data ?? {},
+
+      // 🔥 NEW FIELDS (wajib ada)
+      classes: Array.isArray(it.classes) ? it.classes : [],
+      damage_type: Array.isArray(it.damage_type) ? it.damage_type : [],
+      subclasses: Array.isArray(it.subclasses) ? it.subclasses : [],
+      species: Array.isArray(it.species) ? it.species : [],
+      subspecies: Array.isArray(it.subspecies) ? it.subspecies : [],
     };
   });
 
@@ -139,6 +156,7 @@ export async function bulkInsertFoundrySpells(items) {
 
   return data;
 }
+
 
 export async function listFoundrySpells({ limit = 50, offset = 0 } = {}) {
   const { data, error } = await supabase
@@ -187,10 +205,7 @@ export async function updateFoundrySpell(id, payload) {
 }
 
 export async function deleteFoundrySpell(id) {
-  const { error } = await supabase
-    .from("foundry_spells")
-    .delete()
-    .eq("id", id);
+  const { error } = await supabase.from("foundry_spells").delete().eq("id", id);
 
   if (error) {
     console.error("❌ deleteFoundrySpell error:", error.message);

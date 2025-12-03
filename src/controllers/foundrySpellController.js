@@ -50,7 +50,6 @@ function formatPrice(system) {
   return value * mult;
 }
 
-
 function normalizeFoundrySpell(raw) {
   if (!raw || typeof raw !== "object") {
     throw new Error("Invalid spell JSON");
@@ -58,19 +57,31 @@ function normalizeFoundrySpell(raw) {
 
   const name = raw.name || "Unknown Spell";
   const type = raw.type || "spell";
-  const img = raw.img || raw.system?.img || null;
+  const img = raw.img || null;
 
   const system = raw.system ?? {};
   const effects = Array.isArray(raw.effects) ? raw.effects : [];
 
-  const description = system.description?.value ?? system.description ?? "";
-  const affects = system.target?.affects ?? null;
+  const description =
+    typeof system.description?.value === "string"
+      ? system.description.value
+      : typeof system.description === "string"
+      ? system.description
+      : "";
 
+  const affects = system.target?.affects ?? null;
   const activation = system.activation ?? null;
   const range = system.range ?? null;
   const template = system.target?.template ?? null;
   const materials = system.materials ?? null;
   const duration = system.duration ?? null;
+
+  // 🔥 NEW — ambil spellClassNames
+  const classes =
+    raw?.flags?.plutonium?.spellClassNames &&
+    Array.isArray(raw.flags.plutonium.spellClassNames)
+      ? raw.flags.plutonium.spellClassNames
+      : [];
 
   return {
     name,
@@ -85,9 +96,15 @@ function normalizeFoundrySpell(raw) {
     template,
     materials,
     duration,
+
+    // NEW
+    classes,
+    damage_type: [],
+    subclasses: [],
+    species: [],
+    subspecies: [],
   };
 }
-
 
 function buildSpellPayloads(rawItems) {
   const payloads = [];
@@ -108,9 +125,15 @@ function buildSpellPayloads(rawItems) {
         template,
         materials,
         duration,
+        classes,
+        damage_type,
+        subclasses,
+        species,
+        subspecies,
       } = normalized;
 
-      const image = resolveSpellImage(system.img, img);
+      const image = resolveSpellImage(raw.img, img);
+
       const compendium_source = getCompendiumSource(raw);
       const source_book = getSourceBook(system);
       const price = formatPrice(system);
@@ -118,6 +141,7 @@ function buildSpellPayloads(rawItems) {
       payloads.push({
         name,
         type,
+
         properties: system.properties ?? null,
         level: system.level ?? null,
         school: system.school ?? null,
@@ -130,6 +154,13 @@ function buildSpellPayloads(rawItems) {
         template,
         materials,
         duration,
+
+        // NEW JSONB fields
+        classes,
+        damage_type,
+        subclasses,
+        species,
+        subspecies,
 
         price,
         image,
@@ -150,7 +181,6 @@ function buildSpellPayloads(rawItems) {
 
   return { payloads, errors };
 }
-
 
 export const importFoundrySpells = async (req, res) => {
   try {
@@ -187,7 +217,6 @@ export const importFoundrySpells = async (req, res) => {
     return res.status(500).json({ error: "Failed to import foundry spells" });
   }
 };
-
 
 export const importFoundrySpellsFromFiles = async (req, res) => {
   try {
@@ -342,3 +371,74 @@ export async function exportFoundrySpellHandler(req, res) {
     res.status(500).json({ error: err.message });
   }
 }
+
+export const updateSpellClasses = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const classes = Array.isArray(req.body.classes) ? req.body.classes : [];
+
+    const updated = await updateFoundrySpell(id, { classes });
+    return res.json({ success: true, item: updated });
+  } catch (err) {
+    console.error("updateSpellClasses error:", err);
+    return res.status(500).json({ error: "Failed to update classes" });
+  }
+};
+
+export const updateSpellDamageType = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const damage_type = Array.isArray(req.body.damage_type)
+      ? req.body.damage_type
+      : [];
+
+    const updated = await updateFoundrySpell(id, { damage_type });
+    return res.json({ success: true, item: updated });
+  } catch (err) {
+    console.error("updateSpellDamageType error:", err);
+    return res.status(500).json({ error: "Failed to update damage type" });
+  }
+};
+
+export const updateSpellSubclasses = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const subclasses = Array.isArray(req.body.subclasses)
+      ? req.body.subclasses
+      : [];
+
+    const updated = await updateFoundrySpell(id, { subclasses });
+    return res.json({ success: true, item: updated });
+  } catch (err) {
+    console.error("updateSpellSubclasses error:", err);
+    return res.status(500).json({ error: "Failed to update subclasses" });
+  }
+};
+
+export const updateSpellSpecies = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const species = Array.isArray(req.body.species) ? req.body.species : [];
+
+    const updated = await updateFoundrySpell(id, { species });
+    return res.json({ success: true, item: updated });
+  } catch (err) {
+    console.error("updateSpellSpecies error:", err);
+    return res.status(500).json({ error: "Failed to update species" });
+  }
+};
+
+export const updateSpellSubspecies = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const subspecies = Array.isArray(req.body.subspecies)
+      ? req.body.subspecies
+      : [];
+
+    const updated = await updateFoundrySpell(id, { subspecies });
+    return res.json({ success: true, item: updated });
+  } catch (err) {
+    console.error("updateSpellSubspecies error:", err);
+    return res.status(500).json({ error: "Failed to update subspecies" });
+  }
+};
