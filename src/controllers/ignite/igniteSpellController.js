@@ -70,12 +70,9 @@ export const getIgniteSpells = async (req, res) => {
       const favorites = row.favorites || [];
       const ratings = row.ratings || [];
 
-      // --- favorites ---
       const is_favorite = userId
         ? favorites.some((f) => String(f.user_id) === String(userId))
         : false;
-
-      // --- ratings ---
       const { avgLetter, avgScore, count } = computeAverageRating(ratings);
 
       const my_rating = userId
