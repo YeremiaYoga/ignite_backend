@@ -1,9 +1,7 @@
 import supabase from "../utils/db.js";
 import bcrypt from "bcryptjs";
 
-/**
- * Pastikan user punya role admin atau superadmin
- */
+
 function ensureAdmin(req, res) {
   if (
     !req.user ||
@@ -15,9 +13,7 @@ function ensureAdmin(req, res) {
   return true;
 }
 
-/**
- * GET semua user
- */
+
 export const getAllUsers = async (req, res) => {
   if (!ensureAdmin(req, res)) return;
 
@@ -30,9 +26,7 @@ export const getAllUsers = async (req, res) => {
   res.json({ success: true, users: data });
 };
 
-/**
- * GET user by id
- */
+
 export const getUserById = async (req, res) => {
   if (!ensureAdmin(req, res)) return;
   const { id } = req.params;
@@ -47,9 +41,6 @@ export const getUserById = async (req, res) => {
   res.json({ success: true, user: data });
 };
 
-/**
- * POST create user baru
- */
 
 export const createUser = async (req, res) => {
   if (!ensureAdmin(req, res)) return;

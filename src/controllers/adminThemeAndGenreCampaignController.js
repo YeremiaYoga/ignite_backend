@@ -84,7 +84,7 @@ export const adminCreateGenre = async (req, res) => {
     if (!payload.name)
       return res.status(400).json({ error: "Name is required" });
 
-    // ambil data user dari middleware auth
+   
     const user_id = req.user?.id || null;
     const creator_name =
       req.user?.username || req.user?.email || "admin@ignite";
