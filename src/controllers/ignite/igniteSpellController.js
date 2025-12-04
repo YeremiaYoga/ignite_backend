@@ -20,12 +20,6 @@ function normalizeRating(val) {
   return RATING_VALUES.includes(upper) ? upper : null;
 }
 
-/**
- * Hitung rata-rata rating:
- * - avgLetter → huruf (S/A/B/...) dari skor rata-rata yang dibulatkan ke bawah
- * - avgScore  → angka rata-rata yang SUDAH dibulatkan ke bawah (int)
- * - count     → total rating valid
- */
 function computeAverageRating(ratings) {
   const arr = Array.isArray(ratings) ? ratings : [];
   if (!arr.length) return { avgLetter: null, avgScore: null, count: 0 };
