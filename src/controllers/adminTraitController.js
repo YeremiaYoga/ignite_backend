@@ -8,9 +8,7 @@ import {
 } from "../models/traitModel.js";
 import { getSpeciesById, updateSpecies } from "../models/speciesModel.js";
 
-/**
- * 🧾 GET all traits
- */
+
 export const getTraitsAdmin = async (req, res) => {
   try {
     const { data, error } = await getAllTraits();
@@ -22,9 +20,7 @@ export const getTraitsAdmin = async (req, res) => {
   }
 };
 
-/**
- * 🔍 GET single trait
- */
+
 export const getTraitAdmin = async (req, res) => {
   try {
     const { id } = req.params;
@@ -37,15 +33,12 @@ export const getTraitAdmin = async (req, res) => {
   }
 };
 
-/**
- * ➕ CREATE new trait
- * Sekaligus menambahkan ke species.traits[]
- */
+
 export const addTraitAdmin = async (req, res) => {
   try {
     const body = req.body;
 
-    // 1️⃣ buat trait baru
+
     const { data: trait, error } = await createTrait({
       name: body.name,
       slug: body.name.toLowerCase().replace(/\s+/g, "_"),
@@ -53,13 +46,13 @@ export const addTraitAdmin = async (req, res) => {
       description: body.description || "",
       has_options: body.has_options ?? false,
       options: body.options || [],
-      has_modifiers: body.has_modifiers ?? false, // ✅ baru
-      modifiers: body.modifiers || [], // ✅ baru
+      has_modifiers: body.has_modifiers ?? false,
+      modifiers: body.modifiers || [], 
       scope: body.scope || "specific",
     });
     if (error) throw error;
 
-    // 2️⃣ kalau ada species_id → tambahkan trait_id ke species.traits[]
+
     if (body.species_id) {
       const { data: species, error: speciesErr } = await getSpeciesById(
         body.species_id
@@ -91,10 +84,7 @@ export const addTraitAdmin = async (req, res) => {
   }
 };
 
-/**
- * ✏️ UPDATE trait
- * Sekaligus sync nama trait di species.traits[]
- */
+
 export const editTraitAdmin = async (req, res) => {
   try {
     const { id } = req.params;
@@ -107,14 +97,14 @@ export const editTraitAdmin = async (req, res) => {
       description: body.description || "",
       has_options: body.has_options ?? false,
       options: body.options || [],
-      has_modifiers: body.has_modifiers ?? false, // ✅ baru
-      modifiers: body.modifiers || [], // ✅ baru
+      has_modifiers: body.has_modifiers ?? false, 
+      modifiers: body.modifiers || [],
       scope: body.scope || "specific",
       updated_at: new Date().toISOString(),
     });
     if (error) throw error;
 
-    // 2️⃣ sync nama trait di species.traits[]
+
     if (body.species_id) {
       const { data: species, error: speciesErr } = await getSpeciesById(
         body.species_id
@@ -144,20 +134,16 @@ export const editTraitAdmin = async (req, res) => {
   }
 };
 
-/**
- * 🗑 DELETE trait
- * Sekaligus hapus dari species.traits[]
- */
+
 export const deleteTraitAdmin = async (req, res) => {
   try {
     const { id } = req.params;
-    const species_id = req.body?.species_id; // ✅ aman kalau body kosong
+    const species_id = req.body?.species_id; 
 
-    // 1️⃣ Hapus trait dari species_traits
+
     const { error } = await deleteTrait(id);
     if (error) throw error;
 
-    // 2️⃣ Hapus referensi dari species.traits[] hanya jika species_id valid
     if (species_id && typeof species_id === "string") {
       const { data: species, error: speciesErr } = await getSpeciesById(species_id);
       if (speciesErr) throw speciesErr;

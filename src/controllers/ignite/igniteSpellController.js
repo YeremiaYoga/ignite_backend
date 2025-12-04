@@ -38,7 +38,7 @@ function computeAverageRating(ratings) {
   if (!count) return { avgLetter: null, avgScore: null, count: 0 };
 
   const avgRaw = sum / count;
-  const avgFloor = Math.floor(avgRaw); // dibulatkan ke bawah
+  const avgFloor = Math.floor(avgRaw); 
 
   const avgLetter =
     Object.entries(RATING_SCORES).find(
@@ -47,7 +47,7 @@ function computeAverageRating(ratings) {
 
   return {
     avgLetter,
-    avgScore: avgFloor, // simpan versi dibulatkan
+    avgScore: avgFloor, 
     count,
   };
 }
@@ -104,11 +104,11 @@ export const getIgniteSpells = async (req, res) => {
         }
       }
 
-      // hitung rata-rata + total dari helper
+    
       const { avgLetter, avgScore, count } = computeAverageRating(ratings);
 
       const rating_average_score =
-        typeof avgScore === "number" ? avgScore : null; // int (floor)
+        typeof avgScore === "number" ? avgScore : null; 
       const rating_average_letter = avgLetter || "";
       const rating_total = count;
 
@@ -207,7 +207,7 @@ export const rateIgniteSpell = async (req, res) => {
     const user = req.user;
     if (!user?.id) return res.status(401).json({ error: "Unauthorized" });
 
-    const normalized = normalizeRating(rating); // bisa null → hapus rating
+    const normalized = normalizeRating(rating); 
 
     const { data: spell, error: fetchError } = await supabase
       .from(SPELL_TABLE)
@@ -231,7 +231,7 @@ export const rateIgniteSpell = async (req, res) => {
         .from(SPELL_TABLE)
         .update({
           ratings,
-          ratings_score: avgScore, // bisa null kalau count=0
+          ratings_score: avgScore, 
         })
         .eq("id", id)
         .select()
@@ -261,9 +261,9 @@ export const rateIgniteSpell = async (req, res) => {
     };
 
     if (idx >= 0) {
-      ratings[idx] = ratingObj; // update existing
+      ratings[idx] = ratingObj; 
     } else {
-      ratings.push(ratingObj); // new rating
+      ratings.push(ratingObj); 
     }
 
     const { avgLetter, avgScore, count } = computeAverageRating(ratings);
@@ -272,7 +272,7 @@ export const rateIgniteSpell = async (req, res) => {
       .from(SPELL_TABLE)
       .update({
         ratings,
-        ratings_score: avgScore, // simpan skor rata-rata (floor)
+        ratings_score: avgScore, 
       })
       .eq("id", id)
       .select()
