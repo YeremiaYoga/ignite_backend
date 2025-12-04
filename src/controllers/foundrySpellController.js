@@ -281,10 +281,7 @@ export const importFoundrySpellsFromFiles = async (req, res) => {
 
 export const listFoundrySpellsHandler = async (req, res) => {
   try {
-    const limit = Number(req.query.limit) || 50;
-    const offset = Number(req.query.offset) || 0;
-
-    const rows = await listFoundrySpells({ limit, offset });
+    const rows = await listFoundrySpells(); // langsung ambil semua
     return res.json({ success: true, items: rows });
   } catch (err) {
     console.error("💥 listFoundrySpellsHandler error:", err);

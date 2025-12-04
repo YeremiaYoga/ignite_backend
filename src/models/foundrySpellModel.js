@@ -162,12 +162,11 @@ export async function bulkInsertFoundrySpells(items) {
   return data;
 }
 
-export async function listFoundrySpells({ limit = 50, offset = 0 } = {}) {
+export async function listFoundrySpells() {
   const { data, error } = await supabase
     .from("foundry_spells")
     .select("*")
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
+    .order("created_at", { ascending: false });
 
   if (error) {
     console.error("❌ listFoundrySpells error:", error.message);
@@ -176,6 +175,7 @@ export async function listFoundrySpells({ limit = 50, offset = 0 } = {}) {
 
   return data;
 }
+
 
 export async function getFoundrySpellById(id) {
   const { data, error } = await supabase
