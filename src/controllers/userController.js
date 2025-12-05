@@ -9,7 +9,8 @@ import supabase from "../utils/db.js";
 
 /* 🔹 Helper: generate friend code dengan format PI-1234-5678-9012 */
 function generateFriendCode() {
-  const block = () => String(Math.floor(Math.random() * 10000)).padStart(4, "0");
+  const block = () =>
+    String(Math.floor(Math.random() * 10000)).padStart(4, "0");
   return `PI-${block()}-${block()}-${block()}`;
 }
 
@@ -47,7 +48,9 @@ async function ensureFriendCode(userId) {
       .single();
 
     if (!error && data?.friend_code) {
-      console.log(`✅ Friend code generated for user ${userId}: ${data.friend_code}`);
+      console.log(
+        `✅ Friend code generated for user ${userId}: ${data.friend_code}`
+      );
       return data.friend_code;
     }
 
@@ -68,7 +71,9 @@ async function ensureFriendCode(userId) {
     throw error;
   }
 
-  throw new Error("Failed to generate unique friend code after several attempts");
+  throw new Error(
+    "Failed to generate unique friend code after several attempts"
+  );
 }
 
 export const loginUser = async (req, res) => {
@@ -304,7 +309,6 @@ export const getUserMe = async (req, res) => {
 
     if (error) throw error;
 
-    // di sini juga sudah termasuk friend_code kalau kolomnya ada
     res.json({ user: data });
   } catch (err) {
     console.error("❌ getUserMe error:", err.message);

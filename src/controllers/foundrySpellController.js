@@ -182,6 +182,110 @@ function buildSpellPayloads(rawItems) {
   return { payloads, errors };
 }
 
+// function buildSortingMeta({ name, system, range, duration }) {
+//   const lvlRaw = system?.level;
+//   const levelNum =
+//     typeof lvlRaw === "number"
+//       ? lvlRaw
+//       : Number(lvlRaw) || 0;
+
+//   return {
+//     name: name || "",
+//     level: levelNum,
+//     favorites_count: 0,   // awal import pasti 0
+//     ratings_score: 0,     // awal import 0
+//     range,                // mentah
+//     duration,             // mentah
+//   };
+// }
+
+// function buildSpellPayloads(rawItems) {
+//   const payloads = [];
+//   const errors = [];
+
+//   for (const raw of rawItems) {
+//     try {
+//       const normalized = normalizeFoundrySpell(raw);
+//       const {
+//         name,
+//         type,
+//         img,
+//         system,
+//         description,
+//         affects,
+//         activation,
+//         range,
+//         template,
+//         materials,
+//         duration,
+//         classes,
+//         damage_type,
+//         subclasses,
+//         species,
+//         subspecies,
+//       } = normalized;
+
+//       const image = resolveSpellImage(raw.img, img);
+
+//       const compendium_source = getCompendiumSource(raw);
+//       const source_book = getSourceBook(system);
+//       const price = formatPrice(system);
+
+//       // 👇 NEW: bikin meta sorting
+//       const sorting = buildSortingMeta({
+//         name,
+//         system,
+//         range,
+//         duration,
+//       });
+
+//       payloads.push({
+//         name,
+//         type,
+
+//         properties: system.properties ?? null,
+//         level: system.level ?? null,
+//         school: system.school ?? null,
+
+//         description,
+//         affects,
+
+//         activation,
+//         range,
+//         template,
+//         materials,
+//         duration,
+
+//         // NEW JSONB fields
+//         classes,
+//         damage_type,
+//         subclasses,
+//         species,
+//         subspecies,
+
+//         price,
+//         image,
+//         compendium_source,
+//         source_book,
+
+//         raw_data: raw,
+//         format_data: normalized,
+
+//         // 👈 NEW: kirim ke DB
+//         sorting,
+//       });
+//     } catch (err) {
+//       console.error("💥 normalize spell failed:", err);
+//       errors.push({
+//         name: raw?.name || null,
+//         error: err.message,
+//       });
+//     }
+//   }
+
+//   return { payloads, errors };
+// }
+
 export const importFoundrySpells = async (req, res) => {
   try {
     const body = req.body;
@@ -281,7 +385,7 @@ export const importFoundrySpellsFromFiles = async (req, res) => {
 
 export const listFoundrySpellsHandler = async (req, res) => {
   try {
-    const rows = await listFoundrySpells(); 
+    const rows = await listFoundrySpells();
     return res.json({ success: true, items: rows });
   } catch (err) {
     console.error("💥 listFoundrySpellsHandler error:", err);
