@@ -12,10 +12,6 @@ import {
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-// kalau ada middleware auth admin, taruh di sini
-// router.use(requireAdminAuthMiddleware);
-
-// image dikirim dengan field name: "image"
 router.get("/", listTokenBordersAdmin);
 router.get("/:id", getTokenBorderAdmin);
 
