@@ -6,9 +6,6 @@ import {
   deleteGroupType,
 } from "../models/speciesGroupTypeModel.js";
 
-/**
- * ✅ GET all group types
- */
 export const fetchAllGroupTypes = async (req, res) => {
   try {
     const { data, error } = await getAllGroupTypes();
@@ -20,13 +17,11 @@ export const fetchAllGroupTypes = async (req, res) => {
   }
 };
 
-/**
- * ✅ CREATE
- */
 export const addGroupType = async (req, res) => {
   try {
     const parsed = req.body;
-    if (!parsed.name) return res.status(400).json({ error: "Missing field: name" });
+    if (!parsed.name)
+      return res.status(400).json({ error: "Missing field: name" });
 
     const newGroup = {
       ...parsed,
@@ -36,16 +31,15 @@ export const addGroupType = async (req, res) => {
 
     const { data, error } = await createGroupType(newGroup);
     if (error) throw error;
-    res.status(201).json({ success: true, message: "✅ Group type created", data });
+    res
+      .status(201)
+      .json({ success: true, message: "✅ Group type created", data });
   } catch (err) {
     console.error("💥 addGroupType error:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-/**
- * ✅ UPDATE
- */
 export const editGroupType = async (req, res) => {
   try {
     const { id } = req.params;
@@ -65,9 +59,6 @@ export const editGroupType = async (req, res) => {
   }
 };
 
-/**
- * ✅ DELETE
- */
 export const removeGroupType = async (req, res) => {
   try {
     const { id } = req.params;

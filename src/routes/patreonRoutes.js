@@ -290,9 +290,9 @@ router.get("/callback", async (req, res) => {
     const userAgent = req.get("User-Agent") || "";
     const isFirefox = /firefox/i.test(userAgent);
 
-    console.log(isFirefox);
+ 
     if (isFirefox) {
-      console.log(isFirefox);
+    
       res.cookie("ignite_access_token", accessTokenJWT, {
         httpOnly: true,
         secure: isProd,

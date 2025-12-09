@@ -149,12 +149,9 @@ export const adminCreateAnnouncement = async (req, res) => {
       created_at: new Date().toISOString(),
     };
 
-    // ⬇⬇⬇ DI SINI YANG DIUBAH
+
     const created = await createAnnouncement(payload);
-    // kalau createAnnouncement pakai supabase langsung { data, error }:
-    // const { data, error } = await createAnnouncement(payload);
-    // if (error) throw error;
-    // const created = Array.isArray(data) ? data[0] : data;
+
 
     if (!created || !created.id) {
       throw new Error("Failed to create announcement: missing id");

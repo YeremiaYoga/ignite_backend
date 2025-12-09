@@ -3,7 +3,6 @@ import supabase from "../../utils/db.js";
 
 const SPELL_TABLE = "foundry_spells";
 
-// ========================= RATING HELPERS =========================
 const RATING_VALUES = ["S", "A", "B", "C", "D", "F"];
 const RATING_SCORES = {
   S: 6,
@@ -38,7 +37,7 @@ function computeAverageRating(ratings) {
   if (!count) return { avgLetter: null, avgScore: null, count: 0 };
 
   const avgRaw = sum / count;
-  const avgFloor = Math.floor(avgRaw); 
+  const avgFloor = Math.floor(avgRaw);
 
   const avgLetter =
     Object.entries(RATING_SCORES).find(
@@ -47,18 +46,16 @@ function computeAverageRating(ratings) {
 
   return {
     avgLetter,
-    avgScore: avgFloor, 
+    avgScore: avgFloor,
     count,
   };
 }
 
-// ========================= GET SPELLS =========================
 export const getIgniteSpells = async (req, res) => {
   try {
     const { search, school, level } = req.query;
 
     const userId = req.user?.id || null;
-    console.log(userId);
 
     let query = supabase.from(SPELL_TABLE).select("*");
 
@@ -80,7 +77,6 @@ export const getIgniteSpells = async (req, res) => {
     if (error) throw error;
 
     const spells = (data || []).map((row) => {
-      // ===== FAVORITES =====
       const favorites = Array.isArray(row.favorites) ? row.favorites : [];
       const favorites_count =
         typeof row.favorites_count === "number"
@@ -92,23 +88,20 @@ export const getIgniteSpells = async (req, res) => {
           ? favorites.some((f) => String(f.user_id) === userId)
           : false;
 
-      // ===== RATINGS =====
       const ratings = Array.isArray(row.ratings) ? row.ratings : [];
 
       let my_rating = null;
       if (userId != null) {
-        console.log(userId);
         const found = ratings.find((r) => String(r.user_id) === userId);
         if (found && found.rating) {
           my_rating = { rating: String(found.rating).toUpperCase() };
         }
       }
 
-    
       const { avgLetter, avgScore, count } = computeAverageRating(ratings);
 
       const rating_average_score =
-        typeof avgScore === "number" ? avgScore : null; 
+        typeof avgScore === "number" ? avgScore : null;
       const rating_average_letter = avgLetter || "";
       const rating_total = count;
 
@@ -142,7 +135,6 @@ export const getIgniteSpells = async (req, res) => {
   }
 };
 
-// ========================= FAVORITE SPELL =========================
 export const toggleFavoriteIgniteSpell = async (req, res) => {
   try {
     const { id } = req.params;
@@ -198,7 +190,6 @@ export const toggleFavoriteIgniteSpell = async (req, res) => {
   }
 };
 
-// ========================= RATE SPELL (ADD / UPDATE / DELETE) =========================
 export const rateIgniteSpell = async (req, res) => {
   try {
     const { id } = req.params;
@@ -207,7 +198,7 @@ export const rateIgniteSpell = async (req, res) => {
     const user = req.user;
     if (!user?.id) return res.status(401).json({ error: "Unauthorized" });
 
-    const normalized = normalizeRating(rating); 
+    const normalized = normalizeRating(rating);
 
     const { data: spell, error: fetchError } = await supabase
       .from(SPELL_TABLE)
@@ -221,7 +212,6 @@ export const rateIgniteSpell = async (req, res) => {
     let ratings = Array.isArray(spell.ratings) ? spell.ratings : [];
     const idx = ratings.findIndex((r) => String(r.user_id) === String(user.id));
 
-    // ========================= DELETE RATING (NONE) =========================
     if (!normalized) {
       if (idx >= 0) ratings.splice(idx, 1);
 
@@ -231,7 +221,7 @@ export const rateIgniteSpell = async (req, res) => {
         .from(SPELL_TABLE)
         .update({
           ratings,
-          ratings_score: avgScore, 
+          ratings_score: avgScore,
         })
         .eq("id", id)
         .select()
@@ -249,7 +239,6 @@ export const rateIgniteSpell = async (req, res) => {
       });
     }
 
-    // ========================= ADD OR UPDATE RATING =========================
     const now = new Date().toISOString();
 
     const ratingObj = {
@@ -261,9 +250,9 @@ export const rateIgniteSpell = async (req, res) => {
     };
 
     if (idx >= 0) {
-      ratings[idx] = ratingObj; 
+      ratings[idx] = ratingObj;
     } else {
-      ratings.push(ratingObj); 
+      ratings.push(ratingObj);
     }
 
     const { avgLetter, avgScore, count } = computeAverageRating(ratings);
@@ -272,7 +261,7 @@ export const rateIgniteSpell = async (req, res) => {
       .from(SPELL_TABLE)
       .update({
         ratings,
-        ratings_score: avgScore, 
+        ratings_score: avgScore,
       })
       .eq("id", id)
       .select()

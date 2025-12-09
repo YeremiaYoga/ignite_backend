@@ -4,7 +4,7 @@ import {
   getTokenBorderById,
 } from "../../models/tokenBorderModel.js";
 
-// GET /ignite/token-borders
+
 export const listIgniteTokenBordersHandler = async (req, res) => {
   try {
     const items = await getTokenBorders();
@@ -17,7 +17,7 @@ export const listIgniteTokenBordersHandler = async (req, res) => {
   }
 };
 
-// GET /ignite/token-borders/:id
+
 export const getIgniteTokenBorderHandler = async (req, res) => {
   try {
     const { id } = req.params;
