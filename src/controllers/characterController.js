@@ -18,7 +18,44 @@ import { Blob } from "buffer";
 import supabase from "../utils/db.js";
 import { deleteMediaFile } from "../utils/deleteMediaFile.js";
 import { uploadToMedia } from "../utils/uploadToMedia.js";
+
 const MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
+const MAX_IMAGE_SIZE = 3 * 1024 * 1024; // 3MB
+
+// ====== Helper: validasi YouTube URL (youtu.be / youtube.com) ======
+function isValidYouTubeUrl(url) {
+  if (!url) return true; // kosong dianggap valid (tidak diisi)
+
+  let clean = String(url).trim();
+  if (!clean) return true;
+
+  // kadang dari chat ada ">"
+  if (clean.endsWith(">")) {
+    clean = clean.slice(0, -1);
+  }
+
+  try {
+    const u = new URL(clean);
+
+    // youtu.be/VIDEO_ID
+    if (u.hostname.includes("youtu.be")) {
+      const id = u.pathname.replace("/", "").trim();
+      return !!id;
+    }
+
+    // youtube.com/watch?v=VIDEO_ID
+    if (u.hostname.includes("youtube.com")) {
+      const id = u.searchParams.get("v");
+      return !!id;
+    }
+
+    // host lain -> tidak valid
+    return false;
+  } catch (err) {
+    return false;
+  }
+}
+
 export const createCharacterHandler = async (req, res) => {
   const characterData = { ...req.body, user_id: req.userId };
   const { data, error } = await createCharacter(characterData);
@@ -34,7 +71,21 @@ export const saveCharacterHandler = async (req, res) => {
       typeof req.body.data === "string" ? JSON.parse(req.body.data) : req.body;
 
     const publicId = parsed.public_id;
-    const MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
+
+    // ✅ Validasi YouTube link
+    if (parsed.main_theme && !isValidYouTubeUrl(parsed.main_theme)) {
+      return res.status(400).json({
+        error:
+          "Invalid main_theme: must be a valid YouTube link (youtu.be or youtube.com/watch?v=...).",
+      });
+    }
+
+    if (parsed.combat_theme && !isValidYouTubeUrl(parsed.combat_theme)) {
+      return res.status(400).json({
+        error:
+          "Invalid combat_theme: must be a valid YouTube link (youtu.be or youtube.com/watch?v=...).",
+      });
+    }
 
     const uuidFields = [
       "race_id",
@@ -84,7 +135,8 @@ export const saveCharacterHandler = async (req, res) => {
       });
     }
 
-    const uploadToMedia = async (file, type) => {
+    // local uploadToMedia (shadowing util) – tetap dipakai
+    const uploadToMediaLocal = async (file, type) => {
       if (!file || !file.buffer) return null;
       try {
         const blob = new Blob([file.buffer], { type: file.mimetype });
@@ -131,16 +183,31 @@ export const saveCharacterHandler = async (req, res) => {
     let combatThemePath = null;
 
     if (req.files) {
-      artPath = await uploadToMedia(req.files["art"]?.[0], "art");
-      tokenArtPath = await uploadToMedia(
-        req.files["token_art"]?.[0],
-        "token_art"
-      );
-      mainThemePath = await uploadToMedia(
+      const artFile = req.files["art"]?.[0];
+      const tokenFile = req.files["token_art"]?.[0];
+
+      // ✅ Validasi ukuran gambar max 3MB
+      if (artFile && artFile.size > MAX_IMAGE_SIZE) {
+        return res.status(400).json({
+          error: "Art image is too large. Maximum size is 3MB.",
+        });
+      }
+
+      if (tokenFile && tokenFile.size > MAX_IMAGE_SIZE) {
+        return res.status(400).json({
+          error: "Token art image is too large. Maximum size is 3MB.",
+        });
+      }
+
+      artPath = await uploadToMediaLocal(artFile, "art");
+      tokenArtPath = await uploadToMediaLocal(tokenFile, "token_art");
+
+      // OGG tetap, tidak dihapus (hanya upload kalau ada)
+      mainThemePath = await uploadToMediaLocal(
         req.files["main_theme_ogg"]?.[0],
         "main_theme"
       );
-      combatThemePath = await uploadToMedia(
+      combatThemePath = await uploadToMediaLocal(
         req.files["combat_theme_ogg"]?.[0],
         "combat_theme"
       );
@@ -239,12 +306,25 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
     console.log("🛠 [IGNITE] UpdateCharacter by private_id invoked");
 
     const privateId = req.params.id;
-    const MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
 
     const parsed =
       typeof req.body.data === "string" ? JSON.parse(req.body.data) : req.body;
 
-    // 1️⃣ Normalisasi UUID kosong -> null
+    // ✅ Validasi YouTube link (kalau ada di update)
+    if (parsed.main_theme && !isValidYouTubeUrl(parsed.main_theme)) {
+      return res.status(400).json({
+        error:
+          "Invalid main_theme: must be a valid YouTube link (youtu.be atau youtube.com/watch?v=...).",
+      });
+    }
+
+    if (parsed.combat_theme && !isValidYouTubeUrl(parsed.combat_theme)) {
+      return res.status(400).json({
+        error:
+          "Invalid combat_theme: must be a valid YouTube link (youtu.be atau youtube.com/watch?v=...).",
+      });
+    }
+
     const uuidFields = [
       "race_id",
       "subrace_id",
@@ -256,7 +336,7 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       if (parsed[field] === "") parsed[field] = null;
     }
 
-    // 2️⃣ Ambil existing character
+    // Ambil existing character
     const { data: existing, error: fetchError } = await getCharacterByPrivateId(
       privateId
     );
@@ -265,7 +345,7 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       return res.status(404).json({ error: "Character not found" });
     }
 
-    // 3️⃣ Cek owner
+    // Cek owner
     const requesterId =
       req.user?.id || req.user?.user_id || req.userId || parsed.user_id || null;
 
@@ -285,7 +365,7 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       });
     }
 
-    // 4️⃣ Ambil token sekali
+    // Ambil token sekali
     const token =
       req.cookies?.ignite_access_token ||
       req.user?.jwt?.token ||
@@ -294,11 +374,27 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
 
     const files = req.files || {};
 
-    // 5️⃣ Handle ART
+    // ✅ Validasi ukuran gambar max 3MB (kalau ada upload baru)
+    const artFile = files["art"]?.[0];
+    const tokenFile = files["token_art"]?.[0];
+
+    if (artFile && artFile.size > MAX_IMAGE_SIZE) {
+      return res.status(400).json({
+        error: "Art image is too large. Maximum size is 3MB.",
+      });
+    }
+
+    if (tokenFile && tokenFile.size > MAX_IMAGE_SIZE) {
+      return res.status(400).json({
+        error: "Token art image is too large. Maximum size is 3MB.",
+      });
+    }
+
+    // Handle ART
     let artPath = existing.art_image;
-    if (files["art"] && files["art"][0]) {
+    if (artFile) {
       const newUrl = await uploadToMedia({
-        file: files["art"][0],
+        file: artFile,
         path: "characters",
         folderName: existing.public_id,
         token,
@@ -313,11 +409,11 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       }
     }
 
-    // 6️⃣ Handle TOKEN ART
+    // Handle TOKEN ART
     let tokenArtPath = existing.token_image;
-    if (files["token_art"] && files["token_art"][0]) {
+    if (tokenFile) {
       const newUrl = await uploadToMedia({
-        file: files["token_art"][0],
+        file: tokenFile,
         path: "characters",
         folderName: existing.public_id,
         token,
@@ -332,7 +428,7 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       }
     }
 
-    // 7️⃣ Handle MAIN THEME
+    // MAIN THEME OGG (tetap, tidak dihapus)
     let mainThemePath = existing.main_theme_ogg;
     if (files["main_theme_ogg"] && files["main_theme_ogg"][0]) {
       const newUrl = await uploadToMedia({
@@ -351,7 +447,7 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       }
     }
 
-    // 8️⃣ Handle COMBAT THEME
+    // COMBAT THEME OGG (tetap, tidak dihapus)
     let combatThemePath = existing.combat_theme_ogg;
     if (files["combat_theme_ogg"] && files["combat_theme_ogg"][0]) {
       const newUrl = await uploadToMedia({
@@ -370,7 +466,6 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       }
     }
 
-    // 9️⃣ Bersihkan field yang tidak boleh diubah client
     [
       "creator_email",
       "creator_name",
@@ -387,7 +482,6 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       parsed.name = "Hero Without A Name";
     }
 
-    // 🔟 Build final payload
     const updatedData = {
       ...existing,
       ...parsed,
@@ -488,7 +582,6 @@ export const deleteCharacterHandler = async (req, res) => {
     const privateId = req.params.id;
     console.log("🗑️ [IGNITE] deleteCharacterHandler invoked:", privateId);
 
-    // 1. ambil data character dulu buat dapetin public_id
     const { data: existing, error: fetchError } = await getCharacterByPrivateId(
       privateId
     );
@@ -497,26 +590,21 @@ export const deleteCharacterHandler = async (req, res) => {
       return res.status(404).json({ error: "Character not found" });
     }
 
-    // (opsional) cek owner
     if (existing.user_id && req.user?.id && existing.user_id !== req.user.id) {
       console.warn(
         `🚫 Unauthorized delete attempt: user ${req.user.id} tried to delete character of ${existing.user_id}`
       );
-      return res
-        .status(403)
-        .json({
-          error: "Forbidden — you are not the owner of this character.",
-        });
+      return res.status(403).json({
+        error: "Forbidden — you are not the owner of this character.",
+      });
     }
 
-    // 2. hapus record di DB
     const { error: deleteError } = await deleteCharacter(existing.id);
     if (deleteError) {
       console.error("💥 deleteCharacter DB error:", deleteError.message);
       return res.status(400).json({ error: deleteError.message });
     }
 
-    // 3. best-effort hapus folder media
     if (existing.public_id) {
       const folderPath = `characters/${existing.public_id}`;
 
