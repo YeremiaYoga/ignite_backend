@@ -186,7 +186,6 @@ export const saveCharacterHandler = async (req, res) => {
       const artFile = req.files["art"]?.[0];
       const tokenFile = req.files["token_art"]?.[0];
 
-      // ✅ Validasi ukuran gambar max 3MB
       if (artFile && artFile.size > MAX_IMAGE_SIZE) {
         return res.status(400).json({
           error: "Art image is too large. Maximum size is 3MB.",
@@ -202,7 +201,6 @@ export const saveCharacterHandler = async (req, res) => {
       artPath = await uploadToMediaLocal(artFile, "art");
       tokenArtPath = await uploadToMediaLocal(tokenFile, "token_art");
 
-      // OGG tetap, tidak dihapus (hanya upload kalau ada)
       mainThemePath = await uploadToMediaLocal(
         req.files["main_theme_ogg"]?.[0],
         "main_theme"
