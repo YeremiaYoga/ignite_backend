@@ -47,7 +47,7 @@ router.get("/trash/expired", verifyUserIgnite, deleteExpiredTrashCharacters);
 
 
 router.get("/public/:id", getCharacterByPublicIdHandler);
-router.get("/private/:id", verifyUserIgnite, getCharacterByPrivateIdHandler);
+router.get("/private/:id", getCharacterByPrivateIdHandler);
 
 
 router.put("/:id/trash", moveCharacterToTrash);
