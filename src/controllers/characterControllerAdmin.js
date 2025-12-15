@@ -145,9 +145,7 @@ export const saveCharacterAdminHandler = async (req, res) => {
   }
 };
 
-/**
- * 🔎 GET ALL CHARACTERS (ADMIN)
- */
+
 export const getCharactersAdminHandler = async (req, res) => {
   const { data, error } = await getAllCharacters();
   if (error) return res.status(400).json({ error: error.message });
@@ -163,9 +161,7 @@ export const getCharacterAdminHandler = async (req, res) => {
   res.json({ success: true, data });
 };
 
-/**
- * ✏️ UPDATE CHARACTER (ADMIN)
- */
+
 export const updateCharacterAdminHandler = async (req, res) => {
   try {
     console.log("🛠️ [ADMIN] UpdateCharacter invoked");

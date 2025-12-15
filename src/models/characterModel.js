@@ -1,6 +1,6 @@
 import supabase from "../utils/db.js";
 
-// CREATE
+
 export const createCharacter = async (characterData) => {
   try {
     const { data, error } = await supabase
@@ -23,7 +23,7 @@ export const createCharacter = async (characterData) => {
 };
 
 
-// GET ALL
+
 export const getAllCharacters = async () => {
   return await supabase.from("characters").select("*");
 };
@@ -71,7 +71,7 @@ export const getCharacterById = async (id) => {
   return await supabase.from("characters").select("*").eq("id", id).single();
 };
 
-// UPDATE
+
 export const updateCharacter = async (id, updateData) => {
   return await supabase
     .from("characters")
@@ -80,7 +80,7 @@ export const updateCharacter = async (id, updateData) => {
     .select();
 };
 
-// DELETE
+
 export const deleteCharacter = async (id) => {
   return await supabase.from("characters").delete().eq("id", id);
 };
@@ -116,14 +116,14 @@ export const markExpiredTrashCharactersAsDeleted = async (userId) => {
   }
 };
 
-// === GET BY PUBLIC ID ===
+
 export const getCharacterByPublicId = async (publicId) => {
   try {
     const { data, error } = await supabase
       .from("characters")
       .select("*")
       .eq("public_id", publicId)
-      .maybeSingle(); // gunakan maybeSingle agar aman jika tidak ada hasil
+      .maybeSingle(); 
 
     if (error) {
       console.error("❌ Supabase getCharacterByPublicId error:", error.message);
@@ -138,7 +138,7 @@ export const getCharacterByPublicId = async (publicId) => {
   }
 };
 
-// === GET BY PRIVATE ID ===
+
 export const getCharacterByPrivateId = async (privateId) => {
   try {
     const { data, error } = await supabase

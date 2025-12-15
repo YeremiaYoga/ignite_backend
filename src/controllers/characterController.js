@@ -20,16 +20,16 @@ import { deleteMediaFile } from "../utils/deleteMediaFile.js";
 import { uploadToMedia } from "../utils/uploadToMedia.js";
 
 const MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
-const MAX_IMAGE_SIZE = 3 * 1024 * 1024; // 3MB
+const MAX_IMAGE_SIZE = 3 * 1024 * 1024; 
 
-// ====== Helper: validasi YouTube URL (youtu.be / youtube.com) ======
+
 function isValidYouTubeUrl(url) {
-  if (!url) return true; // kosong dianggap valid (tidak diisi)
+  if (!url) return true;
 
   let clean = String(url).trim();
   if (!clean) return true;
 
-  // kadang dari chat ada ">"
+
   if (clean.endsWith(">")) {
     clean = clean.slice(0, -1);
   }
@@ -37,19 +37,19 @@ function isValidYouTubeUrl(url) {
   try {
     const u = new URL(clean);
 
-    // youtu.be/VIDEO_ID
+
     if (u.hostname.includes("youtu.be")) {
       const id = u.pathname.replace("/", "").trim();
       return !!id;
     }
 
-    // youtube.com/watch?v=VIDEO_ID
+
     if (u.hostname.includes("youtube.com")) {
       const id = u.searchParams.get("v");
       return !!id;
     }
 
-    // host lain -> tidak valid
+
     return false;
   } catch (err) {
     return false;
@@ -72,7 +72,6 @@ export const saveCharacterHandler = async (req, res) => {
 
     const publicId = parsed.public_id;
 
-    // ✅ Validasi YouTube link
     if (parsed.main_theme && !isValidYouTubeUrl(parsed.main_theme)) {
       return res.status(400).json({
         error:
@@ -135,7 +134,7 @@ export const saveCharacterHandler = async (req, res) => {
       });
     }
 
-    // local uploadToMedia (shadowing util) – tetap dipakai
+
     const uploadToMediaLocal = async (file, type) => {
       if (!file || !file.buffer) return null;
       try {
