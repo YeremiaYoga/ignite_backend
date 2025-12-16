@@ -6,8 +6,8 @@ import {
   publicExportHtml,
   extractGdocFileId,
   normalizeGdocHtml,
-  sanitizeGdocHtml,
-  stripHtmlBody,
+  // sanitizeGdocHtml,
+  // stripHtmlBody,
 } from "../utils/gdocsProvider.js";
 
 function getBearerToken(req) {
