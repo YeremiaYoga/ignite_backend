@@ -183,14 +183,12 @@ router.get("/callback", async (req, res) => {
       tierName,
     });
 
-    // 🔹 Pastikan user punya friend_code (unik)
+
     const friendCode = await ensureFriendCode(finalUser.id);
 
-    // Kalau frontend kirim user_id (user sudah login), pakai itu.
-    // Kalau tidak, fallback ke finalUser.id (user baru dari Patreon).
+
     const linkedUserId = userIdFromState || finalUser?.id || null;
 
-    // 5️⃣ Upsert ke user_patreon (link akun Patreon ↔ Ignite)
     const { data: existingPatreon } = await supabase
       .from("user_patreon")
       .select("id, user_id")

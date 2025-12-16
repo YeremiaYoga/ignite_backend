@@ -1,4 +1,3 @@
-import sanitizeHtml from "sanitize-html";
 
 export function normalizeGdocHtml(html = "") {
   if (!html) return html;
@@ -18,71 +17,6 @@ export function normalizeGdocHtml(html = "") {
     .replace(/style="\s*"/gi, "")
     .replace(/style="\s*;?\s*"/gi, "");
 }
-
-export function sanitizeGdocHtml(html = "") {
-  if (!html) return html;
-
-  return sanitizeHtml(html, {
-    allowedTags: [
-      "p",
-      "br",
-      "strong",
-      "b",
-      "em",
-      "i",
-      "u",
-      "s",
-      "strike",
-      "blockquote",
-
-      "h1",
-      "h2",
-      "h3",
-      "h4",
-      "h5",
-      "h6",
-
-      "ul",
-      "ol",
-      "li",
-
-      "table",
-      "thead",
-      "tbody",
-      "tr",
-      "th",
-      "td",
-
-      "a",
-      "span",
-      "div",
-    ],
-
-    allowedAttributes: {
-      a: ["href", "target", "rel"],
-      th: ["colspan", "rowspan"],
-      td: ["colspan", "rowspan"],
-      "*": ["style"],
-    },
-
-    disallowedTagsMode: "discard",
-
-    allowedSchemes: ["http", "https", "mailto"],
-
-    transformTags: {
-      a: sanitizeHtml.simpleTransform("a", {
-        rel: "noopener noreferrer",
-        target: "_blank",
-      }),
-    },
-  });
-}
-export function stripHtmlBody(html = "") {
-  return html
-    .replace(/^[\s\S]*?<body[^>]*>/i, "")
-    .replace(/<\/body>[\s\S]*$/i, "");
-}
-
 
 export async function driveExportHtml({ fileId, accessToken }) {
   if (!fileId) throw new Error("Missing fileId");

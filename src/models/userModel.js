@@ -1,6 +1,11 @@
 import supabase from "../utils/db.js";
 
-export const upsertUser = async ({ clerkId, email, username, role = "user" }) => {
+export const upsertUser = async ({
+  clerkId,
+  email,
+  username,
+  role = "user",
+}) => {
   const { data, error } = await supabase
     .from("users")
     .upsert(
@@ -26,14 +31,12 @@ export const upsertUser = async ({ clerkId, email, username, role = "user" }) =>
   return data;
 };
 
-
-
 export const getUserByClerkId = async (clerkId) => {
   const { data, error } = await supabase
     .from("users")
     .select("*")
     .eq("clerk_id", clerkId)
-    .maybeSingle(); 
+    .maybeSingle();
 
   if (error) {
     console.error("❌ getUserByClerkId error:", error.message);
@@ -47,7 +50,6 @@ export const getUserByClerkId = async (clerkId) => {
 
   return data;
 };
-
 
 export const updateUserById = async (id, payload) => {
   console.log("🧩 updateUserById attempt:", id, payload);
@@ -64,7 +66,6 @@ export const updateUserById = async (id, payload) => {
   return { data, error };
 };
 
-// === JWT-BASED AUTH ADDITIONS ===
 
 export const getUserByEmail = async (email) => {
   const { data, error } = await supabase
@@ -80,7 +81,6 @@ export const getUserByEmail = async (email) => {
 
   return data;
 };
-
 
 export async function upsertUserFromPatreon({
   patreonId,
@@ -127,7 +127,7 @@ export async function upsertUserFromPatreon({
   }
 
   const fallbackTierName = tierName || freeTier?.name || "Free";
-  const fallbackCharLimit = freeTier?.character_limit ?? 5; 
+  const fallbackCharLimit = freeTier?.character_limit ?? 12;
   const fallbackTierId = freeTier?.id ?? null;
   if (!existingUser) {
     const { data: newUser, error: insertError } = await supabase
@@ -150,19 +150,17 @@ export async function upsertUserFromPatreon({
       ])
       .select()
       .maybeSingle();
-
     if (insertError) {
       console.error("❌ Insert users error:", insertError.message);
       throw insertError;
     }
-
     return newUser;
   }
 
   const newProfile =
     existingUser.profile_picture &&
     !existingUser.profile_picture.includes("Candle.webp")
-      ? existingUser.profile_picture 
+      ? existingUser.profile_picture
       : avatarUrl || existingUser.profile_picture || DEFAULT_PROFILE;
 
   const { data: updatedUser, error: updateError } = await supabase
@@ -172,8 +170,7 @@ export async function upsertUserFromPatreon({
       profile_picture: newProfile,
       tier: fallbackTierName || existingUser.tier,
       tier_id: existingUser.tier_id || fallbackTierId,
-      character_limit:
-        existingUser.character_limit || fallbackCharLimit,
+      character_limit: existingUser.character_limit || fallbackCharLimit,
     })
     .eq("id", existingUser.id)
     .select()
