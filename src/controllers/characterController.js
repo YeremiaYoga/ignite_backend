@@ -20,15 +20,13 @@ import { deleteMediaFile } from "../utils/deleteMediaFile.js";
 import { uploadToMedia } from "../utils/uploadToMedia.js";
 
 const MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
-const MAX_IMAGE_SIZE = 3 * 1024 * 1024; 
-
+const MAX_IMAGE_SIZE = 3 * 1024 * 1024;
 
 function isValidYouTubeUrl(url) {
   if (!url) return true;
 
   let clean = String(url).trim();
   if (!clean) return true;
-
 
   if (clean.endsWith(">")) {
     clean = clean.slice(0, -1);
@@ -37,18 +35,15 @@ function isValidYouTubeUrl(url) {
   try {
     const u = new URL(clean);
 
-
     if (u.hostname.includes("youtu.be")) {
       const id = u.pathname.replace("/", "").trim();
       return !!id;
     }
 
-
     if (u.hostname.includes("youtube.com")) {
       const id = u.searchParams.get("v");
       return !!id;
     }
-
 
     return false;
   } catch (err) {
@@ -133,7 +128,6 @@ export const saveCharacterHandler = async (req, res) => {
         tier: user.tier,
       });
     }
-
 
     const uploadToMediaLocal = async (file, type) => {
       if (!file || !file.buffer) return null;
@@ -299,6 +293,37 @@ export const getCharacterHandler = async (req, res) => {
 };
 
 export const updateCharacterByPrivateIdHandler = async (req, res) => {
+  // ✅ helper lokal: buang field join / UI-only / non-kolom
+  function stripJoinFields(obj = {}) {
+    if (!obj || typeof obj !== "object") return {};
+    const out = { ...obj };
+
+    [
+      // ❌ join objects (hasil select dari tabel lain)
+      "incumbency",
+
+      // ❌ UI-only
+      "creator_email",
+      "creator_name",
+      "usedSkillPoints",
+      "art",
+      "token_art",
+      "height_unit",
+      "weight_unit",
+
+      // ❌ ids yang tidak boleh diubah
+      "public_id",
+      "private_id",
+      "id",
+
+      // ❌ timestamps (biar server yang set)
+      "created_at",
+      "updated_at",
+    ].forEach((f) => delete out[f]);
+
+    return out;
+  }
+
   try {
     console.log("🛠 [IGNITE] UpdateCharacter by private_id invoked");
 
@@ -425,7 +450,7 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       }
     }
 
-    // MAIN THEME OGG (tetap, tidak dihapus)
+    // MAIN THEME OGG (tetap)
     let mainThemePath = existing.main_theme_ogg;
     if (files["main_theme_ogg"] && files["main_theme_ogg"][0]) {
       const newUrl = await uploadToMedia({
@@ -444,7 +469,7 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       }
     }
 
-    // COMBAT THEME OGG (tetap, tidak dihapus)
+    // COMBAT THEME OGG (tetap)
     let combatThemePath = existing.combat_theme_ogg;
     if (files["combat_theme_ogg"] && files["combat_theme_ogg"][0]) {
       const newUrl = await uploadToMedia({
@@ -463,33 +488,39 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       }
     }
 
-    [
-      "creator_email",
-      "creator_name",
-      "usedSkillPoints",
-      "art",
-      "token_art",
-      "height_unit",
-      "weight_unit",
-      "public_id",
-      "private_id",
-    ].forEach((f) => delete parsed[f]);
+    // ✅ bersihkan parsed (request payload) dari field non-kolom
+    const parsedClean = stripJoinFields(parsed);
 
-    if (!parsed.name || parsed.name.trim() === "") {
-      parsed.name = "Hero Without A Name";
+    if (!parsedClean.name || parsedClean.name.trim() === "") {
+      parsedClean.name = "Hero Without A Name";
     }
 
+    // ✅ bersihkan existing juga (karena existing bisa mengandung JOIN field seperti incumbency)
+    const existingClean = stripJoinFields(existing);
+
+    // ✅ payload final yang dikirim ke Supabase
     const updatedData = {
-      ...existing,
-      ...parsed,
+      ...existingClean,
+      ...parsedClean,
+
+      // keep ID tidak boleh berubah
       public_id: existing.public_id,
       private_id: existing.private_id,
+
+      // file fields
       art_image: artPath,
       token_image: tokenArtPath,
       main_theme_ogg: mainThemePath,
       combat_theme_ogg: combatThemePath,
+
       updated_at: new Date().toISOString(),
     };
+
+    // ✅ hard guard (biar nggak mungkin lolos)
+    delete updatedData.incumbency;
+
+    // DEBUG: pastikan tidak ada incumbency key
+    console.log("🧼 update payload keys:", Object.keys(updatedData));
 
     const { data, error } = await updateCharacterByPrivateId(
       privateId,

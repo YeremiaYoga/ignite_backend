@@ -119,19 +119,50 @@ export const markExpiredTrashCharactersAsDeleted = async (userId) => {
 
 export const getCharacterByPublicId = async (publicId) => {
   try {
-    const { data, error } = await supabase
+    const { data: character, error } = await supabase
       .from("characters")
       .select("*")
       .eq("public_id", publicId)
-      .maybeSingle(); 
+      .maybeSingle();
 
     if (error) {
       console.error("❌ Supabase getCharacterByPublicId error:", error.message);
       return { data: null, error };
     }
 
-    console.log("✅ Character found by public_id:", data?.public_id);
-    return { data, error: null };
+    if (!character) {
+      return { data: null, error: null };
+    }
+
+    let incumbency = null;
+
+    if (character.incumbency_id) {
+      const { data: inc, error: incErr } = await supabase
+        .from("incumbency")
+        .select("*")
+        .eq("id", character.incumbency_id)
+        .maybeSingle();
+
+      if (incErr) {
+        console.warn("⚠️ getIncumbencyById error:", incErr.message);
+      } else {
+        incumbency = inc;
+      }
+    }
+
+    const merged = {
+      ...character,
+      incumbency,
+    };
+
+    console.log(
+      "✅ Character found by public_id:",
+      merged?.public_id,
+      "incumbency:",
+      merged?.incumbency?.id
+    );
+
+    return { data: merged, error: null };
   } catch (err) {
     console.error("💥 getCharacterByPublicId fatal error:", err);
     return { data: null, error: err };
@@ -139,9 +170,10 @@ export const getCharacterByPublicId = async (publicId) => {
 };
 
 
+
 export const getCharacterByPrivateId = async (privateId) => {
   try {
-    const { data, error } = await supabase
+    const { data: character, error } = await supabase
       .from("characters")
       .select("*")
       .eq("private_id", privateId)
@@ -152,13 +184,45 @@ export const getCharacterByPrivateId = async (privateId) => {
       return { data: null, error };
     }
 
-    console.log("✅ Character found by private_id:", data?.private_id);
-    return { data, error: null };
+    if (!character) {
+      return { data: null, error: null };
+    }
+
+    let incumbency = null;
+
+    if (character.incumbency_id) {
+      const { data: inc, error: incErr } = await supabase
+        .from("incumbency")
+        .select("*")
+        .eq("id", character.incumbency_id)
+        .maybeSingle();
+
+      if (incErr) {
+        console.warn("⚠️ getIncumbencyById error:", incErr.message);
+      } else {
+        incumbency = inc;
+      }
+    }
+
+    const merged = {
+      ...character,
+      incumbency, 
+    };
+
+    console.log(
+      "✅ Character found by private_id:",
+      merged?.private_id,
+      "incumbency:",
+      merged?.incumbency?.id
+    );
+
+    return { data: merged, error: null };
   } catch (err) {
     console.error("💥 getCharacterByPrivateId fatal error:", err);
     return { data: null, error: err };
   }
 };
+
 export const updateCharacterByPrivateId = async (privateId, updateData) => {
   return await supabase
     .from("characters")
