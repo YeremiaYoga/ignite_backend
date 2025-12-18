@@ -299,18 +299,16 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
     const out = { ...obj };
 
     [
- 
       "incumbency",
 
-      // ❌ UI-only
+      // ❌ UI-only (dari form)
       "creator_email",
-      "creator_name",
+      "creator_name",      // <- tetap dibuang dari request, biar server yang atur
       "usedSkillPoints",
       "art",
       "token_art",
       "height_unit",
       "weight_unit",
-
 
       "public_id",
       "private_id",
@@ -387,6 +385,30 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       });
     }
 
+    // 🔹 Ambil username terbaru untuk creator_name
+    let creatorName = existing.creator_name || null;
+    try {
+      const { data: userRow, error: userErr } = await supabase
+        .from("users")
+        .select("username, name")
+        .eq("id", requesterId)
+        .maybeSingle();
+
+      if (!userErr && userRow) {
+        creatorName =
+          userRow.username ||
+          userRow.name ||
+          req.user?.username ||
+          creatorName;
+      } else if (req.user?.username) {
+        // fallback kalau query error
+        creatorName = req.user.username;
+      }
+    } catch (e) {
+      console.error("⚠️ Failed fetch user for creator_name:", e.message);
+      // kalau gagal, tetap pakai existing.creator_name supaya tidak null
+    }
+
     // Ambil token sekali
     const token =
       req.cookies?.ignite_access_token ||
@@ -450,7 +472,7 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       }
     }
 
-    // MAIN THEME OGG (tetap)
+    // MAIN THEME OGG
     let mainThemePath = existing.main_theme_ogg;
     if (files["main_theme_ogg"] && files["main_theme_ogg"][0]) {
       const newUrl = await uploadToMedia({
@@ -469,7 +491,7 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       }
     }
 
-    // COMBAT THEME OGG (tetap)
+    // COMBAT THEME OGG
     let combatThemePath = existing.combat_theme_ogg;
     if (files["combat_theme_ogg"] && files["combat_theme_ogg"][0]) {
       const newUrl = await uploadToMedia({
@@ -504,11 +526,13 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       public_id: existing.public_id,
       private_id: existing.private_id,
 
-   
       art_image: artPath,
       token_image: tokenArtPath,
       main_theme_ogg: mainThemePath,
       combat_theme_ogg: combatThemePath,
+
+      // 🔹 pakai username terbaru
+      creator_name: creatorName,
 
       updated_at: new Date().toISOString(),
     };
@@ -516,7 +540,6 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
     // ✅ hard guard (biar nggak mungkin lolos)
     delete updatedData.incumbency;
 
-    // DEBUG: pastikan tidak ada incumbency key
     console.log("🧼 update payload keys:", Object.keys(updatedData));
 
     const { data, error } = await updateCharacterByPrivateId(
@@ -535,6 +558,7 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+
 
 export const moveCharacterToTrash = async (req, res) => {
   const { id } = req.params;
