@@ -47,12 +47,15 @@ import foundryLootRoutes from "./routes/foundryLootRoutes.js";
 import foundrySpellRoutes from "./routes/foundrySpellRoutes.js";
 import foundryFeatureRoutes from "./routes/foundryFeatureRoutes.js";
 import foundryItemsRoutes from "./routes/foundryItemsRoutes.js";
+import foundryFeatRoutes from "./routes/foundryFeatRoutes.js";
 
 import igniteSpellRoutes from "./routes/igniteSpellRoutes.js";
 import adminTokenBorderRoutes from "./routes/adminTokenBorderRoutes.js";
 import igniteTokenBorderRoutes from "./routes/igniteTokenBorderRoutes.js";
-
+import igniteFeatRoutes from "./routes/igniteFeatRoutes.js";
 import gdocsRoutes from "./routes/gdocsRoutes.js";
+
+
 import path from "path";
 const app = express();
 
@@ -136,10 +139,12 @@ app.use("/foundry/spells", foundrySpellRoutes);
 app.use("/foundry/features", foundryFeatureRoutes);
 
 app.use("/foundry/items", foundryItemsRoutes);
+app.use("/foundry/feats", foundryFeatRoutes);
 
 app.use("/ignite/spells", igniteSpellRoutes);
 app.use("/admin/token-borders", adminTokenBorderRoutes);
 app.use("/ignite/token-borders", igniteTokenBorderRoutes);
 
 app.use("/api/gdocs", gdocsRoutes);
+app.use("/ignite/feats", igniteFeatRoutes);
 export default app;

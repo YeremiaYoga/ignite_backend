@@ -299,7 +299,7 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
     const out = { ...obj };
 
     [
-      // ❌ join objects (hasil select dari tabel lain)
+ 
       "incumbency",
 
       // ❌ UI-only
@@ -311,7 +311,7 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       "height_unit",
       "weight_unit",
 
-      // ❌ ids yang tidak boleh diubah
+
       "public_id",
       "private_id",
       "id",
@@ -495,19 +495,16 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       parsedClean.name = "Hero Without A Name";
     }
 
-    // ✅ bersihkan existing juga (karena existing bisa mengandung JOIN field seperti incumbency)
     const existingClean = stripJoinFields(existing);
 
-    // ✅ payload final yang dikirim ke Supabase
     const updatedData = {
       ...existingClean,
       ...parsedClean,
 
-      // keep ID tidak boleh berubah
       public_id: existing.public_id,
       private_id: existing.private_id,
 
-      // file fields
+   
       art_image: artPath,
       token_image: tokenArtPath,
       main_theme_ogg: mainThemePath,

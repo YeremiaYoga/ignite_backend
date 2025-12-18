@@ -1,14 +1,6 @@
-import supabase from "../utils/db.js";
+// controllers/igniteFeatController.js
+import supabase from "../../utils/db.js";
 
-/**
- * GET /ignite/feats
- * Query params:
- * - q            : string (search name / description)
- * - type         : string
- * - category     : string
- * - sort_by      : column name (default: created_at)
- * - sort_order   : asc | desc (default: desc)
- */
 export const getIgniteFeatsHandler = async (req, res) => {
   try {
     const {
@@ -21,18 +13,13 @@ export const getIgniteFeatsHandler = async (req, res) => {
 
     let query = supabase.from("feats").select("*");
 
-    // =====================
-    // SEARCH (ILIKE)
-    // =====================
     if (q) {
       query = query.or(
         `name.ilike.%${q}%,description.ilike.%${q}%`
       );
     }
 
-    // =====================
-    // FILTERS
-    // =====================
+    // optional filter type/category (pastikan kolomnya ada di tabel)
     if (type) {
       query = query.eq("type", type);
     }
@@ -41,9 +28,6 @@ export const getIgniteFeatsHandler = async (req, res) => {
       query = query.eq("category", category);
     }
 
-    // =====================
-    // SORTING
-    // =====================
     query = query.order(sort_by, {
       ascending: sort_order === "asc",
     });
