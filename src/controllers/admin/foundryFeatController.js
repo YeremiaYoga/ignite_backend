@@ -260,10 +260,42 @@ export const importFoundryFeatsFromFiles = async (req, res) => {
 
 export const listFoundryFeatsHandler = async (req, res) => {
   try {
-    const limit = Number(req.query.limit) || 50;
-    const offset = Number(req.query.offset) || 0;
+    const {
+      limit = 50,
+      offset = 0,
+      q,
+      type,          // e.g. "General", "Origin"
+      min_level,
+      max_level,
+      repeatable,    // "true" / "false"
+      sort_by,
+      sort_order,
+    } = req.query;
 
-    const rows = await listFoundryFeats({ limit, offset });
+    const options = {
+      limit: Number(limit) || 50,
+      offset: Number(offset) || 0,
+      q: q && String(q).trim() ? String(q).trim() : null,
+      type: type && String(type).trim() ? String(type).trim() : null,
+      minLevel:
+        min_level !== undefined && min_level !== ""
+          ? Number(min_level)
+          : null,
+      maxLevel:
+        max_level !== undefined && max_level !== ""
+          ? Number(max_level)
+          : null,
+      repeatable:
+        repeatable === "true"
+          ? true
+          : repeatable === "false"
+          ? false
+          : null, 
+      sortBy: sort_by || "created_at", 
+      sortOrder: sort_order === "asc" ? "asc" : "desc",
+    };
+
+    const rows = await listFoundryFeats(options);
 
     return res.json({
       success: true,
@@ -274,6 +306,7 @@ export const listFoundryFeatsHandler = async (req, res) => {
     return res.status(500).json({ error: "Failed to list foundry feats" });
   }
 };
+
 
 export const getFoundryFeatHandler = async (req, res) => {
   try {
