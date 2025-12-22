@@ -12,7 +12,7 @@ const router = express.Router();
 const CLIENT_ID = process.env.PATREON_CLIENT_ID;
 const CLIENT_SECRET = process.env.PATREON_CLIENT_SECRET;
 const REDIRECT_URI = process.env.PATREON_REDIRECT_URI;
-const isProd = process.env.NODE_ENV === "production"; // 🔹 biar isProd tidak undefined
+const isProd = process.env.NODE_ENV === "production";
 
 const PATREON_SCOPE = [
   "identity",
@@ -37,10 +37,8 @@ async function ensureFriendCode(userId) {
     throw existingErr;
   }
 
-  // sudah punya → langsung pakai
   if (existing?.friend_code) return existing.friend_code;
 
-  // belum punya → generate unik dan update
   const newCode = await generateUniqueFriendCode();
 
   const { data: updated, error: updateErr } = await supabase
@@ -59,6 +57,93 @@ async function ensureFriendCode(userId) {
   return updated.friend_code;
 }
 
+/* 🔹 Helper: sync limit user berdasarkan tier di table `tiers` */
+async function syncUserLimitsFromTier(userId) {
+  try {
+    // Ambil info tier user saat ini
+    const { data: user, error: userErr } = await supabase
+      .from("users")
+      .select("tier_id, tier")
+      .eq("id", userId)
+      .single();
+
+    if (userErr || !user) {
+      console.error("⚠️ Gagal ambil user untuk sync limits:", userErr?.message);
+      return;
+    }
+
+    let tierRow = null;
+
+    // 1️⃣ Prioritas: pakai tier_id jika ada
+    if (user.tier_id) {
+      const { data, error } = await supabase
+        .from("tiers")
+        .select("*")
+        .eq("id", user.tier_id)
+        .maybeSingle();
+      if (!error && data) tierRow = data;
+    }
+
+    // 2️⃣ Fallback: pakai field `tier` (slug / name)
+    if (!tierRow && user.tier) {
+      const slugOrName = user.tier;
+      const { data, error } = await supabase
+        .from("tiers")
+        .select("*")
+        .or(
+          `slug.eq.${slugOrName},name.ilike.${slugOrName}`
+        )
+        .maybeSingle();
+      if (!error && data) tierRow = data;
+    }
+
+    // 3️⃣ Fallback terakhir: coba tier "free"
+    if (!tierRow) {
+      const { data } = await supabase
+        .from("tiers")
+        .select("*")
+        .eq("slug", "free")
+        .maybeSingle();
+      if (data) tierRow = data;
+    }
+
+    if (!tierRow) {
+      console.warn("⚠️ Tidak menemukan tier untuk user, skip sync limits");
+      return;
+    }
+
+    const isUnlimited = !!tierRow.is_unlimited;
+
+    const payload = {
+      // pastikan tier text & tier_id konsisten
+      tier_id: tierRow.id,
+      tier: tierRow.slug || tierRow.name || user.tier,
+
+      character_limit: isUnlimited ? null : tierRow.character_limit,
+      world_limit: isUnlimited ? null : tierRow.world_limit,
+      storage_limit: isUnlimited ? null : tierRow.storage_limit,
+      campaign_limit: isUnlimited ? null : tierRow.campaign_limit,
+      fvtt_limit: isUnlimited ? null : tierRow.fvtt_limit,
+      group_limit: isUnlimited ? null : tierRow.group_limit,
+      era_limit: isUnlimited ? null : tierRow.era_limit,
+      friend_limit: isUnlimited ? null : tierRow.friend_limit,
+    };
+
+    const { error: updateErr } = await supabase
+      .from("users")
+      .update(payload)
+      .eq("id", userId);
+
+    if (updateErr) {
+      console.error("❌ Gagal update user limits dari tier:", updateErr.message);
+    } else {
+      console.log(`✅ User ${userId} limits synced from tier ${payload.tier}`);
+    }
+  } catch (e) {
+    console.error("❌ syncUserLimitsFromTier error:", e.message);
+  }
+}
+
 router.get("/auth", (req, res) => {
   const { user_id } = req.query;
 
@@ -73,8 +158,6 @@ router.get("/auth", (req, res) => {
 // 🔹 2️⃣ Callback dari Patreon
 router.get("/callback", async (req, res) => {
   const { code, state } = req.query;
-
-  // user_id dari state (kalau frontend kirim ?user_id=...)
   const userIdFromState = state === "guest" ? null : state;
 
   if (!code) return res.status(400).json({ error: "Missing code" });
@@ -144,9 +227,7 @@ router.get("/callback", async (req, res) => {
       }
     );
 
-    // ==============================
     // 3️⃣ Ambil data dasar user
-    // ==============================
     const patreonUser = userRes.data?.data;
     const patreonId = patreonUser?.id;
     const email = patreonUser?.attributes?.email || null;
@@ -167,10 +248,7 @@ router.get("/callback", async (req, res) => {
     const membershipStatus = membership?.attributes?.patron_status || "free";
 
     if (!patreonId) {
-      console.error(
-        "❌ Tidak ada patreonId di response Patreon:",
-        userRes.data
-      );
+      console.error("❌ Tidak ada patreonId di response Patreon:", userRes.data);
       return res.status(500).json({ error: "Invalid Patreon response" });
     }
 
@@ -183,12 +261,15 @@ router.get("/callback", async (req, res) => {
       tierName,
     });
 
-
+    // 5️⃣ Pastikan user punya friend_code
     const friendCode = await ensureFriendCode(finalUser.id);
 
+    // 6️⃣ Sinkron limit user dari tier (table `tiers`)
+    await syncUserLimitsFromTier(finalUser.id);
 
     const linkedUserId = userIdFromState || finalUser?.id || null;
 
+    // 7️⃣ Upsert ke table user_patreon
     const { data: existingPatreon } = await supabase
       .from("user_patreon")
       .select("id, user_id")
@@ -229,7 +310,7 @@ router.get("/callback", async (req, res) => {
       ]);
     }
 
-    // 6️⃣ LOGGING PENUH ke tabel patreon_data (FULL SNAPSHOT)
+    // 8️⃣ Snapshot penuh ke patreon_data
     try {
       const now = new Date().toISOString();
 
@@ -240,10 +321,7 @@ router.get("/callback", async (req, res) => {
         .maybeSingle();
 
       if (logFetchError && logFetchError.code !== "PGRST116") {
-        console.error(
-          "⚠️ Gagal cek existing patreon_data:",
-          logFetchError.message
-        );
+        console.error("⚠️ Gagal cek existing patreon_data:", logFetchError.message);
       }
 
       const payload = {
@@ -271,7 +349,7 @@ router.get("/callback", async (req, res) => {
       console.error("⚠️ Gagal upsert ke patreon_data:", logErr.message);
     }
 
-    // 🔐 Buat JWT (sekarang include friend_code juga kalau mau)
+    // 9️⃣ Buat JWT
     const accessTokenJWT = jwt.sign(
       {
         id: finalUser.id,
@@ -279,7 +357,7 @@ router.get("/callback", async (req, res) => {
         username: finalUser.name,
         role: finalUser.role,
         app: "ignite",
-        friend_code: friendCode, // 🔹 tambahkan di JWT payload
+        friend_code: friendCode,
       },
       process.env.JWT_SECRET_USER,
       { expiresIn: "9h" }
@@ -288,9 +366,7 @@ router.get("/callback", async (req, res) => {
     const userAgent = req.get("User-Agent") || "";
     const isFirefox = /firefox/i.test(userAgent);
 
- 
     if (isFirefox) {
-    
       res.cookie("ignite_access_token", accessTokenJWT, {
         httpOnly: true,
         secure: isProd,
@@ -300,7 +376,6 @@ router.get("/callback", async (req, res) => {
       });
     } else {
       console.log("🌐 Setting cookie untuk non-Firefox");
-
       res.cookie("ignite_access_token", accessTokenJWT, {
         httpOnly: true,
         secure: true,

@@ -1,20 +1,21 @@
 // controllers/igniteFeatController.js
 import supabase from "../../utils/db.js";
 
+const DEFAULT_LEVEL_MIN = 0;
+const DEFAULT_LEVEL_MAX = 20;
+
 export const getIgniteFeatsHandler = async (req, res) => {
   try {
     const {
       q,
-      type,          // kolom: type
-      category,      // dipetakan ke feat_type
-      feat_type,     // optional: kalau mau kirim langsung feat_type
-      subtype,       // kolom: subtype
-      source_book,   // kolom: source_book
+      feat_type,
       sort_by = "created_at",
       sort_order = "desc",
+      level_min,
+      level_max,
+      repeatable,
     } = req.query;
 
-    // whitelist kolom yang boleh di-sort
     const ALLOWED_SORT_COLUMNS = [
       "created_at",
       "updated_at",
@@ -30,32 +31,54 @@ export const getIgniteFeatsHandler = async (req, res) => {
 
     let query = supabase.from("foundry_feats").select("*");
 
-    // 🔍 search: name / description / requirements / properties
-    if (q) {
-      query = query.or(
-        `name.ilike.%${q}%,description.ilike.%${q}%,requirements.ilike.%${q}%,properties.ilike.%${q}%`
-      );
+    if (q && q.trim()) {
+      query = query.ilike("name", `%${q.trim()}%`);
     }
 
-    // 🎯 filter: type
-    if (type) {
-      query = query.eq("type", type);
-    }
 
-    // 🎯 filter: feat_type (pakai feat_type atau category)
-    const featTypeFilter = feat_type || category;
+    const featTypeFilter = feat_type;
     if (featTypeFilter) {
-      query = query.eq("feat_type", featTypeFilter);
+      const arr = String(featTypeFilter)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      if (arr.length === 1) {
+        query = query.eq("subtype", arr[0]);        
+      } else if (arr.length > 1) {
+        query = query.in("subtype", arr);          
+      }
     }
 
-    // 🎯 filter: subtype
-    if (subtype) {
-      query = query.eq("subtype", subtype);
+    // 🎯 Level range – cuma aktif kalau user ubah dari default 0–20
+    const hasLevelMinParam = level_min !== undefined && level_min !== "";
+    const hasLevelMaxParam = level_max !== undefined && level_max !== "";
+
+    if (hasLevelMinParam || hasLevelMaxParam) {
+      const lvMin = hasLevelMinParam
+        ? Number(level_min)
+        : DEFAULT_LEVEL_MIN;
+      const lvMax = hasLevelMaxParam
+        ? Number(level_max)
+        : DEFAULT_LEVEL_MAX;
+
+      const isDefaultRange =
+        lvMin === DEFAULT_LEVEL_MIN && lvMax === DEFAULT_LEVEL_MAX;
+
+      if (!isDefaultRange) {
+        if (!Number.isNaN(lvMin)) {
+          // prerequisites adalah jsonb, level disimpan di key "level"
+          query = query.gte("prerequisites->>level", lvMin);
+        }
+        if (!Number.isNaN(lvMax)) {
+          query = query.lte("prerequisites->>level", lvMax);
+        }
+      }
     }
 
-    // 🎯 filter: source_book
-    if (source_book) {
-      query = query.eq("source_book", source_book);
+    // 🎯 repeatable true/false (hanya kalau true)
+    if (repeatable === "true") {
+      query = query.eq("prerequisites->>repeatable", "true");
     }
 
     // 📌 sorting
@@ -66,11 +89,10 @@ export const getIgniteFeatsHandler = async (req, res) => {
     const { data, error } = await query;
 
     if (error) {
-      console.error("❌ getIgniteFeatsHandler:", error);
+      console.error("❌ getIgniteFeatsHandler supabase error:", error);
       return res.status(400).json({ error: error.message });
     }
 
-    // bisa pakai { data } kalau mau konsisten dengan endpoint lain
     return res.json(data || []);
   } catch (err) {
     console.error("❌ getIgniteFeatsHandler (catch):", err);

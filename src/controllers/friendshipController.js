@@ -12,12 +12,12 @@ import {
 } from "../models/friendshipModel.js";
 
 /**
- * Helper: ambil user + friend_code
+ * Helper: ambil user + friend_code (+ tier info kalau ada)
  */
 async function getUserWithFriendCodeById(userId) {
   const { data, error } = await supabase
     .from("users")
-    .select("id, email, name, username, profile_picture, friend_code")
+    .select("id, email, name, username, profile_picture, friend_code, friend_limit, tier_id")
     .eq("id", userId)
     .single();
 
@@ -35,7 +35,7 @@ async function getUserWithFriendCodeById(userId) {
 async function getUserByFriendCode(friendCode) {
   const { data, error } = await supabase
     .from("users")
-    .select("id, email, name, username, profile_picture, friend_code")
+    .select("id, email, name, username, profile_picture, friend_code, friend_limit, tier_id")
     .eq("friend_code", friendCode)
     .single();
 
@@ -45,6 +45,61 @@ async function getUserByFriendCode(friendCode) {
   }
 
   return data;
+}
+
+/**
+ * Helper: dapatkan friend_limit user
+ * Prioritas:
+ * 1) kolom users.friend_limit (kalau ada / di-cache)
+ * 2) kalau ada users.tier_id → lihat di tabel tiers.friend_limit
+ * 3) selain itu → null (unlimited)
+ */
+async function getFriendLimitForUser(user) {
+  try {
+    // kalau sudah dikirim object user lengkap, pakai itu
+    let u = user;
+
+    if (!u || !u.id) {
+      return null;
+    }
+
+    // 1. kalau users.friend_limit ada → pakai
+    if (u.friend_limit !== undefined && u.friend_limit !== null) {
+      return u.friend_limit;
+    }
+
+    // 2. kalau ada tier_id → cek tabel tiers
+    if (u.tier_id) {
+      const { data: tier, error: tierErr } = await supabase
+        .from("tiers")
+        .select("friend_limit")
+        .eq("id", u.tier_id)
+        .maybeSingle();
+
+      if (tierErr) {
+        console.error("⚠️ getFriendLimitForUser tier error:", tierErr.message);
+        return null;
+      }
+
+      if (tier && tier.friend_limit !== null && tier.friend_limit !== undefined) {
+        return tier.friend_limit;
+      }
+    }
+
+    // 3. default → unlimited
+    return null;
+  } catch (err) {
+    console.error("⚠️ getFriendLimitForUser catch:", err.message);
+    return null;
+  }
+}
+
+/**
+ * Helper: jumlah teman (status accepted) untuk user
+ */
+async function getCurrentFriendCount(userId) {
+  const friendships = await listFriendshipsForUser(userId, "accepted");
+  return Array.isArray(friendships) ? friendships.length : 0;
 }
 
 /**
@@ -76,7 +131,7 @@ export const addFriendByCode = async (req, res) => {
         .json({ error: "You cannot send a friend request to yourself" });
     }
 
-    // ambil data user sendiri buat friend_code
+    // ambil data user sendiri (friend_code + tier info)
     const meUser = await getUserWithFriendCodeById(me);
 
     if (!meUser.friend_code) {
@@ -85,7 +140,29 @@ export const addFriendByCode = async (req, res) => {
         .json({ error: "Your account does not have a friend_code yet" });
     }
 
-    // cek apakah sudah ada hubungan
+    // ✅ CEK LIMIT teman: SENDER
+    const myLimit = await getFriendLimitForUser(meUser);
+    if (myLimit !== null) {
+      const myCount = await getCurrentFriendCount(me);
+      if (myCount >= myLimit) {
+        return res
+          .status(400)
+          .json({ error: "You have reached your friend limit for this tier" });
+      }
+    }
+
+    // (opsional) CEK LIMIT teman: TARGET, kalau mau dibatasi juga
+    const targetLimit = await getFriendLimitForUser(target);
+    if (targetLimit !== null) {
+      const targetCount = await getCurrentFriendCount(target.id);
+      if (targetCount >= targetLimit) {
+        return res.status(400).json({
+          error: "This user has reached their friend limit and cannot accept more friends",
+        });
+      }
+    }
+
+    // cek existing friendship
     const existing = await getFriendshipBetween(me, target.id);
 
     if (existing) {
@@ -100,7 +177,6 @@ export const addFriendByCode = async (req, res) => {
       }
     }
 
-    // buat friend request baru (pending)
     const friendship = await createFriendRequest({
       fromUserId: me,
       toUserId: target.id,
@@ -119,10 +195,6 @@ export const addFriendByCode = async (req, res) => {
   }
 };
 
-/**
- * POST /friends/respond
- * body: { friendship_id, action }  // action: "accept" | "reject"
- */
 export const respondFriendRequest = async (req, res) => {
   try {
     const me = req.user?.id;
@@ -187,8 +259,35 @@ export const respondFriendRequest = async (req, res) => {
     }
 
     if (action === "accept") {
+      // ✅ CEK LIMIT KEDUA BELAH PIHAK sebelum benar-benar accept
+      const meUser = await getUserWithFriendCodeById(me);
+      const otherUserId = me === user_a_id ? user_b_id : user_a_id;
+      const otherUser = await getUserWithFriendCodeById(otherUserId);
+
+      const myLimit = await getFriendLimitForUser(meUser);
+      const otherLimit = await getFriendLimitForUser(otherUser);
+
+      if (myLimit !== null) {
+        const myCount = await getCurrentFriendCount(me);
+        if (myCount >= myLimit) {
+          return res.status(400).json({
+            error: "You have reached your friend limit and cannot accept more friends",
+          });
+        }
+      }
+
+      if (otherLimit !== null) {
+        const otherCount = await getCurrentFriendCount(otherUserId);
+        if (otherCount >= otherLimit) {
+          return res.status(400).json({
+            error: "The requester has reached their friend limit and cannot add more friends",
+          });
+        }
+      }
+
       const updated = await updateFriendshipById(friendship_id, {
         status: "accepted",
+        blocked_by: null,
       });
       return res.json({
         success: true,
@@ -306,7 +405,6 @@ export const listFriends = async (req, res) => {
       return res.json({ success: true, friends: [] });
     }
 
-    // ambil id teman (dari pair user_a / user_b)
     const friendIds = friendships.map((f) =>
       f.user_a_id === me ? f.user_b_id : f.user_a_id
     );
@@ -360,7 +458,6 @@ export const listFriendRequests = async (req, res) => {
       }
     }
 
-    // ambil semua user yang terlibat
     const userIds = Array.from(
       new Set((pending || []).flatMap((f) => [f.user_a_id, f.user_b_id]))
     );
@@ -403,10 +500,8 @@ export const listBlockedFriends = async (req, res) => {
     const me = req.user?.id;
     if (!me) return res.status(401).json({ error: "Unauthorized" });
 
-    // ambil semua relasi status "blocked" yang melibatkan gue
     let blocked = await listFriendshipsForUser(me, "blocked");
 
-    // 🆕 hanya tampilkan kalau GUE yang nge-block
     blocked = (blocked || []).filter((f) => f.blocked_by === me);
 
     if (!blocked.length) {
@@ -470,14 +565,12 @@ export const unblockUser = async (req, res) => {
       return res.status(400).json({ error: "Friendship is not blocked" });
     }
 
-    // opsional: hanya yang nge-block yang boleh unblock
     if (friendship.blocked_by && friendship.blocked_by !== me) {
       return res
         .status(403)
         .json({ error: "You are not the one who blocked this user" });
     }
 
-    // ✅ Unblock = balik jadi teman
     const updated = await updateFriendshipById(friendship_id, {
       status: "accepted",
       blocked_by: null,
