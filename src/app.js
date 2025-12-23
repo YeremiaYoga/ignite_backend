@@ -54,6 +54,9 @@ import adminTokenBorderRoutes from "./routes/adminTokenBorderRoutes.js";
 import igniteTokenBorderRoutes from "./routes/igniteTokenBorderRoutes.js";
 import igniteFeatRoutes from "./routes/igniteFeatRoutes.js";
 import gdocsRoutes from "./routes/gdocsRoutes.js";
+import igniteTimelineRoutes from "./routes/igniteTimelineRoutes.js";
+
+
 
 
 import path from "path";
@@ -147,4 +150,5 @@ app.use("/ignite/token-borders", igniteTokenBorderRoutes);
 
 app.use("/api/gdocs", gdocsRoutes);
 app.use("/ignite/feats", igniteFeatRoutes);
+app.use("/ignite/timelines", igniteTimelineRoutes);
 export default app;
