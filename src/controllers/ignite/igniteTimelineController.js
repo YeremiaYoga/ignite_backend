@@ -20,7 +20,12 @@ function pick(obj, keys = []) {
 
 export async function getIgniteTimelines(req, res) {
   try {
-    const { q, sort, order, page, limit, created_by } = req.query;
+    const { q, sort, order, page, limit } = req.query;
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
 
     const result = await listTimelines({
       q,
@@ -28,7 +33,7 @@ export async function getIgniteTimelines(req, res) {
       order,
       page,
       limit,
-      created_by: created_by || null,
+      created_by: userId, 
     });
 
     if (result.error) {
@@ -39,11 +44,7 @@ export async function getIgniteTimelines(req, res) {
     return res.json({
       success: true,
       data: result.data || [],
-      meta: {
-        page: result.page,
-        limit: result.limit,
-        total: result.count ?? 0,
-      },
+      meta: { page: result.page, limit: result.limit, total: result.count ?? 0 },
     });
   } catch (err) {
     console.error("❌ getIgniteTimelines catch:", err);
@@ -51,15 +52,22 @@ export async function getIgniteTimelines(req, res) {
   }
 }
 
-// ===== GET ONE BY ID =====
-// GET /ignite/timelines/:id
+
+
 export async function getIgniteTimelineById(req, res) {
   try {
     const { id } = req.params;
+    const userId = req.userId;
+
+    if (!userId) return res.status(401).json({ success: false, message: "Unauthorized" });
 
     const { data, error } = await getTimelineById(id);
-    if (error) {
-      return res.status(404).json({ success: false, message: error.message });
+    if (error || !data) {
+      return res.status(404).json({ success: false, message: error?.message || "Not found" });
+    }
+
+    if (data.created_by !== userId) {
+      return res.status(403).json({ success: false, message: "Forbidden" });
     }
 
     return res.json({ success: true, data });
@@ -69,8 +77,8 @@ export async function getIgniteTimelineById(req, res) {
   }
 }
 
-// ===== GET ONE BY SHARE ID =====
-// GET /ignite/timelines/share/:share_id
+
+
 export async function getIgniteTimelineByShareId(req, res) {
   try {
     const { share_id } = req.params;
@@ -87,13 +95,16 @@ export async function getIgniteTimelineByShareId(req, res) {
   }
 }
 
-// ===== CREATE =====
-// POST /ignite/timelines
+
 export async function createIgniteTimeline(req, res) {
   try {
     const body = req.body || {};
+    const userId = req.userId; 
 
-    // allowlist fields supaya aman
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
     const payload = pick(body, [
       "name",
       "share_id",
@@ -104,12 +115,13 @@ export async function createIgniteTimeline(req, res) {
       "months",
       "weeks",
       "moon_cycle",
-      "created_by",
     ]);
 
     if (!payload.name) {
       return res.status(400).json({ success: false, message: "name is required" });
     }
+
+    payload.created_by = userId; // ✅ server-side, tidak bisa diakalin
 
     const { data, error } = await createTimeline(payload);
     if (error) {
@@ -124,34 +136,28 @@ export async function createIgniteTimeline(req, res) {
   }
 }
 
-// ===== UPDATE =====
-// PATCH /ignite/timelines/:id
 export async function updateIgniteTimeline(req, res) {
   try {
     const { id } = req.params;
-    const body = req.body || {};
+    const userId = req.userId;
+    if (!userId) return res.status(401).json({ success: false, message: "Unauthorized" });
 
+    const body = req.body || {};
     const payload = pick(body, [
-      "name",
-      "share_id",
-      "epoch",
-      "era",
-      "other_era",
-      "days_in_a_year",
-      "months",
-      "weeks",
-      "moon_cycle",
+      "name","share_id","epoch","era","other_era","days_in_a_year","months","weeks","moon_cycle",
     ]);
 
     if (Object.keys(payload).length === 0) {
       return res.status(400).json({ success: false, message: "No fields to update" });
     }
 
+    // ✅ owner check
+    const { data: existing, error: fetchError } = await getTimelineById(id);
+    if (fetchError || !existing) return res.status(404).json({ success: false, message: "Not found" });
+    if (existing.created_by !== userId) return res.status(403).json({ success: false, message: "Forbidden" });
+
     const { data, error } = await updateTimelineById(id, payload);
-    if (error) {
-      console.error("❌ updateIgniteTimeline error:", error.message);
-      return res.status(400).json({ success: false, message: error.message });
-    }
+    if (error) return res.status(400).json({ success: false, message: error.message });
 
     return res.json({ success: true, data });
   } catch (err) {
@@ -160,8 +166,6 @@ export async function updateIgniteTimeline(req, res) {
   }
 }
 
-// ===== DELETE =====
-// DELETE /ignite/timelines/:id
 export async function deleteIgniteTimeline(req, res) {
   try {
     const { id } = req.params;

@@ -8,19 +8,19 @@ import {
   updateIgniteTimeline,
   deleteIgniteTimeline,
 } from "../controllers/ignite/igniteTimelineController.js";
-
+import { verifyUserIgnite } from "../middlewares/verifyUserIgnite.js";
 const router = express.Router();
 
-router.get("/", getIgniteTimelines);
+router.get("/", verifyUserIgnite, getIgniteTimelines);
 
-router.get("/share/:share_id", getIgniteTimelineByShareId);
+router.get("/share/:share_id", verifyUserIgnite, getIgniteTimelineByShareId);
 
-router.get("/:id", getIgniteTimelineById);
+router.get("/:id", verifyUserIgnite, getIgniteTimelineById);
 
-router.post("/", createIgniteTimeline);
+router.post("/", verifyUserIgnite, createIgniteTimeline);
 
-router.patch("/:id", updateIgniteTimeline);
+router.patch("/:id", verifyUserIgnite, updateIgniteTimeline);
 
-router.delete("/:id", deleteIgniteTimeline);
+router.delete("/:id", verifyUserIgnite, deleteIgniteTimeline);
 
 export default router;
