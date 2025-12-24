@@ -15,7 +15,7 @@ import {
   deleteExpiredTrashCharacters,
   getCharacterByPublicIdHandler,
   getCharacterByPrivateIdHandler,
-  getAllCharactersUserHandler
+  getAllCharactersUserHandler,
 } from "../controllers/characterController.js";
 
 const router = express.Router();
@@ -24,35 +24,31 @@ const upload = multer({ storage });
 
 router.post("/", createCharacterHandler);
 
-
 router.post(
   "/save",
+  verifyUserIgnite,
   upload.fields([
     { name: "art", maxCount: 1 },
     { name: "token_art", maxCount: 1 },
     { name: "main_theme_ogg", maxCount: 1 },
     { name: "combat_theme_ogg", maxCount: 1 },
   ]),
-  verifyUserIgnite,
+
   saveCharacterHandler
 );
 
 router.get("/", getCharactersHandler);
-
 
 router.get("/user/all", verifyUserIgnite, getAllCharactersUserHandler);
 router.get("/user", verifyUserIgnite, getCharactersUserHandler);
 router.get("/trash", verifyUserIgnite, getCharactersUserTrash);
 router.get("/trash/expired", verifyUserIgnite, deleteExpiredTrashCharacters);
 
-
 router.get("/public/:id", getCharacterByPublicIdHandler);
 router.get("/private/:id", getCharacterByPrivateIdHandler);
 
-
 router.put("/:id/trash", moveCharacterToTrash);
 router.put("/:id/restore", restoreCharacterFromTrash);
-
 
 router.get("/:id", getCharacterHandler);
 router.put(
