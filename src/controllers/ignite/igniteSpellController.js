@@ -52,8 +52,6 @@ const SCHOOL_CODE_BY_RAW = {
   transmutation: "trs",
 };
 
-// ========================= HELPERS =========================
-
 function normalizeRating(val) {
   if (!val) return null;
   const upper = String(val).trim().toUpperCase();
@@ -92,7 +90,6 @@ function computeAverageRating(ratings) {
   };
 }
 
-// "1,2,3" / ["1","2"] → ["1","2","3"]
 function parseListParam(param) {
   if (!param) return null;
   if (Array.isArray(param)) {
@@ -103,8 +100,6 @@ function parseListParam(param) {
     .map((v) => v.trim())
     .filter((v) => v.length > 0);
 }
-
-// === Spell helpers (dipindah dari frontend ke backend) ===
 
 function cap(str) {
   if (!str) return "";
@@ -299,8 +294,6 @@ function getRangeFilterKey(spell) {
   return "";
 }
 
-// ===== Duration / Range numeric helpers (buat slider backend) =====
-
 function getDurationSeconds(spell) {
   const duration =
     spell.duration ||
@@ -313,7 +306,6 @@ function getDurationSeconds(spell) {
   const valueRaw = duration.value ?? 0;
   const value = Number(valueRaw) || 0;
 
-  // special flags
   if (units === "inst" || units === "instant" || units === "instantaneous") {
     return 0; // Instantaneous
   }
@@ -407,63 +399,52 @@ function getRangeInfo(spell) {
   return { type: "other", feet: null };
 }
 
-// ========================= CONTROLLER =========================
-
 export const getIgniteSpells = async (req, res) => {
   try {
     const {
-      // basic search
       name,
       search,
 
-      // simple single values
       level,
       range,
       duration,
 
-      // rating filters
       minRating,
       maxRating,
       ratingLetter,
       ratingLetters,
 
-      // favorites-only
       favoritesOnly,
 
-      // multiple filters (comma separated)
-      levels, // ex: "0,1,2"
-      ranges, // ex: "Self,Touch"
-      durations, // ex: "Instantaneous,Concentration"
-      classes, // ex: "Wizard,Cleric"
-      castTimes, // ex: "action,bonus action"
-      damageTypes, // ex: "fire,necrotic"
-      schools, // ex: "abj,evo"
+      levels,
+      ranges,
+      durations,
+      classes,
+      castTimes,
+      damageTypes,
+      schools,
 
-      // boolean flags (string "true"/"false")
       ritual,
       concentration,
 
-      // numeric duration & range (dari slider)
       minDurationSec,
       maxDurationSec,
-      durationFlags, // "inst,perm,special"
+      durationFlags,
 
       minRange,
       maxRange,
-      rangeFlags, // "self,touch"
-
-      // sorting
+      rangeFlags,
+      homebrew,
+      homebrews,
       sortBy = "name",
       sortDir = "asc",
     } = req.query;
 
     const userId = req.user?.id ? String(req.user.id) : null;
 
-    // ========= PARSE PARAMS =========
-
     const levelList = parseListParam(levels);
     const rangeList = parseListParam(ranges);
-    const durationList = parseListParam(durations); // kalau mau dipakai tambahan
+    const durationList = parseListParam(durations);
     const classList = parseListParam(classes);
     const castTimeList = parseListParam(castTimes)?.map((v) =>
       String(v).toLowerCase()
@@ -476,7 +457,14 @@ export const getIgniteSpells = async (req, res) => {
     );
 
     const ratingLettersList = parseListParam(ratingLetters);
+    const homebrewNeedle =
+      typeof homebrew !== "undefined" && String(homebrew).trim()
+        ? String(homebrew).toLowerCase().trim()
+        : null;
 
+    const homebrewList = parseListParam(homebrews)?.map((v) =>
+      String(v).toLowerCase().trim()
+    );
     const ritualOnly =
       typeof ritual !== "undefined" && String(ritual).toLowerCase() === "true";
 
@@ -488,7 +476,6 @@ export const getIgniteSpells = async (req, res) => {
       typeof favoritesOnly !== "undefined" &&
       String(favoritesOnly).toLowerCase() === "true";
 
-    // duration slider
     const minDur =
       typeof minDurationSec !== "undefined" && minDurationSec !== ""
         ? Number(minDurationSec)
@@ -507,7 +494,6 @@ export const getIgniteSpells = async (req, res) => {
         : []
     );
 
-    // range slider
     const minR =
       typeof minRange !== "undefined" && minRange !== ""
         ? Number(minRange)
@@ -526,19 +512,20 @@ export const getIgniteSpells = async (req, res) => {
         : []
     );
 
-    let query = supabase.from(SPELL_TABLE).select("*");
+    let query = supabase.from(SPELL_TABLE).select(`
+    *,
+    homebrew:homebrew_sources!homebrew_id (
+      id,
+      name,
+      code
+    )
+  `);
 
-    // =========================
-    // NAME / SEARCH (DB level)
-    // =========================
     const nameQuery = name || search;
     if (nameQuery) {
       query = query.ilike("name", `%${nameQuery}%`);
     }
 
-    // =========================
-    // LEVEL: single / multiple
-    // =========================
     if (levelList && levelList.length > 0) {
       const nums = levelList.map((v) => Number(v)).filter((n) => !isNaN(n));
       if (nums.length > 0) {
@@ -551,32 +538,20 @@ export const getIgniteSpells = async (req, res) => {
       }
     }
 
-    // =========================
-    // RANGE (simple DB filter)
-    // =========================
     if (range) {
       query = query.ilike("range", `%${range}%`);
     }
 
-    // =========================
-    // DURATION (simple DB filter)
-    // =========================
     if (duration) {
       query = query.ilike("duration", `%${duration}%`);
     }
 
-    // =========================
-    // RATING SCORE (min / max) – DB
-    // =========================
     const minRScore = Number(minRating);
     const maxRScore = Number(maxRating);
 
     if (!isNaN(minRScore)) query = query.gte("ratings_score", minRScore);
     if (!isNaN(maxRScore)) query = query.lte("ratings_score", maxRScore);
 
-    // =========================
-    // RATING LETTER: single / multiple – DB
-    // =========================
     if (ratingLettersList && ratingLettersList.length > 0) {
       const scores = ratingLettersList
         .map((rl) => normalizeRating(rl))
@@ -592,9 +567,6 @@ export const getIgniteSpells = async (req, res) => {
       }
     }
 
-    // =========================
-    // SORTING – DB
-    // =========================
     let sortField = "name";
 
     switch (sortBy) {
@@ -616,15 +588,9 @@ export const getIgniteSpells = async (req, res) => {
     const ascending = String(sortDir).toLowerCase() !== "desc";
     query = query.order(sortField, { ascending });
 
-    // =========================
-    // FETCH FROM DB
-    // =========================
     const { data, error } = await query;
     if (error) throw error;
 
-    // =========================
-    // MAP FAVORITES & RATING
-    // =========================
     let spells = (data || []).map((row) => {
       const favorites = Array.isArray(row.favorites) ? row.favorites : [];
       const ratings = Array.isArray(row.ratings) ? row.ratings : [];
@@ -658,12 +624,25 @@ export const getIgniteSpells = async (req, res) => {
         ...row,
       };
     });
+    function matchHomebrew(spell) {
+      if (!homebrewNeedle && (!homebrewList || homebrewList.length === 0))
+        return true;
 
-    // =========================
-    // COMPLEX FILTERS – JS side (masih di backend)
-    // =========================
+      const hb = spell.homebrew;
+      if (!hb) return false;
+
+      const hbName = String(hb.name || "").toLowerCase();
+      const hbCode = String(hb.code || "").toLowerCase();
+
+      if (homebrewNeedle) {
+        return hbCode === homebrewNeedle || hbName.includes(homebrewNeedle);
+      }
+
+      return homebrewList.some((v) => hbCode === v || hbName.includes(v));
+    }
+
     spells = spells.filter((spell) => {
-      // Classes
+      if (!matchHomebrew(spell)) return false;
       if (classList && classList.length > 0) {
         const sClasses = getSpellClasses(spell);
         const matchClass = sClasses.some((cls) => classList.includes(cls));
@@ -845,9 +824,6 @@ export const toggleFavoriteIgniteSpell = async (req, res) => {
   }
 };
 
-// ======================================================
-// RATING SPELL
-// ======================================================
 export const rateIgniteSpell = async (req, res) => {
   try {
     const { id } = req.params;
@@ -870,7 +846,6 @@ export const rateIgniteSpell = async (req, res) => {
     let ratings = Array.isArray(spell.ratings) ? spell.ratings : [];
     const idx = ratings.findIndex((r) => String(r.user_id) === String(user.id));
 
-    // Hapus rating kalau rating invalid / kosong
     if (!normalized) {
       if (idx >= 0) ratings.splice(idx, 1);
 
