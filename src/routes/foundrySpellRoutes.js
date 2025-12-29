@@ -14,6 +14,7 @@ import {
   updateSpellSubclasses,
   updateSpellSpecies,
   updateSpellSubspecies,
+  updateSpellHomebrew,
 } from "../controllers/foundrySpellController.js";
 import { verifyUserFullAuth } from "../middlewares/verifyUserFullAuth.js";
 
@@ -40,5 +41,6 @@ router.put("/:id/damage-type", updateSpellDamageType);
 router.put("/:id/subclasses", updateSpellSubclasses);
 router.put("/:id/species", updateSpellSpecies);
 router.put("/:id/subspecies", updateSpellSubspecies);
+router.patch("/:id/homebrew-source", updateSpellHomebrew);
 
 export default router;

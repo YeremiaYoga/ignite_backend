@@ -56,7 +56,7 @@ import igniteFeatRoutes from "./routes/igniteFeatRoutes.js";
 import gdocsRoutes from "./routes/gdocsRoutes.js";
 import igniteTimelineRoutes from "./routes/igniteTimelineRoutes.js";
 
-import adminHomebrewRoutes from "./routes/adminHomebrewRoutes.js";
+import adminHomebrewRoutes from "./routes/adminHomebrewSourceRoutes.js";
 import igniteHomebrewRoutes from "./routes/igniteHomebrewRoutes.js";
 
 import path from "path";
@@ -146,7 +146,7 @@ app.use("/foundry/feats", foundryFeatRoutes);
 
 app.use("/ignite/spells", igniteSpellRoutes);
 app.use("/admin/token-borders", adminTokenBorderRoutes);
-app.use("/admin/homebrew", adminHomebrewRoutes);
+app.use("/admin/homebrew-sources", adminHomebrewRoutes);
 app.use("/ignite/homebrew", igniteHomebrewRoutes);
 app.use("/ignite/token-borders", igniteTokenBorderRoutes);
 

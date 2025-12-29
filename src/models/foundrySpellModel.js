@@ -165,7 +165,14 @@ export async function bulkInsertFoundrySpells(items) {
 export async function listFoundrySpells() {
   const { data, error } = await supabase
     .from("foundry_spells")
-    .select("*")
+    .select(`
+      *,
+      homebrew:homebrew_sources (
+        id,
+        name,
+        code
+      )
+    `)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -173,14 +180,20 @@ export async function listFoundrySpells() {
     throw error;
   }
 
-  return data;
+  return data || [];
 }
-
 
 export async function getFoundrySpellById(id) {
   const { data, error } = await supabase
     .from("foundry_spells")
-    .select("*")
+    .select(`
+      *,
+      homebrew:homebrew_sources (
+        id,
+        name,
+        code
+      )
+    `)
     .eq("id", id)
     .single();
 
@@ -191,6 +204,7 @@ export async function getFoundrySpellById(id) {
 
   return data;
 }
+
 
 export async function updateFoundrySpell(id, payload) {
   const { data, error } = await supabase

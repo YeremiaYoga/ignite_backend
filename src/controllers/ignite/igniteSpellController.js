@@ -4,50 +4,25 @@ import supabase from "../../utils/db.js";
 const SPELL_TABLE = "foundry_spells";
 
 const RATING_VALUES = ["S", "A", "B", "C", "D", "F"];
-const RATING_SCORES = {
-  S: 6,
-  A: 5,
-  B: 4,
-  C: 3,
-  D: 2,
-  F: 1,
-};
-
-const SCHOOL_LABEL_BY_CODE = {
-  abj: "Abjuration",
-  con: "Conjuration",
-  div: "Divination",
-  enc: "Enchantment",
-  evo: "Evocation",
-  ill: "Illusion",
-  nec: "Necromancy",
-  trs: "Transmutation",
-};
+const RATING_SCORES = { S: 6, A: 5, B: 4, C: 3, D: 2, F: 1 };
 
 const SCHOOL_CODE_BY_RAW = {
   abj: "abj",
   abjuration: "abj",
-
   con: "con",
   conj: "con",
   conjuration: "con",
-
   div: "div",
   divination: "div",
-
   enc: "enc",
   ench: "enc",
   enchantment: "enc",
-
   evo: "evo",
   evocation: "evo",
-
   ill: "ill",
   illusion: "ill",
-
   nec: "nec",
   necromancy: "nec",
-
   trs: "trs",
   transmutation: "trs",
 };
@@ -68,7 +43,6 @@ function computeAverageRating(ratings) {
   for (const r of arr) {
     const letter = normalizeRating(r.rating);
     if (!letter) continue;
-
     sum += RATING_SCORES[letter] || 0;
     count++;
   }
@@ -79,15 +53,10 @@ function computeAverageRating(ratings) {
   const avgFloor = Math.floor(avgRaw);
 
   const avgLetter =
-    Object.entries(RATING_SCORES).find(
-      ([, score]) => score === avgFloor
-    )?.[0] || null;
+    Object.entries(RATING_SCORES).find(([, score]) => score === avgFloor)?.[0] ||
+    null;
 
-  return {
-    avgLetter,
-    avgScore: avgFloor,
-    count,
-  };
+  return { avgLetter, avgScore: avgFloor, count };
 }
 
 function parseListParam(param) {
@@ -133,7 +102,6 @@ function hasProperty(spell, target) {
   if (!Array.isArray(props)) return false;
 
   const key = String(target).toLowerCase().trim();
-
   return props.some((p) => String(p).toLowerCase().trim() === key);
 }
 
@@ -144,19 +112,14 @@ function getDamageTypes(spell) {
 
   if (spell.format_data?.damageType) {
     const v = spell.format_data.damageType;
-    if (Array.isArray(v)) {
-      v.forEach((d) => out.add(String(d).toLowerCase()));
-    } else {
-      out.add(String(v).toLowerCase());
-    }
+    if (Array.isArray(v)) v.forEach((d) => out.add(String(d).toLowerCase()));
+    else out.add(String(v).toLowerCase());
   }
 
   const parts = spell.raw_data?.system?.damage?.parts;
   if (Array.isArray(parts)) {
     parts.forEach((p) => {
-      if (Array.isArray(p) && p[1]) {
-        out.add(String(p[1]).toLowerCase());
-      }
+      if (Array.isArray(p) && p[1]) out.add(String(p[1]).toLowerCase());
     });
   }
 
@@ -173,14 +136,10 @@ function getSpellClasses(spell) {
     spell.raw_data?.flags?.dnd5e?.spell?.classes;
 
   const result = [];
-
   if (!raw) return result;
 
   if (Array.isArray(raw)) {
-    raw.forEach((c) => {
-      if (!c) return;
-      result.push(cap(String(c)));
-    });
+    raw.forEach((c) => c && result.push(cap(String(c))));
   } else if (typeof raw === "string") {
     raw
       .split(/[;,/]+/)
@@ -188,9 +147,7 @@ function getSpellClasses(spell) {
       .filter(Boolean)
       .forEach((c) => result.push(cap(c)));
   } else if (typeof raw === "object") {
-    Object.keys(raw).forEach((k) => {
-      if (raw[k]) result.push(cap(k));
-    });
+    Object.keys(raw).forEach((k) => raw[k] && result.push(cap(k)));
   }
 
   return Array.from(new Set(result));
@@ -252,11 +209,7 @@ function getRangeFilterKey(spell) {
       size !== "" &&
       (Number.isNaN(Number(size)) || Number(size) !== 0);
 
-    if (hasSize) {
-      return "Area";
-    }
-
-    return "Point";
+    return hasSize ? "Area" : "Point";
   }
 
   if (typeof range === "string") {
@@ -267,27 +220,23 @@ function getRangeFilterKey(spell) {
       raw.includes("sphere") ||
       raw.includes("cube") ||
       raw.includes("cylinder")
-    ) {
+    )
       return "Area";
-    }
     if (raw.includes("special")) return "Special";
     return "Point";
   }
 
   if (typeof range === "object" && range) {
     const units = (range.units || range.unit || "").toLowerCase();
-
     if (
       units.includes("cone") ||
       units.includes("line") ||
       units.includes("sphere") ||
       units.includes("cube") ||
       units.includes("cylinder")
-    ) {
+    )
       return "Area";
-    }
     if (units.includes("special")) return "Special";
-
     if (units) return "Point";
   }
 
@@ -306,26 +255,21 @@ function getDurationSeconds(spell) {
   const valueRaw = duration.value ?? 0;
   const value = Number(valueRaw) || 0;
 
-  if (units === "inst" || units === "instant" || units === "instantaneous") {
-    return 0; // Instantaneous
-  }
-  if (units === "perm" || units === "permanent") {
-    return -1; // Permanent
-  }
-  if (units === "spec" || units === "special") {
-    return -2; // Special
-  }
+  if (units === "inst" || units === "instant" || units === "instantaneous")
+    return 0;
+  if (units === "perm" || units === "permanent") return -1;
+  if (units === "spec" || units === "special") return -2;
 
   switch (units) {
     case "turn":
     case "turns":
-      return value * 1; // Turn = 1 second
+      return value * 1;
     case "round":
     case "rounds":
-      return value * 6; // Round = 6 seconds
+      return value * 6;
     case "minute":
     case "minutes":
-      return value * 60 * 6; // 60 round * 6s
+      return value * 60 * 6;
     case "hour":
     case "hours":
       return value * 3600;
@@ -350,28 +294,21 @@ function getDurationFlagFromSeconds(sec) {
   return null;
 }
 
-// Range numeric: feet + type (self/touch/numeric/other)
 function getRangeInfo(spell) {
   const range =
     spell.range || spell.format_data?.range || spell.raw_data?.system?.range;
 
   if (!range) return { type: "other", feet: null };
 
-  // string
   if (typeof range === "string") {
     const raw = range.toLowerCase();
     if (raw.includes("self")) return { type: "self", feet: null };
     if (raw.includes("touch")) return { type: "touch", feet: null };
-
     const match = raw.match(/(\d+)\s*(ft|feet|foot)?/);
-    if (match) {
-      const v = Number(match[1]) || 0;
-      return { type: "numeric", feet: v };
-    }
+    if (match) return { type: "numeric", feet: Number(match[1]) || 0 };
     return { type: "other", feet: null };
   }
 
-  // object
   if (typeof range === "object") {
     const units = String(range.units || range.unit || "").toLowerCase();
     const value = Number(range.value ?? 0) || 0;
@@ -379,24 +316,57 @@ function getRangeInfo(spell) {
     if (units === "self") return { type: "self", feet: null };
     if (units === "touch") return { type: "touch", feet: null };
 
-    if (!units || !value) {
-      return { type: "other", feet: null };
-    }
+    if (!units || !value) return { type: "other", feet: null };
 
     let feet = value;
-    if (units === "ft" || units === "feet" || units === "foot") {
-      feet = value;
-    } else if (units === "mi" || units === "mile" || units === "miles") {
-      feet = value * 5280;
-    } else {
-      // fallback: treat as feet
-      feet = value;
-    }
+    if (units === "mi" || units === "mile" || units === "miles") feet = value * 5280;
 
     return { type: "numeric", feet };
   }
 
   return { type: "other", feet: null };
+}
+
+// ======================================================
+// ✅ Tri-state generic matcher (case-insensitive + number-safe)
+// - itemValues: array of values from spell (string/number)
+// - onlyList/blacklistList: array from query (string/number)
+// ======================================================
+function triListPass(itemValues, onlyList = [], blacklistList = []) {
+  const vals = (Array.isArray(itemValues) ? itemValues : [])
+    .map((v) => String(v).trim().toLowerCase())
+    .filter(Boolean);
+
+  const only = (Array.isArray(onlyList) ? onlyList : [])
+    .map((v) => String(v).trim().toLowerCase())
+    .filter(Boolean);
+
+  const black = (Array.isArray(blacklistList) ? blacklistList : [])
+    .map((v) => String(v).trim().toLowerCase())
+    .filter(Boolean);
+
+  // blacklist always applied
+  if (black.length) {
+    const hitBlack = vals.some((v) => black.includes(v));
+    if (hitBlack) return false;
+  }
+
+  // ONLY mode: if any only selected, must match at least one
+  if (only.length) {
+    const hitOnly = vals.some((v) => only.includes(v));
+    if (!hitOnly) return false;
+  }
+
+  return true;
+}
+
+// tri-state for boolean property: 0(off) 1(ONLY true) 2(BLACKLIST true)
+function triPropPass(hasProp, mode = 0) {
+  const m = Number(mode || 0);
+  if (m === 0) return true;
+  if (m === 1) return !!hasProp;
+  if (m === 2) return !hasProp;
+  return true;
 }
 
 export const getIgniteSpells = async (req, res) => {
@@ -405,10 +375,6 @@ export const getIgniteSpells = async (req, res) => {
       name,
       search,
 
-      level,
-      range,
-      duration,
-
       minRating,
       maxRating,
       ratingLetter,
@@ -416,66 +382,111 @@ export const getIgniteSpells = async (req, res) => {
 
       favoritesOnly,
 
+      // legacy params (still supported)
       levels,
       ranges,
-      durations,
       classes,
       castTimes,
       damageTypes,
       schools,
-
       ritual,
       concentration,
 
+      // numeric filters
       minDurationSec,
       maxDurationSec,
       durationFlags,
-
       minRange,
       maxRange,
       rangeFlags,
-      homebrew,
+
+      // homebrew include/only
       homebrews,
+      homebrewOnly,
+
+      // tri-state params
+      classesOnly,
+      classesBlacklist,
+      levelsOnly,
+      levelsBlacklist,
+      castTimeOnly,
+      castTimeBlacklist,
+      damageTypeOnly,
+      damageTypeBlacklist,
+      schoolOnly,
+      schoolBlacklist,
+      ritualMode,
+      concentrationMode,
+
       sortBy = "name",
       sortDir = "asc",
     } = req.query;
 
     const userId = req.user?.id ? String(req.user.id) : null;
 
-    const levelList = parseListParam(levels);
-    const rangeList = parseListParam(ranges);
-    const durationList = parseListParam(durations);
-    const classList = parseListParam(classes);
-    const castTimeList = parseListParam(castTimes)?.map((v) =>
+    // ========= legacy lists =========
+    const legacyClassList = parseListParam(classes) || [];
+    const legacyLevelList = parseListParam(levels) || [];
+    const legacyCastTimeList = (parseListParam(castTimes) || []).map((v) =>
       String(v).toLowerCase()
     );
-    const damageTypeList = parseListParam(damageTypes)?.map((v) =>
+    const legacyDamageTypeList = (parseListParam(damageTypes) || []).map((v) =>
       String(v).toLowerCase()
     );
-    const schoolList = parseListParam(schools)?.map((v) =>
+    const legacySchoolList = (parseListParam(schools) || []).map((v) =>
       String(v).toLowerCase()
     );
 
-    const ratingLettersList = parseListParam(ratingLetters);
-    const homebrewNeedle =
-      typeof homebrew !== "undefined" && String(homebrew).trim()
-        ? String(homebrew).toLowerCase().trim()
-        : null;
-
-    const homebrewList = parseListParam(homebrews)?.map((v) =>
-      String(v).toLowerCase().trim()
+    // ========= tri lists (fallback to legacy ONLY lists) =========
+    const classOnlyList = (parseListParam(classesOnly) || legacyClassList).map((v) =>
+      cap(String(v))
     );
-    const ritualOnly =
+    const classBlackList = (parseListParam(classesBlacklist) || []).map((v) =>
+      cap(String(v))
+    );
+
+    const levelOnlyList = parseListParam(levelsOnly) || legacyLevelList; // keep raw (we will string it)
+    const levelBlackList = parseListParam(levelsBlacklist) || [];
+
+    const castOnlyList = parseListParam(castTimeOnly) || legacyCastTimeList;
+    const castBlackList = parseListParam(castTimeBlacklist) || [];
+
+    const dmgOnlyList = parseListParam(damageTypeOnly) || legacyDamageTypeList;
+    const dmgBlackList = parseListParam(damageTypeBlacklist) || [];
+
+    const schOnlyList = parseListParam(schoolOnly) || legacySchoolList;
+    const schBlackList = parseListParam(schoolBlacklist) || [];
+
+    // ========= tri flags with legacy bool =========
+    const ritualLegacy =
       typeof ritual !== "undefined" && String(ritual).toLowerCase() === "true";
-
-    const concentrationOnly =
+    const concentrationLegacy =
       typeof concentration !== "undefined" &&
       String(concentration).toLowerCase() === "true";
 
+    const ritualModeNum =
+      typeof ritualMode !== "undefined"
+        ? Number(ritualMode)
+        : ritualLegacy
+        ? 1
+        : 0;
+
+    const concentrationModeNum =
+      typeof concentrationMode !== "undefined"
+        ? Number(concentrationMode)
+        : concentrationLegacy
+        ? 1
+        : 0;
+
+    // ========= favorites =========
     const favoritesOnlyFlag =
       typeof favoritesOnly !== "undefined" &&
       String(favoritesOnly).toLowerCase() === "true";
 
+    // ========= rating =========
+    const ratingLettersList = parseListParam(ratingLetters);
+
+    // ========= duration numeric =========
     const minDur =
       typeof minDurationSec !== "undefined" && minDurationSec !== ""
         ? Number(minDurationSec)
@@ -494,14 +505,11 @@ export const getIgniteSpells = async (req, res) => {
         : []
     );
 
+    // ========= range numeric =========
     const minR =
-      typeof minRange !== "undefined" && minRange !== ""
-        ? Number(minRange)
-        : null;
+      typeof minRange !== "undefined" && minRange !== "" ? Number(minRange) : null;
     const maxR =
-      typeof maxRange !== "undefined" && maxRange !== ""
-        ? Number(maxRange)
-        : null;
+      typeof maxRange !== "undefined" && maxRange !== "" ? Number(maxRange) : null;
 
     const rangeFlagSet = new Set(
       typeof rangeFlags === "string" && rangeFlags.length
@@ -512,43 +520,30 @@ export const getIgniteSpells = async (req, res) => {
         : []
     );
 
+    // ========= homebrew include/only =========
+    const hbInclude = (parseListParam(homebrews) || []).map((v) =>
+      String(v).toLowerCase().trim()
+    );
+    const hbOnly = (parseListParam(homebrewOnly) || []).map((v) =>
+      String(v).toLowerCase().trim()
+    );
+
+    // ========= supabase query =========
     let query = supabase.from(SPELL_TABLE).select(`
-    *,
-    homebrew:homebrew_sources!homebrew_id (
-      id,
-      name,
-      code
-    )
-  `);
+      *,
+      homebrew:homebrew_sources!homebrew_id (
+        id,
+        name,
+        code
+      )
+    `);
 
     const nameQuery = name || search;
-    if (nameQuery) {
-      query = query.ilike("name", `%${nameQuery}%`);
-    }
+    if (nameQuery) query = query.ilike("name", `%${nameQuery}%`);
 
-    if (levelList && levelList.length > 0) {
-      const nums = levelList.map((v) => Number(v)).filter((n) => !isNaN(n));
-      if (nums.length > 0) {
-        query = query.in("level", nums);
-      }
-    } else if (level !== undefined && level !== "") {
-      const lvl = Number(level);
-      if (!isNaN(lvl)) {
-        query = query.eq("level", lvl);
-      }
-    }
-
-    if (range) {
-      query = query.ilike("range", `%${range}%`);
-    }
-
-    if (duration) {
-      query = query.ilike("duration", `%${duration}%`);
-    }
-
+    // rating filters DB-side
     const minRScore = Number(minRating);
     const maxRScore = Number(maxRating);
-
     if (!isNaN(minRScore)) query = query.gte("ratings_score", minRScore);
     if (!isNaN(maxRScore)) query = query.lte("ratings_score", maxRScore);
 
@@ -557,18 +552,14 @@ export const getIgniteSpells = async (req, res) => {
         .map((rl) => normalizeRating(rl))
         .filter(Boolean)
         .map((rl) => RATING_SCORES[rl]);
-      if (scores.length > 0) {
-        query = query.in("ratings_score", scores);
-      }
+      if (scores.length > 0) query = query.in("ratings_score", scores);
     } else if (ratingLetter) {
       const normalized = normalizeRating(ratingLetter);
-      if (normalized) {
-        query = query.eq("ratings_score", RATING_SCORES[normalized]);
-      }
+      if (normalized) query = query.eq("ratings_score", RATING_SCORES[normalized]);
     }
 
+    // sort
     let sortField = "name";
-
     switch (sortBy) {
       case "level":
         sortField = "level";
@@ -584,7 +575,6 @@ export const getIgniteSpells = async (req, res) => {
         sortField = "name";
         break;
     }
-
     const ascending = String(sortDir).toLowerCase() !== "desc";
     query = query.order(sortField, { ascending });
 
@@ -603,88 +593,86 @@ export const getIgniteSpells = async (req, res) => {
       let my_rating = null;
       if (userId) {
         const found = ratings.find((r) => String(r.user_id) === userId);
-        if (found?.rating) {
-          my_rating = { rating: String(found.rating).toUpperCase() };
-        }
+        if (found?.rating) my_rating = { rating: String(found.rating).toUpperCase() };
       }
 
       return {
         __type: "spell",
         __table: SPELL_TABLE,
         __global_id: `spell-${row.id}`,
-
         favorites_count: favorites.length,
         is_favorite,
-
         my_rating,
         rating_average_letter: avgLetter || "",
         rating_average_score: typeof avgScore === "number" ? avgScore : null,
         rating_total: count,
-
         ...row,
       };
     });
-    function matchHomebrew(spell) {
-      if (!homebrewNeedle && (!homebrewList || homebrewList.length === 0))
-        return true;
+
+    // ======================================================
+    // Homebrew rule (same behavior)
+    // ======================================================
+    function matchHomebrewRule(spell) {
+      const hasInclude = hbInclude.length > 0;
+      const hasOnly = hbOnly.length > 0;
 
       const hb = spell.homebrew;
-      if (!hb) return false;
+      const hbName = hb ? String(hb.name || "").toLowerCase() : "";
+      const hbCode = hb ? String(hb.code || "").toLowerCase() : "";
+      const isHomebrew = !!spell.homebrew_id;
 
-      const hbName = String(hb.name || "").toLowerCase();
-      const hbCode = String(hb.code || "").toLowerCase();
+      if (!hasInclude && !hasOnly) return !isHomebrew;
 
-      if (homebrewNeedle) {
-        return hbCode === homebrewNeedle || hbName.includes(homebrewNeedle);
+      if (hasOnly) {
+        if (!isHomebrew) return false;
+        return hbOnly.some((v) => hbCode === v || hbName.includes(v));
       }
 
-      return homebrewList.some((v) => hbCode === v || hbName.includes(v));
+      if (!isHomebrew) return true;
+      return hbInclude.some((v) => hbCode === v || hbName.includes(v));
     }
 
+    // ======================================================
+    // Apply tri-state filters
+    // ======================================================
+    const rangeListLegacy = parseListParam(ranges); // still supported
     spells = spells.filter((spell) => {
-      if (!matchHomebrew(spell)) return false;
-      if (classList && classList.length > 0) {
-        const sClasses = getSpellClasses(spell);
-        const matchClass = sClasses.some((cls) => classList.includes(cls));
-        if (!matchClass) return false;
-      }
+      if (!matchHomebrewRule(spell)) return false;
 
-      // Cast time
-      if (castTimeList && castTimeList.length > 0) {
-        const key = getActivationFilterKey(spell); // "action", "bonus action", ...
-        if (!key || !castTimeList.includes(key)) return false;
-      }
+      // classes
+      const sClasses = getSpellClasses(spell); // e.g. ["Wizard","Cleric"]
+      if (!triListPass(sClasses, classOnlyList, classBlackList)) return false;
 
-      // Range kategori (Self / Touch / Point / Area / Special)
-      if (rangeList && rangeList.length > 0) {
+      // levels -> string keys: "0".."9" (FE bisa kirim "Cantrips" juga)
+      const lvlNum = Number(spell.level ?? 0);
+      const lvlKeys = lvlNum === 0 ? ["0", "cantrips", "cantrip"] : [String(lvlNum)];
+      // only/black list bisa berisi: "0", "cantrips", "1" dst
+      if (!triListPass(lvlKeys, levelOnlyList, levelBlackList)) return false;
+
+      // cast time
+      const ctKey = getActivationFilterKey(spell); // "action"
+      if (!triListPass([ctKey], castOnlyList, castBlackList)) return false;
+
+      // legacy range category
+      if (rangeListLegacy && rangeListLegacy.length > 0) {
         const rKey = getRangeFilterKey(spell);
-        if (!rKey || !rangeList.includes(rKey)) return false;
+        if (!rKey || !rangeListLegacy.includes(rKey)) return false;
       }
 
-      // Damage type
-      if (damageTypeList && damageTypeList.length > 0) {
-        const types = getDamageTypes(spell); // lowercase
-        const matchDamage = types.some((t) => damageTypeList.includes(t));
-        if (!matchDamage) return false;
-      }
+      // damage types
+      const dTypes = getDamageTypes(spell); // lowercase already
+      if (!triListPass(dTypes, dmgOnlyList, dmgBlackList)) return false;
 
-      // School
-      if (schoolList && schoolList.length > 0) {
-        const code = getSpellSchoolCode(spell);
-        if (!code || !schoolList.includes(code.toLowerCase())) {
-          return false;
-        }
-      }
+      // school
+      const sc = String(getSpellSchoolCode(spell) || "").toLowerCase();
+      if (!triListPass([sc], schOnlyList, schBlackList)) return false;
 
-      // Ritual
-      if (ritualOnly && !hasProperty(spell, "ritual")) {
-        return false;
-      }
-
-      // Concentration
-      if (concentrationOnly && !hasProperty(spell, "concentration")) {
-        return false;
-      }
+      // ritual/concentration tri-mode
+      const isRitual = hasProperty(spell, "ritual");
+      const isConc = hasProperty(spell, "concentration");
+      if (!triPropPass(isRitual, ritualModeNum)) return false;
+      if (!triPropPass(isConc, concentrationModeNum)) return false;
 
       return true;
     });
@@ -699,14 +687,10 @@ export const getIgniteSpells = async (req, res) => {
 
         const flag = getDurationFlagFromSeconds(sec);
         if (flag) {
-          // inst / perm / special
-          if (durationFlagSet.size === 0) {
-            return false; // kalau tidak dipilih, skip
-          }
+          if (durationFlagSet.size === 0) return false;
           return durationFlagSet.has(flag);
         }
 
-        // normal numeric duration
         if (minDur != null && sec < minDur) return false;
         if (maxDur != null && sec > maxDur) return false;
         return true;
@@ -721,7 +705,7 @@ export const getIgniteSpells = async (req, res) => {
         const info = getRangeInfo(spell);
 
         if (info.type === "self") {
-          if (rangeFlagSet.size === 0) return true; // tidak ada flag: jangan di-drop
+          if (rangeFlagSet.size === 0) return true;
           return rangeFlagSet.has("self");
         }
 
@@ -737,7 +721,6 @@ export const getIgniteSpells = async (req, res) => {
           return true;
         }
 
-        // other types (no numeric)
         if (minR != null || maxR != null) return false;
         if (rangeFlagSet.size > 0) return false;
         return true;
@@ -748,18 +731,11 @@ export const getIgniteSpells = async (req, res) => {
     // FAVORITES ONLY – JS side
     // =========================
     if (favoritesOnlyFlag) {
-      if (!userId) {
-        spells = [];
-      } else {
-        spells = spells.filter((s) => s.is_favorite === true);
-      }
+      if (!userId) spells = [];
+      else spells = spells.filter((s) => s.is_favorite === true);
     }
 
-    return res.json({
-      success: true,
-      count: spells.length,
-      spells,
-    });
+    return res.json({ success: true, count: spells.length, spells });
   } catch (err) {
     console.error("❌ getIgniteSpells Error:", err);
     return res.status(500).json({ error: err.message });
@@ -789,9 +765,7 @@ export const toggleFavoriteIgniteSpell = async (req, res) => {
     const exists = favorites.some((f) => String(f.user_id) === String(user.id));
 
     if (exists) {
-      favorites = favorites.filter(
-        (f) => String(f.user_id) !== String(user.id)
-      );
+      favorites = favorites.filter((f) => String(f.user_id) !== String(user.id));
     } else {
       favorites.push({
         user_id: String(user.id),
@@ -883,11 +857,8 @@ export const rateIgniteSpell = async (req, res) => {
       at: now,
     };
 
-    if (idx >= 0) {
-      ratings[idx] = ratingObj;
-    } else {
-      ratings.push(ratingObj);
-    }
+    if (idx >= 0) ratings[idx] = ratingObj;
+    else ratings.push(ratingObj);
 
     const { avgLetter, avgScore, count } = computeAverageRating(ratings);
 

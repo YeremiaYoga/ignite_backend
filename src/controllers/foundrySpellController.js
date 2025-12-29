@@ -182,109 +182,7 @@ function buildSpellPayloads(rawItems) {
   return { payloads, errors };
 }
 
-// function buildSortingMeta({ name, system, range, duration }) {
-//   const lvlRaw = system?.level;
-//   const levelNum =
-//     typeof lvlRaw === "number"
-//       ? lvlRaw
-//       : Number(lvlRaw) || 0;
 
-//   return {
-//     name: name || "",
-//     level: levelNum,
-//     favorites_count: 0,   // awal import pasti 0
-//     ratings_score: 0,     // awal import 0
-//     range,                // mentah
-//     duration,             // mentah
-//   };
-// }
-
-// function buildSpellPayloads(rawItems) {
-//   const payloads = [];
-//   const errors = [];
-
-//   for (const raw of rawItems) {
-//     try {
-//       const normalized = normalizeFoundrySpell(raw);
-//       const {
-//         name,
-//         type,
-//         img,
-//         system,
-//         description,
-//         affects,
-//         activation,
-//         range,
-//         template,
-//         materials,
-//         duration,
-//         classes,
-//         damage_type,
-//         subclasses,
-//         species,
-//         subspecies,
-//       } = normalized;
-
-//       const image = resolveSpellImage(raw.img, img);
-
-//       const compendium_source = getCompendiumSource(raw);
-//       const source_book = getSourceBook(system);
-//       const price = formatPrice(system);
-
-//       // 👇 NEW: bikin meta sorting
-//       const sorting = buildSortingMeta({
-//         name,
-//         system,
-//         range,
-//         duration,
-//       });
-
-//       payloads.push({
-//         name,
-//         type,
-
-//         properties: system.properties ?? null,
-//         level: system.level ?? null,
-//         school: system.school ?? null,
-
-//         description,
-//         affects,
-
-//         activation,
-//         range,
-//         template,
-//         materials,
-//         duration,
-
-//         // NEW JSONB fields
-//         classes,
-//         damage_type,
-//         subclasses,
-//         species,
-//         subspecies,
-
-//         price,
-//         image,
-//         compendium_source,
-//         source_book,
-
-//         raw_data: raw,
-//         format_data: normalized,
-
-//         // 👈 NEW: kirim ke DB
-//         sorting,
-//       });
-//     } catch (err) {
-//       console.error("💥 normalize spell failed:", err);
-//       errors.push({
-//         name: raw?.name || null,
-//         error: err.message,
-//       });
-//     }
-//   }
-
-//   return { payloads, errors };
-// }
 
 export const importFoundrySpells = async (req, res) => {
   try {
@@ -541,5 +439,42 @@ export const updateSpellSubspecies = async (req, res) => {
   } catch (err) {
     console.error("updateSpellSubspecies error:", err);
     return res.status(500).json({ error: "Failed to update subspecies" });
+  }
+};
+
+export const updateSpellHomebrew = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const homebrew_id_raw = req.body?.homebrew_id;
+    let homebrew_id = null;
+    if (homebrew_id_raw === "" || homebrew_id_raw === undefined || homebrew_id_raw === null) {
+      homebrew_id = null;
+    } else {
+
+      homebrew_id = String(homebrew_id_raw).trim();
+      if (!homebrew_id) homebrew_id = null;
+    }
+
+    if (req.body?.toggle === true) {
+      const row = await getFoundrySpellById(id);
+      if (!row) return res.status(404).json({ error: "Spell not found" });
+
+      const next = row.homebrew_id ? null : null; 
+
+      return res.status(400).json({
+        error: "toggle=true is not supported without a target homebrew_id. Send { homebrew_id: <id> } or { homebrew_id: null }.",
+      });
+    }
+
+    const updated = await updateFoundrySpell(id, { homebrew_id });
+
+    return res.json({
+      success: true,
+      item: updated,
+    });
+  } catch (err) {
+    console.error("updateSpellHomebrew error:", err);
+    return res.status(500).json({ error: "Failed to update homebrew" });
   }
 };
