@@ -50,6 +50,45 @@ function isValidYouTubeUrl(url) {
     return false;
   }
 }
+function stringifyBackstoryIfNeeded(v) {
+  if (v == null) return null;
+
+  // kalau sudah stringified (mulai dan akhir dengan ")
+  // contoh: "\"<div ...>\""
+  if (typeof v === "string") {
+    const s = v.trim();
+    if (s.startsWith('"') && s.endsWith('"')) {
+      // coba parse, kalau valid berarti memang sudah JSON string
+      try {
+        JSON.parse(s);
+        return s; // sudah aman
+      } catch {
+        // bukan json string valid, lanjut stringify
+      }
+    }
+    return JSON.stringify(v); // ✅ stringify HTML mentah
+  }
+
+  // kalau bukan string, paksa stringify
+  return JSON.stringify(String(v));
+}
+
+function parseBackstoryIfStringified(v) {
+  if (v == null) return "";
+  if (typeof v !== "string") return String(v);
+
+  const s = v.trim();
+  if (s.startsWith('"') && s.endsWith('"')) {
+    try {
+      const parsed = JSON.parse(s);
+      // pastikan hasilnya string
+      return typeof parsed === "string" ? parsed : String(parsed);
+    } catch {
+      return v;
+    }
+  }
+  return v;
+}
 
 export const createCharacterHandler = async (req, res) => {
   const characterData = { ...req.body, user_id: req.userId };
@@ -217,6 +256,9 @@ export const saveCharacterHandler = async (req, res) => {
     if (!parsed.name || parsed.name.trim() === "") {
       parsed.name = "Hero Without A Name";
     }
+    if (Object.prototype.hasOwnProperty.call(parsed, "backstory")) {
+      parsed.backstory = stringifyBackstoryIfNeeded(parsed.backstory);
+    }
 
     const newCharacter = {
       ...parsed,
@@ -303,7 +345,7 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
 
       // ❌ UI-only (dari form)
       "creator_email",
-      "creator_name",      // <- tetap dibuang dari request, biar server yang atur
+      "creator_name", // <- tetap dibuang dari request, biar server yang atur
       "usedSkillPoints",
       "art",
       "token_art",
@@ -396,10 +438,7 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
 
       if (!userErr && userRow) {
         creatorName =
-          userRow.username ||
-          userRow.name ||
-          req.user?.username ||
-          creatorName;
+          userRow.username || userRow.name || req.user?.username || creatorName;
       } else if (req.user?.username) {
         // fallback kalau query error
         creatorName = req.user.username;
@@ -518,7 +557,9 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
     }
 
     const existingClean = stripJoinFields(existing);
-
+    if (Object.prototype.hasOwnProperty.call(parsedClean, "backstory")) {
+      parsedClean.backstory = stringifyBackstoryIfNeeded(parsedClean.backstory);
+    }
     const updatedData = {
       ...existingClean,
       ...parsedClean,
@@ -558,7 +599,6 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
-
 
 export const moveCharacterToTrash = async (req, res) => {
   const { id } = req.params;
@@ -718,7 +758,9 @@ export const getCharacterByPrivateIdHandler = async (req, res) => {
   try {
     const { id } = req.params;
     const { data, error } = await getCharacterByPrivateId(id);
-
+    if (data?.backstory) {
+      data.backstory = parseBackstoryIfStringified(data.backstory);
+    }
     if (error) return res.status(400).json({ error: error.message });
     if (!data) return res.status(404).json({ error: "Character not found" });
 
