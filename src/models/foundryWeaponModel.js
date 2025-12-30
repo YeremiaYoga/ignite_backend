@@ -13,21 +13,21 @@ export async function insertFoundryWeapon(payload) {
     base_item,
     type_value,
     damage_type,
+
+    damage,
+
     attunement,
     properties,
     weight,
     mastery,
 
-    // kolom baru
     compendium_source,
     price,
     source_book,
 
-    // JSONB di DB
     raw_data,
     format_data,
 
-    // kolom image
     image,
   } = payload;
 
@@ -41,12 +41,15 @@ export async function insertFoundryWeapon(payload) {
       base_item,
       type_value,
       damage_type,
+
+      // ✅ NEW
+      damage: damage ?? null,
+
       attunement,
       properties,
       weight,
       mastery,
 
-      // baru
       compendium_source: compendium_source ?? null,
       price: price ?? null,
       source_book: source_book ?? null,
@@ -66,9 +69,7 @@ export async function insertFoundryWeapon(payload) {
   return data;
 }
 
-/**
- * Bulk insert
- */
+
 export async function bulkInsertFoundryWeapons(items) {
   if (!items?.length) return [];
 
@@ -80,12 +81,14 @@ export async function bulkInsertFoundryWeapons(items) {
     base_item: it.base_item ?? null,
     type_value: it.type_value ?? null,
     damage_type: it.damage_type ?? null,
+
+    damage: it.damage ?? null,
+
     attunement: it.attunement ?? null,
     properties: it.properties ?? null,
     weight: it.weight ?? null,
     mastery: it.mastery ?? null,
 
-    // baru
     compendium_source: it.compendium_source ?? null,
     price: it.price ?? null,
     source_book: it.source_book ?? null,
@@ -108,9 +111,7 @@ export async function bulkInsertFoundryWeapons(items) {
   return data || [];
 }
 
-/**
- * List weapon
- */
+
 export async function listFoundryWeapons({ limit = 50, offset = 0 } = {}) {
   const from = offset;
   const to = offset + limit - 1;
@@ -129,9 +130,7 @@ export async function listFoundryWeapons({ limit = 50, offset = 0 } = {}) {
   return data || [];
 }
 
-/**
- * Get detail weapon
- */
+
 export async function getFoundryWeaponById(id) {
   const { data, error } = await supabase
     .from("foundry_weapons")
@@ -147,10 +146,7 @@ export async function getFoundryWeaponById(id) {
   return data;
 }
 
-/**
- * Update weapon (bisa edit semua kolom kecuali id)
- * Termasuk kolom baru: compendium_source, price, source_book
- */
+
 export async function updateFoundryWeapon(id, payload) {
   const { data, error } = await supabase
     .from("foundry_weapons")
@@ -170,14 +166,9 @@ export async function updateFoundryWeapon(id, payload) {
   return data;
 }
 
-/**
- * Delete weapon
- */
+
 export async function deleteFoundryWeapon(id) {
-  const { error } = await supabase
-    .from("foundry_weapons")
-    .delete()
-    .eq("id", id);
+  const { error } = await supabase.from("foundry_weapons").delete().eq("id", id);
 
   if (error) {
     console.error("❌ deleteFoundryWeapon error:", error.message);
