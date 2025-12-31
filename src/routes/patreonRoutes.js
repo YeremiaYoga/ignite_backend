@@ -90,9 +90,7 @@ async function syncUserLimitsFromTier(userId) {
       const { data, error } = await supabase
         .from("tiers")
         .select("*")
-        .or(
-          `slug.eq.${slugOrName},name.ilike.${slugOrName}`
-        )
+        .or(`slug.eq.${slugOrName},name.ilike.${slugOrName}`)
         .maybeSingle();
       if (!error && data) tierRow = data;
     }
@@ -114,6 +112,9 @@ async function syncUserLimitsFromTier(userId) {
 
     const isUnlimited = !!tierRow.is_unlimited;
 
+    // 🔹 fallback aman kalau tiers.journal_limit null: pakai default 100000
+    const journalFallback = 100000;
+
     const payload = {
       // pastikan tier text & tier_id konsisten
       tier_id: tierRow.id,
@@ -127,6 +128,11 @@ async function syncUserLimitsFromTier(userId) {
       group_limit: isUnlimited ? null : tierRow.group_limit,
       era_limit: isUnlimited ? null : tierRow.era_limit,
       friend_limit: isUnlimited ? null : tierRow.friend_limit,
+
+      // ✅ NEW: journal_limit
+      journal_limit: isUnlimited
+        ? null
+        : (tierRow.journal_limit ?? journalFallback),
     };
 
     const { error: updateErr } = await supabase
@@ -143,6 +149,7 @@ async function syncUserLimitsFromTier(userId) {
     console.error("❌ syncUserLimitsFromTier error:", e.message);
   }
 }
+
 
 router.get("/auth", (req, res) => {
   const { user_id } = req.query;

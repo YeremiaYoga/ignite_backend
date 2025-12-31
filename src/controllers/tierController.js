@@ -51,7 +51,7 @@ export const createTierController = async (req, res) => {
       is_active,
       is_unlimited,
 
-      // 🔹 LIMIT BARU
+      // 🔹 LIMITS
       world_limit,
       storage_limit,
       campaign_limit,
@@ -59,6 +59,7 @@ export const createTierController = async (req, res) => {
       group_limit,
       era_limit,
       friend_limit,
+      journal_limit, // ✅ NEW
     } = req.body;
 
     if (!name) return res.status(400).json({ error: "Name is required" });
@@ -101,14 +102,16 @@ export const createTierController = async (req, res) => {
       group_limit = null;
       era_limit = null;
       friend_limit = null;
+      journal_limit = null; // ✅ NEW
     } else {
-      world_limit = parseLimit(world_limit, 0);      
-      storage_limit = parseLimit(storage_limit, 0);  
-      campaign_limit = parseLimit(campaign_limit, 0); 
-      fvtt_limit = parseLimit(fvtt_limit, 0);        
-      group_limit = parseLimit(group_limit, 0);    
-      era_limit = parseLimit(era_limit, 0);        
-      friend_limit = parseLimit(friend_limit, 0); 
+      world_limit = parseLimit(world_limit, 0);
+      storage_limit = parseLimit(storage_limit, 0);
+      campaign_limit = parseLimit(campaign_limit, 0);
+      fvtt_limit = parseLimit(fvtt_limit, 0);
+      group_limit = parseLimit(group_limit, 0);
+      era_limit = parseLimit(era_limit, 0);
+      friend_limit = parseLimit(friend_limit, 0);
+      journal_limit = parseLimit(journal_limit, 0); // ✅ NEW
     }
 
     const newTier = {
@@ -126,6 +129,7 @@ export const createTierController = async (req, res) => {
       group_limit,
       era_limit,
       friend_limit,
+      journal_limit, // ✅ NEW
     };
 
     const { data, error } = await createTier(newTier);
@@ -160,7 +164,10 @@ export const updateTierController = async (req, res) => {
       updates.is_active = updates.is_active === "true";
     if (typeof updates.is_unlimited === "string")
       updates.is_unlimited = updates.is_unlimited === "true";
+
     const isUnlimited = updates.is_unlimited === true;
+
+    // 🔧 Character limit
     if (isUnlimited) {
       updates.character_limit = null;
     } else if (
@@ -185,6 +192,7 @@ export const updateTierController = async (req, res) => {
       "group_limit",
       "era_limit",
       "friend_limit",
+      "journal_limit", // ✅ NEW
     ];
 
     if (isUnlimited) {
@@ -193,7 +201,6 @@ export const updateTierController = async (req, res) => {
         updates[key] = null;
       });
     } else {
-   
       if (Object.prototype.hasOwnProperty.call(updates, "world_limit")) {
         updates.world_limit = parseLimit(updates.world_limit);
       }
@@ -214,6 +221,9 @@ export const updateTierController = async (req, res) => {
       }
       if (Object.prototype.hasOwnProperty.call(updates, "friend_limit")) {
         updates.friend_limit = parseLimit(updates.friend_limit);
+      }
+      if (Object.prototype.hasOwnProperty.call(updates, "journal_limit")) {
+        updates.journal_limit = parseLimit(updates.journal_limit);
       }
     }
 
