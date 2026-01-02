@@ -1,9 +1,5 @@
-import supabase from "../utils/db.js";
+import supabase from "../../utils/db.js";
 
-/**
- * SOURCE CONFIG
- * Tambah tabel baru cukup di sini.
- */
 const CHARACTER_SOURCES = [
   {
     key: "journals",
@@ -24,17 +20,13 @@ const CHARACTER_SOURCES = [
   // },
 ];
 
-/**
- * GET /ignite/usage/characters
- * ?sources=journals,worlds
- */
+
 export async function igniteCharacterUsageController(req, res) {
   try {
-    // ✅ dari verifyUserIgnite (TIDAK DIUBAH)
+
     const creatorId = req.user.id;
     const creatorName = req.user.username;
 
-    // optional filter source
     const querySources = String(req.query.sources || "")
       .split(",")
       .map((s) => s.trim())
