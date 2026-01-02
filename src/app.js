@@ -58,7 +58,7 @@ import igniteTimelineRoutes from "./routes/igniteTimelineRoutes.js";
 
 import adminHomebrewRoutes from "./routes/adminHomebrewSourceRoutes.js";
 import igniteHomebrewRoutes from "./routes/igniteHomebrewRoutes.js";
-import igniteJournalRoutes from "./src/routes/igniteJournalRoutes.js";
+import igniteJournalRoutes from "./routes/igniteJournalRoutes.js";
 import path from "path";
 const app = express();
 

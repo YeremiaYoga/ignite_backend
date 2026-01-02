@@ -1,3 +1,6 @@
+// src/controllers/ignite/journalController.js
+import supabase from "../../utils/db.js";
+
 import {
   listAllJournals,
   listJournalsByUser,
@@ -8,25 +11,125 @@ import {
   deleteJournalById,
 } from "../../models/journalModel.js";
 
+/* ---------------- permissions ---------------- */
 function canReadJournal(user, journal) {
   if (!journal) return false;
   if (journal.private === false) return true;
   return user?.id === journal.creator_id;
 }
 
-/**
- * GET /ignite/journals
- */
+/* ---------------- limits ---------------- */
+async function getUserJournalLimit(userId) {
+  const { data, error } = await supabase
+    .from("users")
+    .select("id, tier, journal_limit")
+    .eq("id", userId)
+    .single();
+
+  if (error || !data) {
+    console.error("❌ getUserJournalLimit error:", error?.message);
+    return { user: null, error: error || new Error("User not found") };
+  }
+
+  return { user: data, error: null };
+}
+
+async function enforceJournalLimitOnCreate(userId) {
+  const { user, error } = await getUserJournalLimit(userId);
+  if (error || !user) {
+    return {
+      ok: false,
+      status: 400,
+      payload: { success: false, message: "User not found" },
+    };
+  }
+
+  const limit = user.journal_limit; // null = unlimited
+
+  const { count, error: countError } = await supabase
+    .from("journals")
+    .select("*", { count: "exact", head: true })
+    .eq("creator_id", userId);
+
+  if (countError) {
+    console.error("❌ enforceJournalLimit count error:", countError.message);
+    return {
+      ok: false,
+      status: 500,
+      payload: { success: false, message: "Failed to check journal count" },
+    };
+  }
+
+  if (limit !== null && count >= limit) {
+    return {
+      ok: false,
+      status: 403,
+      payload: {
+        success: false,
+        message: `Journal limit reached (${limit}). Upgrade your plan to create more.`,
+        tier: user.tier,
+        limit,
+        count,
+      },
+    };
+  }
+
+  return { ok: true, status: 200, payload: null };
+}
+
+/* ---------------- helpers (pages + count + fvtt) ---------------- */
+function normalizeLevel(v) {
+  const n = Number(v);
+  if (n === 2) return 2;
+  if (n === 3) return 3;
+  return 1;
+}
+
+function normalizePages(pages) {
+  if (!Array.isArray(pages)) return [];
+  return pages.map((p, idx) => ({
+    id: p?.id ?? `page_${idx}`,
+    name: String(p?.name || "").trim() || `Page Name ${idx + 1}`,
+    content: p?.content ?? "",
+    show_title: typeof p?.show_title === "boolean" ? p.show_title : true,
+    level: normalizeLevel(p?.level),
+  }));
+}
+
+function computeCharacterCountFromPages(pages) {
+  if (!Array.isArray(pages)) return 0;
+  let total = 0;
+  for (const p of pages) total += String(p?.content ?? "").length;
+  return total;
+}
+
+function buildFvttFormat({ name, pages }) {
+  const safeName = String(name || "").trim() || "Untitled Journal";
+  const fvttPages = (pages || []).map((p, idx) => {
+    const pageName = String(p?.name || "").trim() || `Page Name ${idx + 1}`;
+    const content = p?.content ?? "";
+    const show_title = typeof p?.show_title === "boolean" ? p.show_title : true;
+    const level = normalizeLevel(p?.level);
+
+    return {
+      name: pageName,
+      type: "text",
+      text: { format: 1, content },
+      _id: String(idx + 1).padStart(16, "0"),
+      title: { show: show_title, level },
+    };
+  });
+
+  return { name: safeName, pages: fvttPages };
+}
+
+/* ---------------- controllers ---------------- */
 export async function getIgniteJournals(req, res) {
   try {
     const userId = req.user.id;
-
     const { data, error } = await listJournalsByUser({ userId });
 
-    if (error) {
-      return res.status(400).json({ success: false, message: error.message });
-    }
-
+    if (error) return res.status(400).json({ success: false, message: error.message });
     return res.json({ success: true, data: data || [] });
   } catch (e) {
     console.error("❌ getIgniteJournals:", e);
@@ -34,17 +137,10 @@ export async function getIgniteJournals(req, res) {
   }
 }
 
-/**
- * GET /ignite/journals/all
- */
 export async function getAllIgniteJournals(req, res) {
   try {
     const { data, error } = await listAllJournals();
-
-    if (error) {
-      return res.status(400).json({ success: false, message: error.message });
-    }
-
+    if (error) return res.status(400).json({ success: false, message: error.message });
     return res.json({ success: true, data: data || [] });
   } catch (e) {
     console.error("❌ getAllIgniteJournals:", e);
@@ -52,17 +148,12 @@ export async function getAllIgniteJournals(req, res) {
   }
 }
 
-/**
- * GET /ignite/journals/:id
- */
 export async function getIgniteJournalDetail(req, res) {
   try {
     const { id } = req.params;
 
     const { data, error } = await getJournalById(id);
-    if (error || !data) {
-      return res.status(404).json({ success: false, message: "Not found" });
-    }
+    if (error || !data) return res.status(404).json({ success: false, message: "Not found" });
 
     if (!canReadJournal(req.user, data)) {
       return res.status(403).json({ success: false, message: "Forbidden" });
@@ -75,17 +166,12 @@ export async function getIgniteJournalDetail(req, res) {
   }
 }
 
-/**
- * GET /ignite/journals/share/:shareId
- */
 export async function getIgniteJournalByShare(req, res) {
   try {
     const { shareId } = req.params;
 
     const { data, error } = await getJournalByShareId(shareId);
-    if (error || !data) {
-      return res.status(404).json({ success: false, message: "Not found" });
-    }
+    if (error || !data) return res.status(404).json({ success: false, message: "Not found" });
 
     if (!canReadJournal(req.user, data)) {
       return res.status(403).json({ success: false, message: "Forbidden" });
@@ -99,59 +185,70 @@ export async function getIgniteJournalByShare(req, res) {
 }
 
 /**
- * POST /ignite/journals
- * NOTE: share_id HARUS dikirim dari frontend
+ * CREATE:
+ * - wajib name, share_id
+ * - pages boleh dari FE, kalau FE gak kirim => minimal create 1 page default
+ * - server isi pages + character_count + fvtt_format + creator_name
  */
 export async function createIgniteJournalHandler(req, res) {
   try {
     const user = req.user;
 
+    const gate = await enforceJournalLimitOnCreate(user.id);
+    if (!gate.ok) return res.status(gate.status).json(gate.payload);
+
     const {
       name,
       description = null,
-      fvtt_format,
       private: isPrivate,
       share_id,
+      pages,
     } = req.body;
 
     if (!name || !String(name).trim()) {
-      return res.status(400).json({
-        success: false,
-        message: "name is required",
-      });
+      return res.status(400).json({ success: false, message: "name is required" });
     }
 
     if (!share_id || !String(share_id).trim()) {
-      return res.status(400).json({
-        success: false,
-        message: "share_id is required",
-      });
+      return res.status(400).json({ success: false, message: "share_id is required" });
     }
 
-    if (fvtt_format === undefined || fvtt_format === null) {
-      return res.status(400).json({
-        success: false,
-        message: "fvtt_format is required",
-      });
-    }
+    const normalizedPages = normalizePages(
+      Array.isArray(pages) && pages.length
+        ? pages
+        : [
+            {
+              id: `page_${Date.now()}`,
+              name: "Page Name 1",
+              content: "",
+              show_title: true,
+              level: 1,
+            },
+          ]
+    );
+
+    const safeName = String(name).trim();
+    const fvtt_format = buildFvttFormat({ name: safeName, pages: normalizedPages });
+    const character_count = computeCharacterCountFromPages(normalizedPages);
 
     const payload = {
-      name: String(name).trim(),
+      name: safeName,
       description,
-      fvtt_format,
       private: typeof isPrivate === "boolean" ? isPrivate : true,
       share_id: String(share_id).trim(),
+
+      // ✅ FIX UTAMA
+      pages: normalizedPages,
+      character_count,
+      fvtt_format,
+
       creator_id: user.id,
-      creator_name: user.name || "Unknown",
+      creator_name: user.username || user.name || user.email || "Unknown",
     };
 
     const { data, error } = await createJournal(payload);
     if (error) {
-      // kemungkinan besar duplicate share_id
-      return res.status(400).json({
-        success: false,
-        message: error.message,
-      });
+      return res.status(400).json({ success: false, message: error.message });
     }
 
     return res.status(201).json({ success: true, data });
@@ -162,7 +259,10 @@ export async function createIgniteJournalHandler(req, res) {
 }
 
 /**
- * PUT /ignite/journals/:id
+ * UPDATE:
+ * - bisa patch name/description/private/pages
+ * - kalau pages ada => update pages + character_count + fvtt_format
+ * - kalau pages gak ada tapi name berubah => fvtt_format name ikut berubah pakai pages existing
  */
 export async function updateIgniteJournalHandler(req, res) {
   try {
@@ -178,13 +278,28 @@ export async function updateIgniteJournalHandler(req, res) {
       return res.status(403).json({ success: false, message: "Forbidden" });
     }
 
-    const { name, description, fvtt_format, private: isPrivate } = req.body;
+    const { name, description, private: isPrivate, pages } = req.body;
 
     const patch = {};
-    if (typeof name === "string") patch.name = name.trim();
+
+    if (typeof name === "string" && name.trim()) patch.name = name.trim();
     if (description !== undefined) patch.description = description;
-    if (fvtt_format !== undefined) patch.fvtt_format = fvtt_format;
     if (typeof isPrivate === "boolean") patch.private = isPrivate;
+
+    if (pages !== undefined) {
+      const normalizedPages = normalizePages(pages);
+
+      // ✅ FIX UTAMA
+      patch.pages = normalizedPages;
+      patch.character_count = computeCharacterCountFromPages(normalizedPages);
+
+      const nextName = (patch.name || current.data.name || "").trim();
+      patch.fvtt_format = buildFvttFormat({ name: nextName, pages: normalizedPages });
+    } else if (patch.name) {
+      // name berubah tapi pages tidak dikirim => rebuild fvtt_format pakai pages existing
+      const normalizedPages = normalizePages(current.data.pages || []);
+      patch.fvtt_format = buildFvttFormat({ name: patch.name, pages: normalizedPages });
+    }
 
     const { data, error } = await updateJournalById(id, patch);
     if (error) {
@@ -198,9 +313,6 @@ export async function updateIgniteJournalHandler(req, res) {
   }
 }
 
-/**
- * DELETE /ignite/journals/:id
- */
 export async function deleteIgniteJournalHandler(req, res) {
   try {
     const user = req.user;
@@ -215,12 +327,12 @@ export async function deleteIgniteJournalHandler(req, res) {
       return res.status(403).json({ success: false, message: "Forbidden" });
     }
 
-    const { error } = await deleteJournalById(id);
+    const { data, error } = await deleteJournalById(id);
     if (error) {
       return res.status(400).json({ success: false, message: error.message });
     }
 
-    return res.json({ success: true });
+    return res.json({ success: true, data });
   } catch (e) {
     console.error("❌ deleteIgniteJournalHandler:", e);
     return res.status(500).json({ success: false, message: "Server error" });
