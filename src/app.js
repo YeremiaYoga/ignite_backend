@@ -59,6 +59,7 @@ import igniteTimelineRoutes from "./routes/igniteTimelineRoutes.js";
 import adminHomebrewRoutes from "./routes/adminHomebrewSourceRoutes.js";
 import igniteHomebrewRoutes from "./routes/igniteHomebrewRoutes.js";
 import igniteJournalRoutes from "./routes/igniteJournalRoutes.js";
+import igniteCharacterUsageRoutes from "./routes/igniteCharacterUsageRoutes.js";
 import path from "path";
 const app = express();
 
@@ -154,4 +155,5 @@ app.use("/api/gdocs", gdocsRoutes);
 app.use("/ignite/feats", igniteFeatRoutes);
 app.use("/ignite/timelines", igniteTimelineRoutes);
 app.use("/ignite/journals", igniteJournalRoutes);
+app.use("/ignite/character-limit", igniteCharacterUsageRoutes);
 export default app;

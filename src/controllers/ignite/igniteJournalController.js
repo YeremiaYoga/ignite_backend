@@ -90,21 +90,37 @@ function normalizePages(pages) {
   return pages.map((p, idx) => ({
     id: p?.id ?? `page_${idx}`,
     name: String(p?.name || "").trim() || `Page Name ${idx + 1}`,
+    // ✅ SIMPAN HTML APA ADANYA (jangan strip)
     content: p?.content ?? "",
     show_title: typeof p?.show_title === "boolean" ? p.show_title : true,
     level: normalizeLevel(p?.level),
   }));
 }
 
-function computeCharacterCountFromPages(pages) {
-  if (!Array.isArray(pages)) return 0;
+/**
+ * ✅ HITUNG CHARACTER APA ADANYA (HTML IKUT DIHITUNG)
+ * - description ikut dihitung (HTML ikut dihitung)
+ * - pages[].content ikut dihitung (HTML ikut dihitung)
+ */
+function computeCharacterCount({ pages, description }) {
   let total = 0;
-  for (const p of pages) total += String(p?.content ?? "").length;
+
+  if (description !== undefined && description !== null) {
+    total += String(description).length;
+  }
+
+  if (Array.isArray(pages)) {
+    for (const p of pages) {
+      total += String(p?.content ?? "").length;
+    }
+  }
+
   return total;
 }
 
 function buildFvttFormat({ name, pages }) {
   const safeName = String(name || "").trim() || "Untitled Journal";
+
   const fvttPages = (pages || []).map((p, idx) => {
     const pageName = String(p?.name || "").trim() || `Page Name ${idx + 1}`;
     const content = p?.content ?? "";
@@ -129,7 +145,10 @@ export async function getIgniteJournals(req, res) {
     const userId = req.user.id;
     const { data, error } = await listJournalsByUser({ userId });
 
-    if (error) return res.status(400).json({ success: false, message: error.message });
+    if (error) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+
     return res.json({ success: true, data: data || [] });
   } catch (e) {
     console.error("❌ getIgniteJournals:", e);
@@ -140,7 +159,11 @@ export async function getIgniteJournals(req, res) {
 export async function getAllIgniteJournals(req, res) {
   try {
     const { data, error } = await listAllJournals();
-    if (error) return res.status(400).json({ success: false, message: error.message });
+
+    if (error) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+
     return res.json({ success: true, data: data || [] });
   } catch (e) {
     console.error("❌ getAllIgniteJournals:", e);
@@ -153,7 +176,9 @@ export async function getIgniteJournalDetail(req, res) {
     const { id } = req.params;
 
     const { data, error } = await getJournalById(id);
-    if (error || !data) return res.status(404).json({ success: false, message: "Not found" });
+    if (error || !data) {
+      return res.status(404).json({ success: false, message: "Not found" });
+    }
 
     if (!canReadJournal(req.user, data)) {
       return res.status(403).json({ success: false, message: "Forbidden" });
@@ -171,7 +196,9 @@ export async function getIgniteJournalByShare(req, res) {
     const { shareId } = req.params;
 
     const { data, error } = await getJournalByShareId(shareId);
-    if (error || !data) return res.status(404).json({ success: false, message: "Not found" });
+    if (error || !data) {
+      return res.status(404).json({ success: false, message: "Not found" });
+    }
 
     if (!canReadJournal(req.user, data)) {
       return res.status(403).json({ success: false, message: "Forbidden" });
@@ -206,11 +233,15 @@ export async function createIgniteJournalHandler(req, res) {
     } = req.body;
 
     if (!name || !String(name).trim()) {
-      return res.status(400).json({ success: false, message: "name is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "name is required" });
     }
 
     if (!share_id || !String(share_id).trim()) {
-      return res.status(400).json({ success: false, message: "share_id is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "share_id is required" });
     }
 
     const normalizedPages = normalizePages(
@@ -228,16 +259,25 @@ export async function createIgniteJournalHandler(req, res) {
     );
 
     const safeName = String(name).trim();
-    const fvtt_format = buildFvttFormat({ name: safeName, pages: normalizedPages });
-    const character_count = computeCharacterCountFromPages(normalizedPages);
+    const safeDescription = description ?? null;
+
+    const fvtt_format = buildFvttFormat({
+      name: safeName,
+      pages: normalizedPages,
+    });
+
+    // ✅ character_count hitung HTML apa adanya (description + pages)
+    const character_count = computeCharacterCount({
+      pages: normalizedPages,
+      description: safeDescription,
+    });
 
     const payload = {
       name: safeName,
-      description,
+      description: safeDescription,
       private: typeof isPrivate === "boolean" ? isPrivate : true,
       share_id: String(share_id).trim(),
 
-      // ✅ FIX UTAMA
       pages: normalizedPages,
       character_count,
       fvtt_format,
@@ -260,9 +300,10 @@ export async function createIgniteJournalHandler(req, res) {
 
 /**
  * UPDATE:
- * - bisa patch name/description/private/pages
+ * - bisa patch name/description/private/pages/share_id(optional)
  * - kalau pages ada => update pages + character_count + fvtt_format
  * - kalau pages gak ada tapi name berubah => fvtt_format name ikut berubah pakai pages existing
+ * - kalau description berubah => character_count wajib ikut update (description dihitung)
  */
 export async function updateIgniteJournalHandler(req, res) {
   try {
@@ -278,27 +319,51 @@ export async function updateIgniteJournalHandler(req, res) {
       return res.status(403).json({ success: false, message: "Forbidden" });
     }
 
-    const { name, description, private: isPrivate, pages } = req.body;
+    const { name, description, private: isPrivate, pages, share_id } = req.body;
 
     const patch = {};
 
+    // basic fields
     if (typeof name === "string" && name.trim()) patch.name = name.trim();
     if (description !== undefined) patch.description = description;
     if (typeof isPrivate === "boolean") patch.private = isPrivate;
 
+    // kalau kamu memang mau allow edit share_id (kalau enggak, hapus block ini)
+    if (typeof share_id === "string" && share_id.trim()) {
+      patch.share_id = share_id.trim();
+    }
+
+    const nextName = (patch.name || current.data.name || "").trim();
+    const nextDescription =
+      patch.description !== undefined ? patch.description : current.data.description;
+
     if (pages !== undefined) {
       const normalizedPages = normalizePages(pages);
 
-      // ✅ FIX UTAMA
       patch.pages = normalizedPages;
-      patch.character_count = computeCharacterCountFromPages(normalizedPages);
-
-      const nextName = (patch.name || current.data.name || "").trim();
       patch.fvtt_format = buildFvttFormat({ name: nextName, pages: normalizedPages });
-    } else if (patch.name) {
-      // name berubah tapi pages tidak dikirim => rebuild fvtt_format pakai pages existing
-      const normalizedPages = normalizePages(current.data.pages || []);
-      patch.fvtt_format = buildFvttFormat({ name: patch.name, pages: normalizedPages });
+
+      // ✅ character_count = description + pages (HTML apa adanya)
+      patch.character_count = computeCharacterCount({
+        pages: normalizedPages,
+        description: nextDescription,
+      });
+    } else {
+      // pages tidak diupdate, tapi name/description mungkin berubah
+      // fvtt_format name perlu ikut kalau name berubah
+      if (patch.name) {
+        const normalizedPages = normalizePages(current.data.pages || []);
+        patch.fvtt_format = buildFvttFormat({ name: patch.name, pages: normalizedPages });
+      }
+
+      // ✅ kalau description berubah, tetap update character_count
+      if (patch.description !== undefined) {
+        const normalizedPages = normalizePages(current.data.pages || []);
+        patch.character_count = computeCharacterCount({
+          pages: normalizedPages,
+          description: nextDescription,
+        });
+      }
     }
 
     const { data, error } = await updateJournalById(id, patch);
