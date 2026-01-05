@@ -54,7 +54,7 @@ import adminTokenBorderRoutes from "./routes/adminTokenBorderRoutes.js";
 import igniteTokenBorderRoutes from "./routes/igniteTokenBorderRoutes.js";
 import igniteFeatRoutes from "./routes/igniteFeatRoutes.js";
 import gdocsRoutes from "./routes/gdocsRoutes.js";
-import igniteTimelineRoutes from "./routes/igniteTimelineRoutes.js";
+import igniteCalendarRoutes from "./routes/igniteCalendarRoutes.js";
 
 import adminHomebrewRoutes from "./routes/adminHomebrewSourceRoutes.js";
 import igniteHomebrewRoutes from "./routes/igniteHomebrewRoutes.js";
@@ -153,7 +153,7 @@ app.use("/ignite/token-borders", igniteTokenBorderRoutes);
 
 app.use("/api/gdocs", gdocsRoutes);
 app.use("/ignite/feats", igniteFeatRoutes);
-app.use("/ignite/timelines", igniteTimelineRoutes);
+app.use("/ignite/calendars", igniteCalendarRoutes);
 app.use("/ignite/journals", igniteJournalRoutes);
 app.use("/ignite/character-limit", igniteCharacterUsageRoutes);
 export default app;
