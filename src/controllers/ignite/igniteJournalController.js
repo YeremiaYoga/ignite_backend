@@ -90,18 +90,13 @@ function normalizePages(pages) {
   return pages.map((p, idx) => ({
     id: p?.id ?? `page_${idx}`,
     name: String(p?.name || "").trim() || `Page Name ${idx + 1}`,
-    // ✅ SIMPAN HTML APA ADANYA (jangan strip)
     content: p?.content ?? "",
     show_title: typeof p?.show_title === "boolean" ? p.show_title : true,
     level: normalizeLevel(p?.level),
   }));
 }
 
-/**
- * ✅ HITUNG CHARACTER APA ADANYA (HTML IKUT DIHITUNG)
- * - description ikut dihitung (HTML ikut dihitung)
- * - pages[].content ikut dihitung (HTML ikut dihitung)
- */
+
 function computeCharacterCount({ pages, description }) {
   let total = 0;
 
@@ -211,12 +206,6 @@ export async function getIgniteJournalByShare(req, res) {
   }
 }
 
-/**
- * CREATE:
- * - wajib name, share_id
- * - pages boleh dari FE, kalau FE gak kirim => minimal create 1 page default
- * - server isi pages + character_count + fvtt_format + creator_name
- */
 export async function createIgniteJournalHandler(req, res) {
   try {
     const user = req.user;
