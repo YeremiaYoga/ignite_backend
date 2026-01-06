@@ -40,19 +40,21 @@ export async function getIgniteCalendars(req, res) {
       order,
       page,
       limit,
-      private_only: parseBool(privateQuery), // null = all, true/false = filter
+      private_only: parseBool(privateQuery),
+      creator_id: userId, // ✅ FILTER DI DB
     });
 
     if (result.error) {
       console.error("❌ getIgniteCalendars error:", result.error.message);
-      return res
-        .status(400)
-        .json({ success: false, message: result.error.message });
+      return res.status(400).json({ success: false, message: result.error.message });
     }
 
-    const rows = (result.data || []).map((c) => ({
+    // ✅ safety-net filter (optional but recommended)
+    const mine = (result.data || []).filter((c) => c.creator_id === userId);
+
+    const rows = mine.map((c) => ({
       ...c,
-      is_owner: c.creator_id === userId,
+      is_owner: true,
     }));
 
     return res.json({
@@ -61,16 +63,15 @@ export async function getIgniteCalendars(req, res) {
       meta: {
         page: result.page,
         limit: result.limit,
-        total: result.count ?? 0,
+        total: rows.length, // atau result.count kalau kamu count juga sesuai filter
       },
     });
   } catch (err) {
     console.error("❌ getIgniteCalendars catch:", err);
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal Server Error" });
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 }
+
 
 export async function getIgnitePublicCalendars(req, res) {
   try {

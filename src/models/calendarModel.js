@@ -1,14 +1,16 @@
 // src/models/calendarModel.js
 import supabase from "../utils/db.js";
 
-
-
 const TABLE = "calendars";
 
 function safeSortField(sort) {
-  return new Set(["created_at", "updated_at", "name", "share_id", "private"]).has(
-    sort
-  )
+  return new Set([
+    "created_at",
+    "updated_at",
+    "name",
+    "share_id",
+    "private",
+  ]).has(sort)
     ? sort
     : "updated_at";
 }
@@ -124,37 +126,45 @@ export async function deleteCalendarById(id) {
   return await supabase.from(TABLE).delete().eq("id", id);
 }
 
-/**
- * Creator view listing: ambil SEMUA kalender (tanpa syarat creator),
- * nanti controller yang nambahin field is_owner dengan compare creator_id === userId
- */
 export async function listCalendarsAllForCreatorView({
-  q = "",
-  sort = "updated_at",
-  order = "desc",
+  q,
+  sort,
+  order,
   page = 1,
   limit = 20,
-  private_only = null, // true/false/null
-} = {}) {
-  const safeSort = safeSortField(sort);
-  const ascending = safeOrderBool(order);
-  const { safePage, safeLimit, from, to } = safePaging(page, limit);
+  private_only = null,
+  creator_id = null,
+}) {
+  const from = Math.max(0, (Number(page) - 1) * Number(limit));
+  const to = from + Number(limit) - 1;
 
-  let query = supabase
-    .from(TABLE)
-    .select("*", { count: "exact" })
-    .order(safeSort, { ascending })
-    .range(from, to);
+  let query = supabase.from("calendars").select("*", { count: "exact" });
 
-  if (q && String(q).trim()) {
-    const term = String(q).trim().replace(/"/g, '\\"');
-    query = query.or(`name.ilike."%${term}%",share_id.ilike."%${term}%"`);
+  if (creator_id) query = query.eq("creator_id", creator_id);
+
+  if (private_only === true) query = query.eq("private", true);
+  if (private_only === false) query = query.eq("private", false);
+
+  if (q?.trim()) {
+    const qq = q.trim();
+    query = query.or(
+      `name.ilike.%${qq}%,abbreviation.ilike.%${qq}%,share_id.ilike.%${qq}%`
+    );
   }
 
-  if (typeof private_only === "boolean") {
-    query = query.eq("private", private_only);
-  }
+  const safeSort = ["updated_at", "created_at", "name"].includes(sort)
+    ? sort
+    : "updated_at";
+  const safeAsc = String(order).toLowerCase() === "asc";
+  query = query.order(safeSort, { ascending: safeAsc });
 
-  const { data, error, count } = await query;
-  return { data, error, count, page: safePage, limit: safeLimit };
+  const { data, error, count } = await query.range(from, to);
+
+  return {
+    data,
+    error,
+    count,
+    page: Number(page),
+    limit: Number(limit),
+  };
 }
