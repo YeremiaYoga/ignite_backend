@@ -119,7 +119,7 @@ function validateAndBuildCurrentYear({ eraList, input }) {
       };
     }
   } else {
-    // optional soft bound using total, if provided
+
     const total = computeEraTotal(eraObj);
     if (total !== null && Math.abs(eraYear) > total) {
       return {
@@ -139,16 +139,7 @@ function validateAndBuildCurrentYear({ eraList, input }) {
   };
 }
 
-/**
- * leap_year input (snake_case):
- * {
- *   leap_start: number,
- *   leap_interval: number (>0)
- * }
 
-// NOTE: icon vs symbol DOES NOT affect this controller.
-// Any icon fields inside months/days/etc are stored as JSON.
- */
 function validateAndBuildLeapYear(input) {
   if (input === null) return { ok: true, value: null };
   if (!input || typeof input !== "object")

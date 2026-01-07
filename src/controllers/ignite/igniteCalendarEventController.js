@@ -40,9 +40,7 @@ export async function getIgniteCalendarEvents(req, res) {
 
     if (error) {
       console.error("❌ getIgniteCalendarEvents:", error.message);
-      return res
-        .status(400)
-        .json({ success: false, message: error.message });
+      return res.status(400).json({ success: false, message: error.message });
     }
 
     // 🔒 safety: only own events
@@ -71,6 +69,7 @@ export async function createIgniteCalendarEvent(req, res) {
 
     const payload = pick(body, [
       "calendar_id",
+      "journal_id",
       "title",
       "content",
       "icon",
@@ -98,9 +97,7 @@ export async function createIgniteCalendarEvent(req, res) {
     const { data, error } = await createCalendarEvent(payload);
     if (error) {
       console.error("❌ createIgniteCalendarEvent:", error.message);
-      return res
-        .status(400)
-        .json({ success: false, message: error.message });
+      return res.status(400).json({ success: false, message: error.message });
     }
 
     return res.status(201).json({ success: true, data });
@@ -126,6 +123,7 @@ export async function updateIgniteCalendarEvent(req, res) {
 
     const body = req.body || {};
     const payload = pick(body, [
+      "journal_id",
       "title",
       "content",
       "icon",
@@ -146,8 +144,9 @@ export async function updateIgniteCalendarEvent(req, res) {
         .json({ success: false, message: "No fields to update" });
     }
 
-    const { data: existing, error: fetchError } =
-      await getCalendarEventById(id);
+    const { data: existing, error: fetchError } = await getCalendarEventById(
+      id
+    );
 
     if (fetchError || !existing)
       return res.status(404).json({ success: false, message: "Not found" });
@@ -180,8 +179,9 @@ export async function deleteIgniteCalendarEvent(req, res) {
     if (!userId)
       return res.status(401).json({ success: false, message: "Unauthorized" });
 
-    const { data: existing, error: fetchError } =
-      await getCalendarEventById(id);
+    const { data: existing, error: fetchError } = await getCalendarEventById(
+      id
+    );
 
     if (fetchError || !existing)
       return res.status(404).json({ success: false, message: "Not found" });
@@ -192,9 +192,7 @@ export async function deleteIgniteCalendarEvent(req, res) {
     const { error } = await deleteCalendarEventById(id);
     if (error) {
       console.error("❌ deleteIgniteCalendarEvent:", error.message);
-      return res
-        .status(400)
-        .json({ success: false, message: error.message });
+      return res.status(400).json({ success: false, message: error.message });
     }
 
     return res.json({ success: true, message: "Deleted" });

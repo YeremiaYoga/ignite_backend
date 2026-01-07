@@ -7,6 +7,7 @@ export async function listCalendarEvents({
   calendar_id,
   year = null,
   month = null,
+  creator_id = null,
 }) {
   if (!calendar_id) {
     return { data: null, error: new Error("calendar_id is required") };
@@ -20,17 +21,15 @@ export async function listCalendarEvents({
     .order("month", { ascending: true })
     .order("day", { ascending: true });
 
-  if (Number.isFinite(Number(year))) {
-    query = query.eq("year", Number(year));
-  }
+  if (creator_id) query = query.eq("creator_id", creator_id); // ✅ add
 
-  if (Number.isFinite(Number(month))) {
-    query = query.eq("month", Number(month));
-  }
+  if (Number.isFinite(Number(year))) query = query.eq("year", Number(year));
+  if (Number.isFinite(Number(month))) query = query.eq("month", Number(month));
 
   const { data, error } = await query;
   return { data, error };
 }
+
 
 /* =========================
    GET EVENT BY ID
