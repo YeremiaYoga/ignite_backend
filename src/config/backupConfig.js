@@ -1,9 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-/**
- * 🕒 Konversi BACKUP_TIME (HH:mm) → cron format (m H * * *)
- */
 function convertTimeToCron(timeString) {
   try {
     const [hour, minute] = timeString.split(":").map(Number);
@@ -22,34 +19,34 @@ function convertTimeToCron(timeString) {
     return `${minute} ${hour} * * *`;
   } catch (err) {
     console.warn("⚠️ Invalid BACKUP_TIME in .env, fallback to 02:00");
-    return "0 2 * * *"; // fallback default 02:00 WIB
+    return "0 2 * * *";
   }
 }
 
 // 🧩 Ambil dari env
 const BACKUP_TIME = process.env.BACKUP_TIME || "02:00";
 
+const backup_schedule = "0 */4 * * *";
+
 export const backupConfig = {
   enabled: true,
 
   tables: [
+    "users",
+    "tiers",
+    "user_patreon",
+    "kofi_logs",
+
     "backgrounds",
     "characters",
     "dnd_source",
-    "feats",
     "incumbency",
-    "kofi_logs",
     "languages",
     "races",
     "species",
     "species_group_type",
     "species_traits",
-    "subraces",
-    "tiers",
-    "trait_modifiers",
-    "user_patreon",
-    "users",
-    "wayfarers",
+
     "foundry_weapons",
     "foundry_consumables",
     "foundry_containers",
@@ -58,8 +55,29 @@ export const backupConfig = {
     "foundry_tools",
     "foundry_spells",
     "foundry_features",
+    "foundry_feats",
+
+    "journals",
+    "friendships",
+
+    "calendars",
+    "calendar_events",
+
+    "homebrew_sources",
+
+    "worlds",
+    "game_systems",
+    "platforms",
+
+    "token_borders",
+    "modifiers",
+
+    "campaign_themes",
+    "campaign_genres",
+
+    "announcements",
   ],
 
-  schedule: convertTimeToCron(BACKUP_TIME),
-  readable_time: BACKUP_TIME,
+  schedule: backup_schedule,
+  readable_time: "every 4 hours",
 };

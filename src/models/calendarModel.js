@@ -35,8 +35,7 @@ export async function listCalendarsByCreator({
   page = 1,
   limit = 20,
   creator_id,
-  // optional filter for creator list
-  private_only = null, // true/false/null
+  private_only = null, 
 } = {}) {
   const safeSort = safeSortField(sort);
   const ascending = safeOrderBool(order);

@@ -1,0 +1,562 @@
+[
+  {
+    "id": "f4c3efc4-82b2-4323-b339-ba35297be10b",
+    "name": "Acolyte",
+    "source": "Player's Handbook",
+    "description": "You devoted yourself to service in a temple, either nestled in a town or secluded in a sacred grove. There you performed rites in honor of a god or pantheon. You served under a priest and studied religion. Thanks to your priest’s instruction and your own devotion, you also learned how to channel a modicum of divine power in service to your place of worship and the people who prayed there.",
+    "ability_scores": [
+      "Intelligence",
+      "Wisdom",
+      "Charisma"
+    ],
+    "feat": "Magic Initiate (Cleric)",
+    "skill_proficiencies": [
+      "Insight",
+      "Religion"
+    ],
+    "tool_proficiencies": [
+      "Calligrapher's Supplies"
+    ],
+    "tags": [],
+    "languages": "common",
+    "feature": "testing feature name",
+    "equipment_options": {
+      "A": {
+        "items": [
+          "Calligrapher's Supplies",
+          "Book (prayers)",
+          "Holy Symbol",
+          "Parchment (10 sheets)",
+          "Robe",
+          "8 GP"
+        ]
+      },
+      "B": {
+        "items": [
+          "50 GP"
+        ]
+      }
+    },
+    "created_at": "2025-10-15T09:16:30.727+00:00"
+  },
+  {
+    "id": "00b193db-09af-407f-a8f6-74ef89b7698c",
+    "name": "Artisan",
+    "source": "Player's Handbook",
+    "description": "You began mopping floors and scrubbing counters in an artisan's workshop for a few coppers per day as soon as you were strong enough to carry a bucket. When you were old enough to apprentice, you learned to create basic crafts of your own, as well as how to sweet-talk the occasional demanding customer. Your trade has also given you a keen eye for detail.",
+    "ability_scores": [
+      "Strength",
+      "Dexterity",
+      "Intelligence"
+    ],
+    "feat": "Crafter",
+    "skill_proficiencies": [
+      "Investigation",
+      "Persuasion"
+    ],
+    "tool_proficiencies": [
+      " Choose one kind of Artisan's Tools"
+    ],
+    "tags": [],
+    "languages": null,
+    "feature": null,
+    "equipment_options": {
+      "A": {
+        "items": [
+          "Artisan's Tools (same as above), 2 Pouches, Traveler's Clothes, 32 GP"
+        ]
+      },
+      "B": {
+        "items": [
+          "50 GP"
+        ]
+      }
+    },
+    "created_at": "2025-10-15T09:16:32.023+00:00"
+  },
+  {
+    "id": "be4fbd4b-fd97-470d-af38-40b9b5f5f5f7",
+    "name": "Charlatan",
+    "source": "Player's Handbook",
+    "description": "Once you were old enough to order an ale, you soon had a favorite stool in every tavern within ten miles of where you were born. As you traveled the circuit from public house to watering hole, you learned to prey on unfortunates who were in the market for a comforting lie or two—perhaps a sham potion or forged ancestry records.",
+    "ability_scores": [
+      "Dexterity",
+      "Constitution",
+      "Charisma"
+    ],
+    "feat": "Skilled",
+    "skill_proficiencies": [
+      "Deception",
+      "Sleight of Hand"
+    ],
+    "tool_proficiencies": [
+      "Forgery Kit"
+    ],
+    "tags": [],
+    "languages": null,
+    "feature": null,
+    "equipment_options": {
+      "A": {
+        "items": [
+          "Forgery Kit, Costume, Fine Clothes, 15 GP"
+        ]
+      },
+      "B": {
+        "items": [
+          "50 GP"
+        ]
+      }
+    },
+    "created_at": "2025-10-15T09:16:33.252+00:00"
+  },
+  {
+    "id": "01c7a4cc-3659-4181-9f0c-8945468e053a",
+    "name": "Criminal",
+    "source": "Player's Handbook",
+    "description": "You eked out a living in dark alleyways, cutting purses or burgling shops. Perhaps you were part of a small gang of like-minded wrongdoers who looked out for each other. Or maybe you were a lone wolf, fending for yourself against the local thieves’ guild and more fearsome lawbreakers.",
+    "ability_scores": [
+      "Dexterity",
+      "Constitution",
+      "Intelligence"
+    ],
+    "feat": "Alert",
+    "skill_proficiencies": [
+      "Sleight of Hand",
+      "Stealth"
+    ],
+    "tool_proficiencies": [
+      "Thieves' Tools"
+    ],
+    "tags": [],
+    "languages": null,
+    "feature": null,
+    "equipment_options": {
+      "A": {
+        "items": [
+          "2 Daggers",
+          "Thieves' Tools",
+          "Crowbar",
+          "2 Pouches",
+          "Traveler’s Clothes",
+          "16 GP"
+        ]
+      },
+      "B": {
+        "items": [
+          "50 GP"
+        ]
+      }
+    },
+    "created_at": "2025-10-15T09:16:33.718+00:00"
+  },
+  {
+    "id": "aa9f3c4c-0958-477e-8c57-f8410ce78120",
+    "name": "Entertainer",
+    "source": "Player's Handbook",
+    "description": "You spent much of your youth following roving fairs and carnivals, performing odd jobs for musicians and acrobats in exchange for lessons. You may have learned how to walk a tightrope, how to play a lute in a distinct style, or how to recite poetry with impeccable diction. To this day, you thrive on applause and long for the stage.",
+    "ability_scores": [
+      "Strength",
+      "Dexterity",
+      "Charisma"
+    ],
+    "feat": "Musician",
+    "skill_proficiencies": [
+      "Acrobatics",
+      "Performance"
+    ],
+    "tool_proficiencies": [
+      "Choose one kind of Musical Instrument"
+    ],
+    "tags": [],
+    "languages": null,
+    "feature": null,
+    "equipment_options": {
+      "A": {
+        "items": [
+          "Musical Instrument (same as above), 2 Costumes, Mirror, Perfume, Traveler's Clothes, 11 GP"
+        ]
+      },
+      "B": {
+        "items": [
+          "50 GP"
+        ]
+      }
+    },
+    "created_at": "2025-10-15T09:16:34.213+00:00"
+  },
+  {
+    "id": "e440744a-7cf1-4937-85e3-abac3e6fc0f0",
+    "name": "Farmer",
+    "source": "Player's Handbook",
+    "description": "You grew up close to the land. Years tending animals and cultivating the earth rewarded you with patience and good health. You have a keen appreciation for nature's bounty alongside a healthy respect for nature's wrath.",
+    "ability_scores": [
+      "Strength",
+      "Constitution",
+      "Wisdom"
+    ],
+    "feat": "Tough",
+    "skill_proficiencies": [
+      "Animal Handling",
+      "Nature"
+    ],
+    "tool_proficiencies": [
+      "Carpenter's Tools"
+    ],
+    "tags": [],
+    "languages": null,
+    "feature": null,
+    "equipment_options": {
+      "A": {
+        "items": [
+          "Sickle, Carpenter's Tools, Healer's Kit, Iron Pot, Shovel, 30 GP"
+        ]
+      },
+      "B": {
+        "items": [
+          "50 GP"
+        ]
+      }
+    },
+    "created_at": "2025-10-15T09:16:34.673+00:00"
+  },
+  {
+    "id": "cb0be1fd-953e-4d6f-88d7-344263f5f6c3",
+    "name": "Guard",
+    "source": "Player's Handbook",
+    "description": "Your feet ache when you remember the countless hours you spent at your post in the tower. You were trained to keep one eye looking outside the wall, watching for marauders sweeping from the nearby forest, and your other eye looking inside the wall, searching for cutpurses and troublemakers.",
+    "ability_scores": [
+      "Strength",
+      "Intelligence",
+      "Wisdom"
+    ],
+    "feat": "Alert",
+    "skill_proficiencies": [
+      "Athletics",
+      "Perception"
+    ],
+    "tool_proficiencies": [
+      "Choose one kind of Gaming Set"
+    ],
+    "tags": [],
+    "languages": null,
+    "feature": null,
+    "equipment_options": {
+      "A": {
+        "items": [
+          "Spear, Light Crossbow, 20 Bolts, Gaming Set (same as above), Hooded Lantern, Manacles, Quiver, Traveler's Clothes, 12 GP"
+        ]
+      },
+      "B": {
+        "items": [
+          "50 GP"
+        ]
+      }
+    },
+    "created_at": "2025-10-15T09:16:35.166+00:00"
+  },
+  {
+    "id": "e4dd8e3d-eb06-40d7-bf87-4f74f06cfd07",
+    "name": "Guide",
+    "source": "Player's Handbook",
+    "description": "You came of age outdoors, far from settled lands. Your home was anywhere you chose to spread your bedroll. There are wonders in the wilderness—strange monsters, pristine forests and streams, overgrown ruins of great halls once trod by giants—and you learned to fend for yourself as you explored them. From time to time, you guided friendly nature priests who instructed you in the fundamentals of channeling the magic of the wild.",
+    "ability_scores": [
+      "Dexterity",
+      "Constitution",
+      "Wisdom"
+    ],
+    "feat": "Magic Initiate (Druid)",
+    "skill_proficiencies": [
+      "Stealth",
+      "Survival"
+    ],
+    "tool_proficiencies": [
+      "Cartographer's Tools"
+    ],
+    "tags": [],
+    "languages": null,
+    "feature": null,
+    "equipment_options": {
+      "A": {
+        "items": [
+          "Shortbow, 20 Arrows, Cartographer's Tools, Bedroll, Quiver, Tent, Traveler's Clothes, 3 GP"
+        ]
+      },
+      "B": {
+        "items": [
+          "50 GP"
+        ]
+      }
+    },
+    "created_at": "2025-10-15T09:16:35.634+00:00"
+  },
+  {
+    "id": "3f526659-bb82-4a51-9dd1-b6d6e5f39ac8",
+    "name": "Hermit",
+    "source": "Player's Handbook",
+    "description": "You spent your early years secluded in a hut or monastery located well beyond the outskirts of the nearest settlement. In those days, your only companions were the creatures of the forest and those who would occasionally visit to bring news of the outside world and supplies. The solitude allowed you to spend many hours pondering the mysteries of creation.",
+    "ability_scores": [
+      "Constitution",
+      "Wisdom",
+      "Charisma"
+    ],
+    "feat": "Healer",
+    "skill_proficiencies": [
+      "Medicine",
+      "Religion"
+    ],
+    "tool_proficiencies": [
+      "Herbalism Kit"
+    ],
+    "tags": [],
+    "languages": null,
+    "feature": null,
+    "equipment_options": {
+      "A": {
+        "items": [
+          "Quarterstaff, Herbalism Kit, Bedroll, Book (philosophy), Lamp, Oil (3 flasks), Traveler's Clothes, 16 GP"
+        ]
+      },
+      "B": {
+        "items": [
+          "50 GP"
+        ]
+      }
+    },
+    "created_at": "2025-10-15T09:16:36.126+00:00"
+  },
+  {
+    "id": "4e451fdf-46f5-4596-a155-943b773e0739",
+    "name": "Mercant",
+    "source": "Player's Handbook",
+    "description": "You were apprenticed to a trader, caravan master, or shopkeeper, learning the fundamentals of commerce. You traveled broadly, and you earned a living by buying and selling the raw materials artisans need to practice their craft or finished works from such crafters. You might have transported goods from one place to another (by ship, wagon, or caravan) or bought them from traveling traders and sold them in your own shop.",
+    "ability_scores": [
+      "Constitution",
+      "Intelligence",
+      "Charisma"
+    ],
+    "feat": "Lucky",
+    "skill_proficiencies": [
+      "Animal Handling",
+      "Persuasion"
+    ],
+    "tool_proficiencies": [
+      "Navigator's Tools"
+    ],
+    "tags": [],
+    "languages": null,
+    "feature": null,
+    "equipment_options": {
+      "A": {
+        "items": [
+          "Navigator's Tools, 2 Pouches, Traveler's Clothes, 22 GP"
+        ]
+      },
+      "B": {
+        "items": [
+          "50 GP"
+        ]
+      }
+    },
+    "created_at": "2025-10-15T09:16:36.593+00:00"
+  },
+  {
+    "id": "8eefc6bb-4f91-4aa8-9fca-a10575594326",
+    "name": "Noble",
+    "source": "Player's Handbook",
+    "description": "You were raised in a castle, surrounded by wealth, power, and privilege. Your family of minor aristocrats ensured that you received a first-class education, some of which you appreciated and some of which you resented. Your time in the castle, especially the many hours you spent observing your family at court, also taught you a great deal about leadership.",
+    "ability_scores": [
+      "Strength",
+      "Intelligence",
+      "Charisma"
+    ],
+    "feat": "Skilled",
+    "skill_proficiencies": [
+      "History",
+      "Persuasion"
+    ],
+    "tool_proficiencies": [
+      "Choose one kind of Gaming Set"
+    ],
+    "tags": [],
+    "languages": null,
+    "feature": null,
+    "equipment_options": {
+      "A": {
+        "items": [
+          " Gaming Set (same as above), Fine Clothes, Perfume, 29 GP"
+        ]
+      },
+      "B": {
+        "items": [
+          "50 GP"
+        ]
+      }
+    },
+    "created_at": "2025-10-15T09:16:37.078+00:00"
+  },
+  {
+    "id": "0ed57d66-5855-4e6d-93a8-a6a5f0af5bdf",
+    "name": "Sage",
+    "source": "Player's Handbook",
+    "description": "You spent your formative years traveling between manors and monasteries, performing various odd jobs and services in exchange for access to their libraries. You whiled away many a long evening studying books and scrolls, learning the lore of the multiverse—even the rudiments of magic—and your mind yearns for more.",
+    "ability_scores": [
+      "Constitution",
+      "Intelligence",
+      "Wisdom"
+    ],
+    "feat": "Magic Initiate (Wizard)",
+    "skill_proficiencies": [
+      "Arcana",
+      "History"
+    ],
+    "tool_proficiencies": [
+      "Calligrapher's Supplies"
+    ],
+    "tags": [],
+    "languages": null,
+    "feature": null,
+    "equipment_options": {
+      "A": {
+        "items": [
+          "Quarterstaff, Calligrapher's Supplies, Book (history), Parchment (8 sheets), Robe, 8 GP"
+        ]
+      },
+      "B": {
+        "items": [
+          "50 GP"
+        ]
+      }
+    },
+    "created_at": "2025-10-15T09:16:37.545+00:00"
+  },
+  {
+    "id": "2751a0ed-c495-4981-b18b-c040a8e4d759",
+    "name": "Sailor",
+    "source": "Player's Handbook",
+    "description": "You lived as a seafarer, wind at your back and decks swaying beneath your feet. You've perched on barstools in more ports of call than you can remember, faced mighty storms, and swapped stories with folk who live beneath the waves.",
+    "ability_scores": [
+      "Strength",
+      "Dexterity",
+      "Wisdom"
+    ],
+    "feat": "Tavern Brawler",
+    "skill_proficiencies": [
+      "Acrobatics",
+      "Perception"
+    ],
+    "tool_proficiencies": [
+      "Navigator's Tools"
+    ],
+    "tags": [],
+    "languages": null,
+    "feature": null,
+    "equipment_options": {
+      "A": {
+        "items": [
+          "Dagger, Navigator's Tools, Rope, Traveler's Clothes, 20 GP"
+        ]
+      },
+      "B": {
+        "items": [
+          "50 GP"
+        ]
+      }
+    },
+    "created_at": "2025-10-15T09:16:38.403+00:00"
+  },
+  {
+    "id": "d94c0b69-8b75-4581-afec-3006d7ce9f5a",
+    "name": "Scribe",
+    "source": "Player's Handbook",
+    "description": "You spent formative years in a scriptorium, a monastery dedicated to the preservation of knowledge, or a government agency, where you learned to write with a clear hand and produce finely written texts. Perhaps you scribed government documents or copied tomes of literature. You might have some skill as a writer of poetry, narrative, or scholarly research. Above all, you have a careful attention to detail, helping you avoid introducing mistakes to the documents you copy and create.",
+    "ability_scores": [
+      "Dexterity",
+      "Intelligence",
+      "Wisdom"
+    ],
+    "feat": "Skilled",
+    "skill_proficiencies": [
+      "Investigation",
+      "Perception"
+    ],
+    "tool_proficiencies": [
+      "Calligrapher's Supplies"
+    ],
+    "tags": [],
+    "languages": null,
+    "feature": null,
+    "equipment_options": {
+      "A": {
+        "items": [
+          "(A) Calligrapher's Supplies, Fine Clothes, Lamp, Oil (3 flasks), Parchment (12 sheets), 23 GP; or (B) 50 GP"
+        ]
+      }
+    },
+    "created_at": "2025-10-15T09:16:38.864+00:00"
+  },
+  {
+    "id": "45b57845-f94e-472f-94d2-9a0b33e512d9",
+    "name": "Soldier",
+    "source": "Player's Handbook",
+    "description": "You began training for war as soon as you reached adulthood and carry precious few memories of life before you took up arms. Battle is in your blood. Sometimes you catch yourself reflexively performing the basic fighting exercises you learned first. Eventually, you put that training to use on the battlefield, protecting the realm by waging war.",
+    "ability_scores": [
+      "Strength",
+      "Dexterity",
+      "Constitution"
+    ],
+    "feat": "Savage Attacker",
+    "skill_proficiencies": [
+      "Athletics",
+      "Intimidation"
+    ],
+    "tool_proficiencies": [
+      "Choose one kind of Gaming Set"
+    ],
+    "tags": [],
+    "languages": null,
+    "feature": null,
+    "equipment_options": {
+      "A": {
+        "items": [
+          "(A) Spear, Shortbow, 20 Arrows, Gaming Set (same as above), Healer's Kit, Quiver, Traveler's Clothes, 14 GP"
+        ]
+      },
+      "B": {
+        "items": [
+          "(B) 50 GP"
+        ]
+      }
+    },
+    "created_at": "2025-10-15T09:16:39.337+00:00"
+  },
+  {
+    "id": "f737f85e-0982-4cc6-a629-0253ec1428bf",
+    "name": "Wayfarer",
+    "source": "Player’s Handbook",
+    "description": "You grew up on the streets surrounded by similarly ill-fated castoffs, a few of them friends and a few of them rivals. You slept where you could and did odd jobs for food. At times, when the hunger became unbearable, you resorted to theft. Still, you never lost your pride and never abandoned hope. Fate is not yet finished with you.",
+    "ability_scores": [
+      "Dexterity",
+      "Wisdom",
+      "Charisma"
+    ],
+    "feat": "Lucky",
+    "skill_proficiencies": [
+      "Insight",
+      "Stealth"
+    ],
+    "tool_proficiencies": [
+      "Thieves' Tools"
+    ],
+    "tags": [],
+    "languages": null,
+    "feature": null,
+    "equipment_options": {
+      "A": {
+        "items": [
+          "2 Daggers, Thieves' Tools, Gaming Set (any), Bedroll, 2 Pouches, Traveler's Clothes, 16 GP; or (B) 50 GP"
+        ]
+      }
+    },
+    "created_at": "2025-10-15T09:16:40.274+00:00"
+  }
+]

@@ -12,27 +12,23 @@ function generateCode(length) {
 }
 
 function generateWorldId() {
-  // 20 random code internal
   return generateCode(20);
 }
 
 function generatePublicId() {
-  // 23 random code untuk public
   return generateCode(23);
 }
 
-// 📄 GET semua world (admin)
 export async function getWorlds() {
   const { data, error } = await supabase
     .from("worlds")
-    .select("*") // termasuk jsonb & password (nanti bisa disembunyikan di controller)
+    .select("*") 
     .order("created_at", { ascending: false });
 
   if (error) throw error;
   return data;
 }
 
-// 📄 GET satu world berdasarkan id (UUID row)
 export async function getWorldById(id) {
   const { data, error } = await supabase
     .from("worlds")
@@ -44,7 +40,6 @@ export async function getWorldById(id) {
   return data;
 }
 
-// 📄 (opsional tapi biasanya kepake) GET world by public_id
 export async function getWorldByPublicId(publicId) {
   const { data, error } = await supabase
     .from("worlds")

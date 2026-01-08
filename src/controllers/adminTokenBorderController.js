@@ -25,7 +25,6 @@ function parseIsPaid(value, fallback = false) {
   return value === true || value === "true" || value === 1 || value === "1";
 }
 
-// ================== LIST ==================
 export const listTokenBordersAdmin = async (req, res) => {
   try {
     const borders = await getTokenBorders();

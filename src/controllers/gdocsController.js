@@ -57,13 +57,7 @@ export const exportGdocHtmlHandler = async (req, res) => {
   }
 };
 
-/**
- * =========================================================
- * META (OAUTH)
- * =========================================================
- * GET /api/gdocs/meta?fileId=...
- * Header: Authorization: Bearer <google_access_token>
- */
+
 export const gdocMetaHandler = async (req, res) => {
   try {
     const fileId = req.query.fileId;

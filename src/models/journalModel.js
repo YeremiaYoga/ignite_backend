@@ -18,11 +18,7 @@ export async function listAllJournals({ q = null } = {}) {
   return { data, error };
 }
 
-/**
- * Ambil journal sesuai user:
- * - public
- * - private milik userId
- */
+
 export async function listJournalsByUser({ userId, q = null } = {}) {
   let query = supabase
     .from("journals")

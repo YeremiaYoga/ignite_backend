@@ -15,10 +15,7 @@ function pick(obj, keys = []) {
   return out;
 }
 
-/* =========================
-   GET EVENTS
-   GET /ignite/calendar-events?calendar_id=&year=&month=
-========================= */
+
 export async function getIgniteCalendarEvents(req, res) {
   try {
     const { calendar_id, year, month } = req.query;
@@ -80,7 +77,6 @@ export async function createIgniteCalendarEvent(req, res) {
       "repeat_unit",
       "repeat_interval",
       "repeat_count",
-      "is_preset",
       "private",
     ]);
 
@@ -109,10 +105,7 @@ export async function createIgniteCalendarEvent(req, res) {
   }
 }
 
-/* =========================
-   UPDATE EVENT
-   PATCH /ignite/calendar-events/:id
-========================= */
+
 export async function updateIgniteCalendarEvent(req, res) {
   try {
     const { id } = req.params;
@@ -167,10 +160,7 @@ export async function updateIgniteCalendarEvent(req, res) {
   }
 }
 
-/* =========================
-   DELETE EVENT
-   DELETE /ignite/calendar-events/:id
-========================= */
+
 export async function deleteIgniteCalendarEvent(req, res) {
   try {
     const { id } = req.params;

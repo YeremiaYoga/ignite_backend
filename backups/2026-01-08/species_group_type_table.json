@@ -1,0 +1,58 @@
+[
+  {
+    "id": "d1262c38-9976-45df-9ed5-5357d7115277",
+    "name": "Goblin",
+    "description": null,
+    "created_at": "2025-11-05T06:49:47.270872+00:00",
+    "updated_at": "2025-11-05T06:49:47.270872+00:00"
+  },
+  {
+    "id": "69a46e23-2338-4fec-addd-bf079c077967",
+    "name": "Dwarf",
+    "description": "Stout and enduring folk who dwell in mountains and stone halls. Dwarves are known for their craftsmanship, sense of honor, and unwavering loyalty to clan and kin. Their societies often revolve around mining, forging, and ancestral tradition.",
+    "created_at": "2025-11-05T06:48:50.624021+00:00",
+    "updated_at": "2025-11-05T06:48:50.624021+00:00"
+  },
+  {
+    "id": "2a0d3bc4-5f63-49d7-a020-c2d2c482295a",
+    "name": "Human",
+    "description": "The most adaptable and ambitious of all peoples. Humans thrive in every environment, their societies ranging from great empires to frontier settlements. Their short lives drive them toward innovation, exploration, and leadership.",
+    "created_at": "2025-11-05T06:48:59.336567+00:00",
+    "updated_at": "2025-11-05T06:48:59.336567+00:00"
+  },
+  {
+    "id": "6c55f7f3-ee9f-4f60-8a22-7e45686e7a3c",
+    "name": "Halfing",
+    "description": "Small, nimble, and cheerful folk who value comfort, food, and community. Despite their size, halflings are remarkably brave and lucky, surviving where others might fall through a mix of charm and fortune.",
+    "created_at": "2025-11-05T06:49:06.515646+00:00",
+    "updated_at": "2025-11-05T06:49:06.515646+00:00"
+  },
+  {
+    "id": "6d989c99-b764-4fa7-a54c-28cf81907bb1",
+    "name": "Elf",
+    "description": "Graceful, long-lived people tied deeply to magic and nature. Elves prize freedom, artistry, and the pursuit of perfection. Their forms vary from the forest-dwelling Wood Elves to the mystical Eladrin of the Feywild and the dark-skinned Drow of the Underdark.",
+    "created_at": "2025-11-05T06:48:43.545268+00:00",
+    "updated_at": "2025-11-05T06:48:43.545268+00:00"
+  },
+  {
+    "id": "eb980b7e-1347-45c0-a97b-79a35923db05",
+    "name": "Gnome",
+    "description": "Curious, inventive, and fey-touched people with boundless creativity. Gnomes find joy in discovery, illusion, and craftsmanship, often blending magic and invention in playful ways.",
+    "created_at": "2025-11-05T06:49:13.32922+00:00",
+    "updated_at": "2025-11-05T06:49:13.32922+00:00"
+  },
+  {
+    "id": "1f637228-89cd-4e1d-8961-019db99d6654",
+    "name": "Orc",
+    "description": "Strong and determined beings shaped by hardship and endurance. Orcs embrace strength and spirit, while Half-Orcs walk between two worlds, often proving their worth through valor and resolve.",
+    "created_at": "2025-11-05T06:49:34.812311+00:00",
+    "updated_at": "2025-11-05T06:49:34.812311+00:00"
+  },
+  {
+    "id": "d42c635e-e08f-4d34-bb92-f38c73756019",
+    "name": "Tieflings",
+    "description": "Descendants of infernal pacts or cursed bloodlines. Tieflings bear fiendish traits—horns, tails, or strange eyes—but their hearts and destinies are their own. Many struggle between acceptance and the stigma of their heritage.",
+    "created_at": "2025-11-05T06:50:44.208328+00:00",
+    "updated_at": "2025-11-05T06:50:44.208328+00:00"
+  }
+]

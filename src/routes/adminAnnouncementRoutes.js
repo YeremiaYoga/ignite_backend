@@ -13,15 +13,10 @@ import { verifyUserFullAuth } from "../middlewares/verifyUserFullAuth.js";
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-/**
- * 🔹 PUBLIC endpoint
- * Example: GET /announcements?position=left
- */
+
 router.get("/public", getAnnouncementPublic);
 
-/**
- * 🔹 ADMIN endpoints
- */
+
 router.get("/", verifyUserFullAuth, adminListAnnouncements);
 
 router.post(

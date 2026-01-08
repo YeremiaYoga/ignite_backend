@@ -116,12 +116,7 @@ export const deleteModifierCtrl = async (req, res) => {
   res.json({ success: true });
 };
 
-/* ======================================================
-   🧩 SUBTYPE OPERATIONS
-====================================================== */
 
-// ➕ Tambah subtype ke modifier
-// POST /modifiers/:id/subtypes
 export const addSubtypeCtrl = async (req, res) => {
   try {
     const { id } = req.params;

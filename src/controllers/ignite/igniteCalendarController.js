@@ -36,7 +36,9 @@ function toInt(v, fallback = null) {
 }
 
 function normalizeKey(s) {
-  return String(s || "").trim().toLowerCase();
+  return String(s || "")
+    .trim()
+    .toLowerCase();
 }
 
 function findEraByAbbrOrName(eraList, eraCodeOrName) {
@@ -50,12 +52,6 @@ function findEraByAbbrOrName(eraList, eraCodeOrName) {
   );
 }
 
-/**
- * total rule:
- * - if era.total exists => use it as absolute max span (>=0)
- * - else if start and end both exist => abs(end - start)
- * - else (end is null/current era) => unlimited (null)
- */
 function computeEraTotal(eraObj) {
   const explicit = toInt(eraObj?.total, null);
   if (explicit !== null && explicit >= 0) return explicit;
@@ -67,25 +63,6 @@ function computeEraTotal(eraObj) {
   return Math.abs(end - start);
 }
 
-/**
- * current_year input:
- *  {
- *    era: "BC" | "AC" | (or name),
- *    era_year: number (can be negative),
- *    true_year: (ignored; computed)
- *  }
- *
- * compute:
- *   true_year = era.start + era_year
- *
- * validation:
- * - era must exist in era list
- * - era_year must be integer (can be negative)
- * - if era has fixed range (end not null):
- *     true_year must be within [min(start,end), max(start,end)]
- * - if era.total exists:
- *     era_year must be within [-total, +total] (soft bound)
- */
 function validateAndBuildCurrentYear({ eraList, input }) {
   if (!input || typeof input !== "object") return { ok: true, value: null };
 
@@ -98,7 +75,10 @@ function validateAndBuildCurrentYear({ eraList, input }) {
 
   const eraObj = findEraByAbbrOrName(eraList, eraCode);
   if (!eraObj)
-    return { ok: false, message: "Selected era not found in calendar era list" };
+    return {
+      ok: false,
+      message: "Selected era not found in calendar era list",
+    };
 
   const start = toInt(eraObj?.start, null);
   const end = toInt(eraObj?.end, null);
@@ -119,7 +99,6 @@ function validateAndBuildCurrentYear({ eraList, input }) {
       };
     }
   } else {
-
     const total = computeEraTotal(eraObj);
     if (total !== null && Math.abs(eraYear) > total) {
       return {
@@ -138,7 +117,6 @@ function validateAndBuildCurrentYear({ eraList, input }) {
     },
   };
 }
-
 
 function validateAndBuildLeapYear(input) {
   if (input === null) return { ok: true, value: null };
@@ -192,8 +170,6 @@ export async function getIgniteCalendars(req, res) {
         .status(400)
         .json({ success: false, message: result.error.message });
     }
-
-    // redundant safety: ensure only mine
     const mine = (result.data || []).filter((c) => c.creator_id === userId);
 
     const rows = mine.map((c) => ({
@@ -207,7 +183,6 @@ export async function getIgniteCalendars(req, res) {
       meta: {
         page: result.page ?? toInt(page, 1) ?? 1,
         limit: result.limit ?? toInt(limit, 50) ?? 50,
-        // prefer count if model provides it, else fallback
         total: result.count ?? result.total ?? rows.length,
       },
     });
@@ -249,10 +224,6 @@ export async function getIgnitePublicCalendars(req, res) {
   }
 }
 
-/**
- * Owner-only detail
- * GET /ignite/calendars/:id
- */
 export async function getIgniteCalendarById(req, res) {
   try {
     const { id } = req.params;
@@ -305,10 +276,6 @@ export async function getIgniteCalendarByShareId(req, res) {
   }
 }
 
-/**
- * Create calendar
- * POST /ignite/calendars
- */
 export async function createIgniteCalendar(req, res) {
   try {
     const body = req.body || {};
@@ -341,7 +308,6 @@ export async function createIgniteCalendar(req, res) {
         .json({ success: false, message: "name is required" });
     }
 
-    // If user sets current_year, era list must exist (for validation)
     if (payload.current_year && !Array.isArray(payload.era)) {
       return res.status(400).json({
         success: false,
@@ -349,7 +315,6 @@ export async function createIgniteCalendar(req, res) {
       });
     }
 
-    // ✅ validate + compute current_year server-side
     if (payload.current_year) {
       const check = validateAndBuildCurrentYear({
         eraList: payload.era,
@@ -363,7 +328,6 @@ export async function createIgniteCalendar(req, res) {
       payload.current_year = check.value;
     }
 
-    // ✅ validate leap_year server-side (snake_case)
     if (payload.leap_year !== undefined) {
       const checkLeap = validateAndBuildLeapYear(payload.leap_year);
       if (!checkLeap.ok) {
@@ -417,7 +381,7 @@ export async function updateIgniteCalendar(req, res) {
       "weather",
       "moon_cycle",
       "current_year",
-      "leap_year", // snake_case
+      "leap_year",
       "private",
     ]);
 
@@ -435,7 +399,6 @@ export async function updateIgniteCalendar(req, res) {
     if (existing.creator_id !== userId)
       return res.status(403).json({ success: false, message: "Forbidden" });
 
-    // If user sets current_year, need era list for validation (payload.era or existing.era)
     if (payload.current_year) {
       const eraListForValidation = payload.era ?? existing.era;
 
@@ -458,7 +421,6 @@ export async function updateIgniteCalendar(req, res) {
       payload.current_year = check.value;
     }
 
-    // ✅ validate leap_year server-side (snake_case)
     if (payload.leap_year !== undefined) {
       const checkLeap = validateAndBuildLeapYear(payload.leap_year);
       if (!checkLeap.ok) {
