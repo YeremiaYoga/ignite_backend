@@ -53,7 +53,9 @@ async function ensureFriendCode(userId) {
     throw updateErr;
   }
 
-  console.log(`✅ Friend code generated for user ${userId}: ${updated.friend_code}`);
+  console.log(
+    `✅ Friend code generated for user ${userId}: ${updated.friend_code}`
+  );
   return updated.friend_code;
 }
 
@@ -132,7 +134,7 @@ async function syncUserLimitsFromTier(userId) {
       // ✅ NEW: journal_limit
       journal_limit: isUnlimited
         ? null
-        : (tierRow.journal_limit ?? journalFallback),
+        : tierRow.journal_limit ?? journalFallback,
     };
 
     const { error: updateErr } = await supabase
@@ -141,7 +143,10 @@ async function syncUserLimitsFromTier(userId) {
       .eq("id", userId);
 
     if (updateErr) {
-      console.error("❌ Gagal update user limits dari tier:", updateErr.message);
+      console.error(
+        "❌ Gagal update user limits dari tier:",
+        updateErr.message
+      );
     } else {
       console.log(`✅ User ${userId} limits synced from tier ${payload.tier}`);
     }
@@ -149,7 +154,6 @@ async function syncUserLimitsFromTier(userId) {
     console.error("❌ syncUserLimitsFromTier error:", e.message);
   }
 }
-
 
 router.get("/auth", (req, res) => {
   const { user_id } = req.query;
@@ -255,7 +259,10 @@ router.get("/callback", async (req, res) => {
     const membershipStatus = membership?.attributes?.patron_status || "free";
 
     if (!patreonId) {
-      console.error("❌ Tidak ada patreonId di response Patreon:", userRes.data);
+      console.error(
+        "❌ Tidak ada patreonId di response Patreon:",
+        userRes.data
+      );
       return res.status(500).json({ error: "Invalid Patreon response" });
     }
 
@@ -283,6 +290,8 @@ router.get("/callback", async (req, res) => {
       .eq("patreon_id", patreonId)
       .maybeSingle();
 
+    const nowIso = new Date().toISOString();
+
     const basePatch = {
       email,
       full_name: fullName,
@@ -293,8 +302,14 @@ router.get("/callback", async (req, res) => {
       access_token,
       refresh_token,
       expires_in,
-      patreon_data: userRes.data,
-      updated_at: new Date().toISOString(),
+
+      patreon_data: {
+        fetched_at: nowIso,
+        raw_user: userRes.data,
+        raw_token: tokenRes.data,
+      },
+
+      updated_at: nowIso,
     };
 
     if (existingPatreon) {
@@ -317,43 +332,24 @@ router.get("/callback", async (req, res) => {
       ]);
     }
 
-    // 8️⃣ Snapshot penuh ke patreon_data
     try {
       const now = new Date().toISOString();
 
-      const { data: existingLog, error: logFetchError } = await supabase
-        .from("patreon_data")
-        .select("id")
-        .eq("patreon_id", patreonId)
-        .maybeSingle();
-
-      if (logFetchError && logFetchError.code !== "PGRST116") {
-        console.error("⚠️ Gagal cek existing patreon_data:", logFetchError.message);
-      }
-
-      const payload = {
-        user_id: linkedUserId,
-        patreon_id: patreonId,
+      const snapshot = {
+        fetched_at: now,
         raw_user: userRes.data,
         raw_token: tokenRes.data,
-        updated_at: now,
       };
 
-      if (existingLog) {
-        await supabase
-          .from("patreon_data")
-          .update(payload)
-          .eq("id", existingLog.id);
-      } else {
-        await supabase.from("patreon_data").insert([
-          {
-            ...payload,
-            created_at: now,
-          },
-        ]);
-      }
+      await supabase
+        .from("user_patreon")
+        .update({
+          patreon_data: snapshot,
+          updated_at: now,
+        })
+        .eq("patreon_id", patreonId);
     } catch (logErr) {
-      console.error("⚠️ Gagal upsert ke patreon_data:", logErr.message);
+      console.error("⚠️ Gagal update snapshot patreon_data:", logErr.message);
     }
 
     // 9️⃣ Buat JWT
