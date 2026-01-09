@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "kofi_user_id": "BROWSER_1761885373092",
+    "kofi_user_name": "BrowserTester",
+    "type": null,
+    "message": "Sent via GET from browser",
+    "amount": 1,
+    "currency": "USD",
+    "membership_tier": "TestTier",
+    "raw_payload": {
+      "amount": 1,
+      "message": "Sent via GET from browser",
+      "currency": "USD",
+      "from_name": "BrowserTester",
+      "tier_name": "TestTier",
+      "supporter_user_id": "BROWSER_1761885373092"
+    },
+    "verified": true,
+    "created_at": "2025-10-31T04:36:52.651+00:00"
+  },
+  {
+    "id": 2,
+    "kofi_user_id": "BROWSER_1761885403934",
+    "kofi_user_name": "BrowserTester",
+    "type": null,
+    "message": "Sent via GET from browser",
+    "amount": 1,
+    "currency": "USD",
+    "membership_tier": "TestTier",
+    "raw_payload": {
+      "amount": 1,
+      "message": "Sent via GET from browser",
+      "currency": "USD",
+      "from_name": "BrowserTester",
+      "tier_name": "TestTier",
+      "supporter_user_id": "BROWSER_1761885403934"
+    },
+    "verified": true,
+    "created_at": "2025-10-31T04:37:23.38814+00:00"
+  }
+]

@@ -53,8 +53,9 @@ function computeAverageRating(ratings) {
   const avgFloor = Math.floor(avgRaw);
 
   const avgLetter =
-    Object.entries(RATING_SCORES).find(([, score]) => score === avgFloor)?.[0] ||
-    null;
+    Object.entries(RATING_SCORES).find(
+      ([, score]) => score === avgFloor
+    )?.[0] || null;
 
   return { avgLetter, avgScore: avgFloor, count };
 }
@@ -319,7 +320,8 @@ function getRangeInfo(spell) {
     if (!units || !value) return { type: "other", feet: null };
 
     let feet = value;
-    if (units === "mi" || units === "mile" || units === "miles") feet = value * 5280;
+    if (units === "mi" || units === "mile" || units === "miles")
+      feet = value * 5280;
 
     return { type: "numeric", feet };
   }
@@ -438,8 +440,8 @@ export const getIgniteSpells = async (req, res) => {
     );
 
     // ========= tri lists (fallback to legacy ONLY lists) =========
-    const classOnlyList = (parseListParam(classesOnly) || legacyClassList).map((v) =>
-      cap(String(v))
+    const classOnlyList = (parseListParam(classesOnly) || legacyClassList).map(
+      (v) => cap(String(v))
     );
     const classBlackList = (parseListParam(classesBlacklist) || []).map((v) =>
       cap(String(v))
@@ -507,9 +509,13 @@ export const getIgniteSpells = async (req, res) => {
 
     // ========= range numeric =========
     const minR =
-      typeof minRange !== "undefined" && minRange !== "" ? Number(minRange) : null;
+      typeof minRange !== "undefined" && minRange !== ""
+        ? Number(minRange)
+        : null;
     const maxR =
-      typeof maxRange !== "undefined" && maxRange !== "" ? Number(maxRange) : null;
+      typeof maxRange !== "undefined" && maxRange !== ""
+        ? Number(maxRange)
+        : null;
 
     const rangeFlagSet = new Set(
       typeof rangeFlags === "string" && rangeFlags.length
@@ -529,14 +535,7 @@ export const getIgniteSpells = async (req, res) => {
     );
 
     // ========= supabase query =========
-    let query = supabase.from(SPELL_TABLE).select(`
-      *,
-      homebrew:homebrew_sources!homebrew_id (
-        id,
-        name,
-        code
-      )
-    `);
+    let query = supabase.from(SPELL_TABLE).select("*");
 
     const nameQuery = name || search;
     if (nameQuery) query = query.ilike("name", `%${nameQuery}%`);
@@ -555,7 +554,8 @@ export const getIgniteSpells = async (req, res) => {
       if (scores.length > 0) query = query.in("ratings_score", scores);
     } else if (ratingLetter) {
       const normalized = normalizeRating(ratingLetter);
-      if (normalized) query = query.eq("ratings_score", RATING_SCORES[normalized]);
+      if (normalized)
+        query = query.eq("ratings_score", RATING_SCORES[normalized]);
     }
 
     // sort
@@ -593,7 +593,8 @@ export const getIgniteSpells = async (req, res) => {
       let my_rating = null;
       if (userId) {
         const found = ratings.find((r) => String(r.user_id) === userId);
-        if (found?.rating) my_rating = { rating: String(found.rating).toUpperCase() };
+        if (found?.rating)
+          my_rating = { rating: String(found.rating).toUpperCase() };
       }
 
       return {
@@ -610,17 +611,18 @@ export const getIgniteSpells = async (req, res) => {
       };
     });
 
-    // ======================================================
-    // Homebrew rule (same behavior)
-    // ======================================================
     function matchHomebrewRule(spell) {
       const hasInclude = hbInclude.length > 0;
       const hasOnly = hbOnly.length > 0;
 
-      const hb = spell.homebrew;
+      // kalau join dimatikan, "homebrew" gak ada -> amanin
+      const hb = spell.homebrew || null;
+
+      // kamu mau null-kan dulu homebrew_id, jadi ini biasanya false
+      const isHomebrew = !!spell.homebrew_id;
+
       const hbName = hb ? String(hb.name || "").toLowerCase() : "";
       const hbCode = hb ? String(hb.code || "").toLowerCase() : "";
-      const isHomebrew = !!spell.homebrew_id;
 
       if (!hasInclude && !hasOnly) return !isHomebrew;
 
@@ -633,42 +635,32 @@ export const getIgniteSpells = async (req, res) => {
       return hbInclude.some((v) => hbCode === v || hbName.includes(v));
     }
 
-    // ======================================================
-    // Apply tri-state filters
-    // ======================================================
-    const rangeListLegacy = parseListParam(ranges); // still supported
+    const rangeListLegacy = parseListParam(ranges); 
     spells = spells.filter((spell) => {
       if (!matchHomebrewRule(spell)) return false;
 
-      // classes
-      const sClasses = getSpellClasses(spell); // e.g. ["Wizard","Cleric"]
+      const sClasses = getSpellClasses(spell); 
       if (!triListPass(sClasses, classOnlyList, classBlackList)) return false;
 
-      // levels -> string keys: "0".."9" (FE bisa kirim "Cantrips" juga)
       const lvlNum = Number(spell.level ?? 0);
-      const lvlKeys = lvlNum === 0 ? ["0", "cantrips", "cantrip"] : [String(lvlNum)];
-      // only/black list bisa berisi: "0", "cantrips", "1" dst
+      const lvlKeys =
+        lvlNum === 0 ? ["0", "cantrips", "cantrip"] : [String(lvlNum)];
       if (!triListPass(lvlKeys, levelOnlyList, levelBlackList)) return false;
 
-      // cast time
-      const ctKey = getActivationFilterKey(spell); // "action"
+      const ctKey = getActivationFilterKey(spell); 
       if (!triListPass([ctKey], castOnlyList, castBlackList)) return false;
 
-      // legacy range category
       if (rangeListLegacy && rangeListLegacy.length > 0) {
         const rKey = getRangeFilterKey(spell);
         if (!rKey || !rangeListLegacy.includes(rKey)) return false;
       }
 
-      // damage types
-      const dTypes = getDamageTypes(spell); // lowercase already
+      const dTypes = getDamageTypes(spell);
       if (!triListPass(dTypes, dmgOnlyList, dmgBlackList)) return false;
 
-      // school
       const sc = String(getSpellSchoolCode(spell) || "").toLowerCase();
       if (!triListPass([sc], schOnlyList, schBlackList)) return false;
 
-      // ritual/concentration tri-mode
       const isRitual = hasProperty(spell, "ritual");
       const isConc = hasProperty(spell, "concentration");
       if (!triPropPass(isRitual, ritualModeNum)) return false;
@@ -677,9 +669,6 @@ export const getIgniteSpells = async (req, res) => {
       return true;
     });
 
-    // =========================
-    // DURATION NUMERIC – JS side
-    // =========================
     if (minDur != null || maxDur != null || durationFlagSet.size > 0) {
       spells = spells.filter((spell) => {
         const sec = getDurationSeconds(spell);
@@ -697,9 +686,6 @@ export const getIgniteSpells = async (req, res) => {
       });
     }
 
-    // =========================
-    // RANGE NUMERIC – JS side
-    // =========================
     if (minR != null || maxR != null || rangeFlagSet.size > 0) {
       spells = spells.filter((spell) => {
         const info = getRangeInfo(spell);
@@ -727,9 +713,6 @@ export const getIgniteSpells = async (req, res) => {
       });
     }
 
-    // =========================
-    // FAVORITES ONLY – JS side
-    // =========================
     if (favoritesOnlyFlag) {
       if (!userId) spells = [];
       else spells = spells.filter((s) => s.is_favorite === true);
@@ -742,9 +725,6 @@ export const getIgniteSpells = async (req, res) => {
   }
 };
 
-// ======================================================
-// FAVORITE TOGGLE
-// ======================================================
 export const toggleFavoriteIgniteSpell = async (req, res) => {
   try {
     const { id } = req.params;
@@ -765,7 +745,9 @@ export const toggleFavoriteIgniteSpell = async (req, res) => {
     const exists = favorites.some((f) => String(f.user_id) === String(user.id));
 
     if (exists) {
-      favorites = favorites.filter((f) => String(f.user_id) !== String(user.id));
+      favorites = favorites.filter(
+        (f) => String(f.user_id) !== String(user.id)
+      );
     } else {
       favorites.push({
         user_id: String(user.id),

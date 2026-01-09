@@ -26,7 +26,7 @@ function convertTimeToCron(timeString) {
 // 🧩 Ambil dari env
 const BACKUP_TIME = process.env.BACKUP_TIME || "02:00";
 
-const backup_schedule = "0 */4 * * *";
+const backup_schedule = "0 */6 * * *";
 
 export const backupConfig = {
   enabled: true,
@@ -79,5 +79,5 @@ export const backupConfig = {
   ],
 
   schedule: backup_schedule,
-  readable_time: "every 4 hours",
+  readable_time: "every 6 hours",
 };

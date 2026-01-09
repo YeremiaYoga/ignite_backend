@@ -136,7 +136,6 @@ export const addTokenBorderAdmin = async (req, res) => {
   }
 };
 
-
 // ================== UPDATE ==================
 export const editTokenBorderAdmin = async (req, res) => {
   try {
@@ -210,15 +209,13 @@ export const editTokenBorderAdmin = async (req, res) => {
     const forbiddenFields = ["id", "created_at", "updated_at"];
     forbiddenFields.forEach((f) => delete parsed[f]);
 
- const updatedPayload = {
-  name: parsed.name ?? existing.name,
-  description: parsed.description ?? existing.description,
-  image_url: imagePath ?? parsed.image_url ?? existing.image_url ?? null,
-  is_paid: isPaid,
-  release_date:
-    parsed.release_date ?? existing.release_date ?? null,
-};
-
+    const updatedPayload = {
+      name: parsed.name ?? existing.name,
+      description: parsed.description ?? existing.description,
+      image_url: imagePath ?? parsed.image_url ?? existing.image_url ?? null,
+      is_paid: isPaid,
+      release_date: parsed.release_date ?? existing.release_date ?? null,
+    };
 
     const result = await updateTokenBorder(id, updatedPayload);
 

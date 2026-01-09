@@ -72,6 +72,8 @@ app.use(
       process.env.NEXT_PUBLIC_APP_ORIGIN_2,
       process.env.NEXT_PUBLIC_APP_ORIGIN_3,
       process.env.NEXT_PUBLIC_APP_ORIGIN_4,
+      process.env.NEXT_PUBLIC_APP_ORIGIN_5,
+      process.env.NEXT_PUBLIC_APP_ORIGIN_6,
       process.env.ADMIN_PANEL_ORIGIN_1,
     ],
     credentials: true,

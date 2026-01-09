@@ -1,0 +1,742 @@
+[
+  {
+    "name": "test duplicate",
+    "description": "123",
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/test-duplicate/1767944474034WVBVq8eh.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T07:41:15.225546+00:00",
+    "updated_at": "2026-01-09T07:41:15.225546+00:00",
+    "release_date": "2026-01-06",
+    "id": "022f51f5-d978-4e70-b409-eb84f6216d04"
+  },
+  {
+    "name": "test duplicate 2",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/test-duplicate-2/1767944629361h25dq0v9.webp",
+    "is_paid": true,
+    "created_at": "2026-01-09T07:43:50.580435+00:00",
+    "updated_at": "2026-01-09T07:43:50.580435+00:00",
+    "release_date": "2026-01-06",
+    "id": "6e7cdefe-9c72-4d11-a5fd-de5bf7bf47cd"
+  },
+  {
+    "name": "Noble Wreath of Aurum",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/noble-wreath-of-aurum/1767946746147eHy-y8Sd.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:18:47.500086+00:00",
+    "updated_at": "2026-01-09T08:18:47.500086+00:00",
+    "release_date": "2026-01-09",
+    "id": "4ab0104f-e54f-42d8-8378-698dea24c96f"
+  },
+  {
+    "name": "Eternal Sakura Blossom Frame",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/eternal-sakura-blossom-frame/1767946784572L4TPNO07.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:19:45.795982+00:00",
+    "updated_at": "2026-01-09T08:19:45.795982+00:00",
+    "release_date": "2026-01-09",
+    "id": "814eaa32-e274-4dac-8638-e057980b07dd"
+  },
+  {
+    "name": "Tranquil Ring",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/tranquil-ring/17679468223057stTwell.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:20:23.507834+00:00",
+    "updated_at": "2026-01-09T08:20:23.507834+00:00",
+    "release_date": "2026-01-09",
+    "id": "1f651fe7-df03-4607-85de-2281f58f98d6"
+  },
+  {
+    "name": "Wyrm's Fire-Tongue Ring",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/wyrm-s-fire-tongue-ring/1767946856962OhyKDQVa.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:20:58.161403+00:00",
+    "updated_at": "2026-01-09T08:20:58.161403+00:00",
+    "release_date": "2026-01-09",
+    "id": "6fc90f41-4c29-45f6-a58f-1c877882b874"
+  },
+  {
+    "name": "Northern Ice Crystal Bastion",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/northern-ice-crystal-bastion/1767946918609pQ0nZPsi.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:21:59.808279+00:00",
+    "updated_at": "2026-01-09T08:21:59.808279+00:00",
+    "release_date": "2026-01-09",
+    "id": "4af6c03f-0573-401d-8c8c-122253787c7f"
+  },
+  {
+    "name": "Luminous Gold Radiant Wreath",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/luminous-gold-radiant-wreath/17679469562504wRmEAYm.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:22:37.445659+00:00",
+    "updated_at": "2026-01-09T08:22:37.445659+00:00",
+    "release_date": "2026-01-09",
+    "id": "06a43052-5421-46b1-81cd-2c453ad54834"
+  },
+  {
+    "name": "Shadow Ash Night Aura",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/shadow-ash-night-aura/1767946983159jjInfGdb.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:23:04.348392+00:00",
+    "updated_at": "2026-01-09T08:23:04.348392+00:00",
+    "release_date": "2026-01-09",
+    "id": "bcfc9fc4-6bea-4037-b897-2cfb3324e863"
+  },
+  {
+    "name": "Corrosive Acid Green Cauldron",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/corrosive-acid-green-cauldron/1767947003879328zAdt1.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:23:25.065947+00:00",
+    "updated_at": "2026-01-09T08:23:25.065947+00:00",
+    "release_date": "2026-01-09",
+    "id": "81ae8338-152b-40bd-9094-f746c829d466"
+  },
+  {
+    "name": "Druid's Branch Ring",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/druid-s-branch-ring/1767947027101_eiXWQ5b.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:23:48.528496+00:00",
+    "updated_at": "2026-01-09T08:23:48.528496+00:00",
+    "release_date": "2026-01-09",
+    "id": "71661aa8-2831-4003-ad64-5fbf971f413a"
+  },
+  {
+    "name": "Starlight Magic Ball Arcana",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/starlight-magic-ball-arcana/1767947057309PfMVf22e.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:24:18.505485+00:00",
+    "updated_at": "2026-01-09T08:24:18.505485+00:00",
+    "release_date": "2026-01-09",
+    "id": "366d8d35-9fef-4ae2-bd57-3afd6fb00bbd"
+  },
+  {
+    "name": "Necromancer's Fossil Seal",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/necromancer-s-fossil-seal/1767947082913Mw3CcKuz.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:24:47.45474+00:00",
+    "updated_at": "2026-01-09T08:24:47.45474+00:00",
+    "release_date": "2026-01-09",
+    "id": "88828efa-ef05-4001-b396-278b016edc1f"
+  },
+  {
+    "name": "Grand Tarot Card Gold Filigree",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/grand-tarot-card-gold-filigree/1767947110485Zyqv1dtt.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:25:11.703966+00:00",
+    "updated_at": "2026-01-09T08:25:11.703966+00:00",
+    "release_date": "2026-01-09",
+    "id": "fae54ddb-890f-450a-815c-60e432ddedf6"
+  },
+  {
+    "name": "Knight's Honorable Mark",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/knight-s-honorable-mark/1767947129896B1R3ErrT.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:25:31.090449+00:00",
+    "updated_at": "2026-01-09T08:25:31.090449+00:00",
+    "release_date": "2026-01-09",
+    "id": "5626803d-b0b5-41eb-8240-90f6fafb511f"
+  },
+  {
+    "name": "Scout's Defensive Bow",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/scout-s-defensive-bow/1767947143817eWNp8F6e.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:25:45.014733+00:00",
+    "updated_at": "2026-01-09T08:25:45.014733+00:00",
+    "release_date": "2026-01-09",
+    "id": "c6ef6fe8-d4b5-4c04-8401-694575b6f701"
+  },
+  {
+    "name": "Red Rune Occultist Crystal",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/red-rune-occultist-crystal/1767947164362f0njk1wJ.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:26:05.547965+00:00",
+    "updated_at": "2026-01-09T08:26:05.547965+00:00",
+    "release_date": "2026-01-09",
+    "id": "75caab18-f2cf-4014-ab00-8025a3259796"
+  },
+  {
+    "name": "Twin-Element Magus Circle",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/twin-element-magus-circle/17679471857918jrOITjO.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:26:26.972965+00:00",
+    "updated_at": "2026-01-09T08:26:26.972965+00:00",
+    "release_date": "2026-01-09",
+    "id": "21b0e12e-ea5a-4309-992d-b0e13de58629"
+  },
+  {
+    "name": "Fire Netherling Demon Horns",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/fire-netherling-demon-horns/1767947199919idGSZXrl.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:26:41.095336+00:00",
+    "updated_at": "2026-01-09T08:26:41.095336+00:00",
+    "release_date": "2026-01-09",
+    "id": "d9f33f73-fb25-424e-bb40-d82692dbc02e"
+  },
+  {
+    "name": "Golden Keeper Facilitator Wreath",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/golden-keeper-facilitator-wreath/17679472205453uBNEx-F.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:27:01.993297+00:00",
+    "updated_at": "2026-01-09T08:27:01.993297+00:00",
+    "release_date": "2026-01-09",
+    "id": "cb9d9498-9c90-4f49-8dab-fd1c1275d476"
+  },
+  {
+    "name": "The Annihilation Lily Vine",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/the-annihilation-lily-vine/17679472569526xggqH4x.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:27:38.152041+00:00",
+    "updated_at": "2026-01-09T08:27:38.152041+00:00",
+    "release_date": "2026-01-09",
+    "id": "35d36ad6-4a58-40f6-bd38-504d91234244"
+  },
+  {
+    "name": "Holy Incarnation Purple Flames",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/holy-incarnation-purple-flames/1767947276332G7fsnv-p.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:27:57.515482+00:00",
+    "updated_at": "2026-01-09T08:27:57.515482+00:00",
+    "release_date": "2026-01-09",
+    "id": "24baa5c8-8fb2-4ab7-870e-32096b0c3744"
+  },
+  {
+    "name": "Purple Rune Anathema Curse Seal",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/purple-rune-anathema-curse-seal/1767947293339mdCjVAvl.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:28:14.544161+00:00",
+    "updated_at": "2026-01-09T08:28:14.544161+00:00",
+    "release_date": "2026-01-09",
+    "id": "416a1553-77f0-4813-b636-9c6c0eb09fa8"
+  },
+  {
+    "name": "Marauder's Golden Mac",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/marauder-s-golden-mac/1767947306047nrqW9Kio.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:28:27.227051+00:00",
+    "updated_at": "2026-01-09T08:28:27.227051+00:00",
+    "release_date": "2026-01-09",
+    "id": "4cf64a6f-2d0c-4d1c-a634-5a319422712a"
+  },
+  {
+    "name": "Elder Wyrm",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/elder-wyrm/1767947398392Yus0Sdzw.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:29:59.588748+00:00",
+    "updated_at": "2026-01-09T08:29:59.588748+00:00",
+    "release_date": "2026-01-09",
+    "id": "2cdaecb5-1a89-42f0-997a-c98c3fe4ca7b"
+  },
+  {
+    "name": "Lotus of Eternity",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/lotus-of-eternity/1767947420040Q4CwZuoR.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:30:21.228066+00:00",
+    "updated_at": "2026-01-09T08:30:21.228066+00:00",
+    "release_date": "2026-01-09",
+    "id": "1962eb17-8f2f-47ef-ab65-2932cd5b4c13"
+  },
+  {
+    "name": "Arcane Phial",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/arcane-phial/1767947448834ZPeD6iIR.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:30:50.02258+00:00",
+    "updated_at": "2026-01-09T08:30:50.02258+00:00",
+    "release_date": "2026-01-09",
+    "id": "c8b6076f-9e6f-4773-a00e-6870fb2c13bf"
+  },
+  {
+    "name": "Aetherbound Ascendant",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/aetherbound-ascendant/17679474736607gemb5Rm.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:31:17.013994+00:00",
+    "updated_at": "2026-01-09T08:31:17.013994+00:00",
+    "release_date": "2026-01-09",
+    "id": "333aa9c4-dea1-4197-a4fa-2504560bab2a"
+  },
+  {
+    "name": "Ironshaper",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/ironshaper/1767947495731ieP9k9A-.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:31:36.925602+00:00",
+    "updated_at": "2026-01-09T08:31:36.925602+00:00",
+    "release_date": "2026-01-09",
+    "id": "0c501ac0-7be1-4064-aef8-700a150c6463"
+  },
+  {
+    "name": "Ascetic of the Silent Path",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/ascetic-of-the-silent-path/1767947540064Ie8MCwQK.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:32:21.262513+00:00",
+    "updated_at": "2026-01-09T08:32:21.262513+00:00",
+    "release_date": "2026-01-09",
+    "id": "6f48b4b0-dad7-4242-8c80-eec1f0682232"
+  },
+  {
+    "name": "Tideborn",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/tideborn/1767947555477CtKnegHw.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:32:36.661812+00:00",
+    "updated_at": "2026-01-09T08:32:36.661812+00:00",
+    "release_date": "2026-01-09",
+    "id": "1de43837-f4b6-46d3-a613-4649d2f1d5a0"
+  },
+  {
+    "name": "Bladesong of Kings",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/bladesong-of-kings/1767947570586lI7kEJ3Z.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:32:51.790403+00:00",
+    "updated_at": "2026-01-09T08:32:51.790403+00:00",
+    "release_date": "2026-01-09",
+    "id": "be087d29-7c07-4aa2-b354-afc0a9aed05b"
+  },
+  {
+    "name": "Crimson Stalker",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/crimson-stalker/1767947588151u6hjTjcG.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:33:09.339958+00:00",
+    "updated_at": "2026-01-09T08:33:09.339958+00:00",
+    "release_date": "2026-01-09",
+    "id": "7e071782-cc54-4ac7-8bf9-bf4edaa8506a"
+  },
+  {
+    "name": "Arcforge Mechanist",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/arcforge-mechanist/1767947611230Jj_uwJaH.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:33:32.665441+00:00",
+    "updated_at": "2026-01-09T08:33:32.665441+00:00",
+    "release_date": "2026-01-09",
+    "id": "b468f397-1ab8-4d2c-85ce-4dc5de1cf3d6"
+  },
+  {
+    "name": "Golden yellow kingdom’s Sacred Vigil",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/golden-yellow-kingdom-s-sacred-vigil/1767947810122jmGMQfMo.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:36:51.3275+00:00",
+    "updated_at": "2026-01-09T08:36:51.3275+00:00",
+    "release_date": "2026-01-09",
+    "id": "93cb45dd-b333-42a5-b09b-9a61b04f43d0"
+  },
+  {
+    "name": "Amber orange kingdom’s Sacred Vigil",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/amber-orange-kingdom-s-sacred-vigil/1767947879465JB3M5bXA.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:38:00.982188+00:00",
+    "updated_at": "2026-01-09T08:38:00.982188+00:00",
+    "release_date": "2026-01-09",
+    "id": "7559dc11-45bc-4c8a-a8a4-23199718decd"
+  },
+  {
+    "name": "Lime green kingdom’s Sacred Vigil",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/lime-green-kingdom-s-sacred-vigil/17679479115497p7SH7qj.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:38:33.05986+00:00",
+    "updated_at": "2026-01-09T08:38:33.05986+00:00",
+    "release_date": "2026-01-09",
+    "id": "a3c45f73-4e92-4aa3-8dfe-649e7869001d"
+  },
+  {
+    "name": "Mint green kingdom’s Sacred Vigil",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/mint-green-kingdom-s-sacred-vigil/17679479278621oJgjV-l.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:38:49.050411+00:00",
+    "updated_at": "2026-01-09T08:38:49.050411+00:00",
+    "release_date": "2026-01-09",
+    "id": "ca7b7aa3-ae7a-4494-a11b-3fccb9551081"
+  },
+  {
+    "name": "Cyan blue kingdom’s Sacred Vigil",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/cyan-blue-kingdom-s-sacred-vigil/1767947977472PxGRmxOG.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:39:38.670587+00:00",
+    "updated_at": "2026-01-09T08:39:38.670587+00:00",
+    "release_date": "2026-01-09",
+    "id": "5767b0b7-4df1-44a1-b38a-b9563674c688"
+  },
+  {
+    "name": "Blue Azure kingdom’s Sacred Vigil",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/blue-azure-kingdom-s-sacred-vigil/1767948087960HAUtq-K7.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:41:29.142694+00:00",
+    "updated_at": "2026-01-09T08:41:29.142694+00:00",
+    "release_date": "2026-01-09",
+    "id": "a327c14f-710b-484e-9526-ffdbd47f7877"
+  },
+  {
+    "name": "Royal blue kingdom’s Sacred Vigil",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/royal-blue-kingdom-s-sacred-vigil/17679481130087RVJc4kB.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:41:54.195341+00:00",
+    "updated_at": "2026-01-09T08:41:54.195341+00:00",
+    "release_date": "2026-01-09",
+    "id": "02f43030-18f8-4050-b0ea-22b821f8da65"
+  },
+  {
+    "name": "Violet kingdom’s Sacred Vigil",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/violet-kingdom-s-sacred-vigil/1767948149807qImIlFhB.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:42:31.029543+00:00",
+    "updated_at": "2026-01-09T08:42:31.029543+00:00",
+    "release_date": "2026-01-09",
+    "id": "f3c19ac0-8e58-4fb2-a780-b50a6afe967e"
+  },
+  {
+    "name": "Purple kingdom’s Sacred Vigil",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/purple-kingdom-s-sacred-vigil/1767948168187WO1tfIF1.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:42:49.389403+00:00",
+    "updated_at": "2026-01-09T08:42:49.389403+00:00",
+    "release_date": "2026-01-09",
+    "id": "cb81a721-3473-44b2-bcb8-3ac69e0c3b5b"
+  },
+  {
+    "name": "Magenta kingdom’s Sacred Vigil",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/magenta-kingdom-s-sacred-vigil/1767948206986zXSwNr1q.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:43:28.186737+00:00",
+    "updated_at": "2026-01-09T08:43:28.186737+00:00",
+    "release_date": "2026-01-09",
+    "id": "13395172-0241-4f45-bf72-e0e93609816d"
+  },
+  {
+    "name": "Funchsia kingdom’s Sacred Vigil",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/funchsia-kingdom-s-sacred-vigil/1767948227672tSzJ9DAI.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:43:49.162426+00:00",
+    "updated_at": "2026-01-09T08:43:49.162426+00:00",
+    "release_date": "2026-01-09",
+    "id": "274276a1-5110-42de-a1be-e8ab4d81f1c8"
+  },
+  {
+    "name": "Golden brown kingdom’s Sacred Vigil",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/golden-brown-kingdom-s-sacred-vigil/1767948261705n-a7aMt_.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:44:23.470417+00:00",
+    "updated_at": "2026-01-09T08:44:23.470417+00:00",
+    "release_date": "2026-01-09",
+    "id": "b11caadf-5b8b-4efd-a106-7800f8ce7aa5"
+  },
+  {
+    "name": "Black kingdom’s Sacred Vigil",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/black-kingdom-s-sacred-vigil/176794830351446yjbb4M.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:45:04.726676+00:00",
+    "updated_at": "2026-01-09T08:45:04.726676+00:00",
+    "release_date": "2026-01-09",
+    "id": "ab6d7cab-7aec-4a15-93a0-e8bfdc60e94c"
+  },
+  {
+    "name": "White kingdom’s Sacred Vigil",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/white-kingdom-s-sacred-vigil/1767948323405rnVqBQz5.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:45:24.817331+00:00",
+    "updated_at": "2026-01-09T08:45:24.817331+00:00",
+    "release_date": "2026-01-09",
+    "id": "d7d688c6-5c53-4c99-92fd-af0bfe949e4c"
+  },
+  {
+    "name": "Green kingdom’s Sacred Vigil",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/green-kingdom-s-sacred-vigil/17679483414076AH7x3xR.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:45:42.600864+00:00",
+    "updated_at": "2026-01-09T08:45:42.600864+00:00",
+    "release_date": "2026-01-09",
+    "id": "64e221e0-88a6-4616-95d5-62f2b1fc5722"
+  },
+  {
+    "name": "Red kingdom’s Sacred Vigil",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/red-kingdom-s-sacred-vigil/1767948380519cyCimAGV.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:46:21.719864+00:00",
+    "updated_at": "2026-01-09T08:46:21.719864+00:00",
+    "release_date": "2026-01-09",
+    "id": "a9dacc1b-f3f9-410b-aa82-d9b8c720d2a0"
+  },
+  {
+    "name": "Blue kingdom’s Sacred Vigil",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/blue-kingdom-s-sacred-vigil/1767948417756KfeGCVYL.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:47:00.991399+00:00",
+    "updated_at": "2026-01-09T08:47:00.991399+00:00",
+    "release_date": "2026-01-09",
+    "id": "47ee550d-f386-4c28-a077-9c40140dcff5"
+  },
+  {
+    "name": "Aetherium galaxy",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/aetherium-galaxy/1767948543169LDYbXkqV.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:49:04.419067+00:00",
+    "updated_at": "2026-01-09T08:49:04.419067+00:00",
+    "release_date": "2026-01-09",
+    "id": "95d296d8-ce8e-437b-af17-b3d39156b864"
+  },
+  {
+    "name": "Genei's Incantation",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/genei-s-incantation/1767948566964RkfIMxsS.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:49:28.16286+00:00",
+    "updated_at": "2026-01-09T08:49:28.16286+00:00",
+    "release_date": "2026-01-09",
+    "id": "0b4cd629-7c26-4662-b794-2f44f350ad6d"
+  },
+  {
+    "name": "The Serpent's Briar Crown",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/the-serpent-s-briar-crown/1767948599620_ZwyakY4.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:50:00.994733+00:00",
+    "updated_at": "2026-01-09T08:50:00.994733+00:00",
+    "release_date": "2026-01-09",
+    "id": "bcc62009-1fab-41ee-8823-e9441d3f4dd4"
+  },
+  {
+    "name": "Mossy Rock Sentinel",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/mossy-rock-sentinel/17679486747902lGzJ4My.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:51:15.996318+00:00",
+    "updated_at": "2026-01-09T08:51:15.996318+00:00",
+    "release_date": "2026-01-09",
+    "id": "c1cd9a60-fb17-4d39-85e5-d725f6bbae94"
+  },
+  {
+    "name": "Gilded Plume Circlet",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/gilded-plume-circlet/1767948701568BKbPPGcZ.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:51:42.760342+00:00",
+    "updated_at": "2026-01-09T08:51:42.760342+00:00",
+    "release_date": "2026-01-09",
+    "id": "87f50a08-3bd3-4547-a170-2eaa8f0d5717"
+  },
+  {
+    "name": "Python Thorny Covenant",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/python-thorny-covenant/17679489490874NvSKxIM.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:55:50.336507+00:00",
+    "updated_at": "2026-01-09T08:55:50.336507+00:00",
+    "release_date": "2026-01-09",
+    "id": "df567042-1f77-470c-a7ac-d132fcc6fbe4"
+  },
+  {
+    "name": "Sylvan Wood Heart",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/sylvan-wood-heart/1767948973153EkVJsLYV.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:56:14.3548+00:00",
+    "updated_at": "2026-01-09T08:56:14.3548+00:00",
+    "release_date": "2026-01-09",
+    "id": "11696b16-126f-4e6f-88ae-1c006903913d"
+  },
+  {
+    "name": "Tooth Maw of the Beast",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/tooth-maw-of-the-beast/1767948989367yrI-S1eA.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:56:30.793772+00:00",
+    "updated_at": "2026-01-09T08:56:30.793772+00:00",
+    "release_date": "2026-01-09",
+    "id": "9a7bcc07-fb9c-4452-84a6-d8dee4bd368c"
+  },
+  {
+    "name": "Leafy Druid's Ward",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/leafy-druid-s-ward/1767949008095T4FqU-xJ.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:56:49.286285+00:00",
+    "updated_at": "2026-01-09T08:56:49.286285+00:00",
+    "release_date": "2026-01-09",
+    "id": "31af4c03-06fa-4271-960e-72ce0ed5ee4b"
+  },
+  {
+    "name": "Autumn Harvest Wreath",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/autumn-harvest-wreath/1767949031918GebT9nA0.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:57:13.353433+00:00",
+    "updated_at": "2026-01-09T08:57:13.353433+00:00",
+    "release_date": "2026-01-09",
+    "id": "0c53ce1f-2035-4130-8516-0a055df130e1"
+  },
+  {
+    "name": "Tiki Ancestral Idol",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/tiki-ancestral-idol/1767949071293hGxzTzV2.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:57:52.752166+00:00",
+    "updated_at": "2026-01-09T08:57:52.752166+00:00",
+    "release_date": "2026-01-09",
+    "id": "765b803c-83d8-4399-aef6-ee0f1c525450"
+  },
+  {
+    "name": "Fox's Lunar Spirit",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/fox-s-lunar-spirit/1767949096283evmstvAr.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:58:17.477348+00:00",
+    "updated_at": "2026-01-09T08:58:17.477348+00:00",
+    "release_date": "2026-01-09",
+    "id": "bfbe54b6-c3e6-435c-9590-f2f388ad2b42"
+  },
+  {
+    "name": "Divine Light Aurum",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/divine-light-aurum/1767949121171QDlu4E2B.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:58:42.375565+00:00",
+    "updated_at": "2026-01-09T08:58:42.375565+00:00",
+    "release_date": "2026-01-09",
+    "id": "f1fbb386-0cf8-48c2-8369-0b342e14990e"
+  },
+  {
+    "name": "Wayfaring Traveler Kit",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/wayfaring-traveler-kit/1767949179188Jq3dlh58.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T08:59:40.393248+00:00",
+    "updated_at": "2026-01-09T08:59:40.393248+00:00",
+    "release_date": "2026-01-09",
+    "id": "f46fdf57-4b1a-44cc-98b2-37cbf0d9bcad"
+  },
+  {
+    "name": "Lightning Storm-Caller Wings",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/lightning-storm-caller-wings/1767949211919oojtS0Ki.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T09:00:13.450165+00:00",
+    "updated_at": "2026-01-09T09:00:13.450165+00:00",
+    "release_date": "2026-01-09",
+    "id": "927a2ed7-aab6-4004-96a2-54c3d7409b17"
+  },
+  {
+    "name": "Spirit Demon Summons Portal",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/spirit-demon-summons-portal/1767949245269l4CxsUIP.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T09:00:46.467378+00:00",
+    "updated_at": "2026-01-09T09:00:46.467378+00:00",
+    "release_date": "2026-01-09",
+    "id": "1b4427f7-1fb9-4fe4-a8eb-60fefa1b91ce"
+  },
+  {
+    "name": "Black Hole Void Vortex",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/black-hole-void-vortex/17679492678629q36WK10.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T09:01:09.06798+00:00",
+    "updated_at": "2026-01-09T09:01:09.06798+00:00",
+    "release_date": "2026-01-09",
+    "id": "8e0e62c5-35bd-405e-ac9a-b19dfe721b0c"
+  },
+  {
+    "name": "Golden Boar Tavern Token",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/golden-boar-tavern-token/1767949296755ahaI0MsI.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T09:01:37.957623+00:00",
+    "updated_at": "2026-01-09T09:01:37.957623+00:00",
+    "release_date": "2026-01-09",
+    "id": "82f1f9ff-1f9d-4c02-aad0-10654ce8238b"
+  },
+  {
+    "name": "Iron-Clad Armor Aegis",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/iron-clad-armor-aegis/17679493163335ZyalkeN.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T09:01:57.529572+00:00",
+    "updated_at": "2026-01-09T09:01:57.529572+00:00",
+    "release_date": "2026-01-09",
+    "id": "dd8135a7-15d6-4cc5-8fbf-80a0eb3e1341"
+  },
+  {
+    "name": "Celestial Moonlight Shape",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/celestial-moonlight-shape/1767949338420bkQoBkVh.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T09:02:19.631662+00:00",
+    "updated_at": "2026-01-09T09:02:19.631662+00:00",
+    "release_date": "2026-01-09",
+    "id": "1e0c9ea8-fed9-47a7-99df-30edab1945a6"
+  },
+  {
+    "name": "Shadow Assassin’s Blade-Edge",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/shadow-assassin-s-blade-edge/1767949361560o3SObNvb.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T09:02:42.805573+00:00",
+    "updated_at": "2026-01-09T09:02:42.805573+00:00",
+    "release_date": "2026-01-09",
+    "id": "784af309-1cf6-4cb6-ac76-470b98fadf19"
+  },
+  {
+    "name": "Darkened Abyss Maw",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/darkened-abyss-maw/1767949393899E9xCczcY.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T09:03:15.116522+00:00",
+    "updated_at": "2026-01-09T09:03:15.116522+00:00",
+    "release_date": "2026-01-09",
+    "id": "b2f23c37-9c3d-4123-838f-47e9acd6a339"
+  },
+  {
+    "name": "Alchemical Beam-Booster Crest",
+    "description": null,
+    "image_url": "http://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/token-borders/alchemical-beam-booster-crest/1767949411870hkuvVXSh.webp",
+    "is_paid": false,
+    "created_at": "2026-01-09T09:03:33.074498+00:00",
+    "updated_at": "2026-01-09T09:03:33.074498+00:00",
+    "release_date": "2026-01-09",
+    "id": "bb4c04b3-e963-4db8-a03c-03f92e6576d7"
+  }
+]

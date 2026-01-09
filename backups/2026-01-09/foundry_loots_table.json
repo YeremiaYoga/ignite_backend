@@ -1,0 +1,165 @@
+[
+  {
+    "id": "6093b274-cea7-4d85-bf90-d3746faf6243",
+    "name": "Jeweled gold crown",
+    "type": "equipment",
+    "type_value": "trinket",
+    "base_item": "",
+    "properties": "[]",
+    "rarity": "",
+    "weight": 0,
+    "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/magic/control/control-influence-crown-gold.webp",
+    "price": 750000,
+    "compendium_source": null,
+    "source_book": "DMG 2024",
+    "raw_data": {
+      "img": "icons/magic/control/control-influence-crown-gold.webp",
+      "name": "Jeweled gold crown",
+      "type": "equipment",
+      "flags": {
+        "plutonium": {
+          "hash": "jeweled%20gold%20crown_xdmg",
+          "page": "items.html",
+          "source": "XDMG",
+          "propDroppable": "item"
+        }
+      },
+      "_stats": {
+        "systemId": "dnd5e",
+        "coreVersion": "13.351",
+        "createdTime": 1764016057417,
+        "exportSource": {
+          "uuid": "Item.bYsya4yxwbHZx0DJ",
+          "worldId": "ignite",
+          "systemId": "dnd5e",
+          "coreVersion": "13.351",
+          "systemVersion": "5.1.10"
+        },
+        "modifiedTime": 1764016061543,
+        "systemVersion": "5.1.10",
+        "lastModifiedBy": "0ETuiPKn7myc5Yj6",
+        "duplicateSource": null,
+        "compendiumSource": null
+      },
+      "folder": "4bHpItlCoOcoTATb",
+      "system": {
+        "type": {
+          "value": "trinket",
+          "baseItem": ""
+        },
+        "uses": {
+          "max": "",
+          "spent": 0,
+          "recovery": []
+        },
+        "armor": {
+          "dex": null,
+          "value": null,
+          "magicalBonus": null
+        },
+        "price": {
+          "value": 7500,
+          "denomination": "gp"
+        },
+        "crewed": false,
+        "rarity": "",
+        "source": {
+          "book": "DMG 2024",
+          "page": "215",
+          "rules": "2024",
+          "custom": "",
+          "license": "",
+          "revision": 1
+        },
+        "weight": {
+          "units": "lb",
+          "value": 0
+        },
+        "attuned": false,
+        "equipped": true,
+        "quantity": 1,
+        "strength": null,
+        "container": null,
+        "activities": {},
+        "attunement": "",
+        "identified": true,
+        "identifier": "jeweled-gold-crown",
+        "proficient": null,
+        "properties": [],
+        "description": {
+          "chat": "",
+          "value": "<div class=\"rd__b  rd__b--2\"></div>"
+        },
+        "unidentified": {
+          "description": ""
+        }
+      },
+      "effects": [],
+      "ownership": {
+        "default": 0
+      }
+    },
+    "format_data": {
+      "img": "icons/magic/control/control-influence-crown-gold.webp",
+      "name": "Jeweled gold crown",
+      "type": "equipment",
+      "system": {
+        "type": {
+          "value": "trinket",
+          "baseItem": ""
+        },
+        "uses": {
+          "max": "",
+          "spent": 0,
+          "recovery": []
+        },
+        "armor": {
+          "dex": null,
+          "value": null,
+          "magicalBonus": null
+        },
+        "price": {
+          "value": 7500,
+          "denomination": "gp"
+        },
+        "crewed": false,
+        "rarity": "",
+        "source": {
+          "book": "DMG 2024",
+          "page": "215",
+          "rules": "2024",
+          "custom": "",
+          "license": "",
+          "revision": 1
+        },
+        "weight": {
+          "units": "lb",
+          "value": 0
+        },
+        "attuned": false,
+        "equipped": true,
+        "quantity": 1,
+        "strength": null,
+        "container": null,
+        "activities": {},
+        "attunement": "",
+        "identified": true,
+        "identifier": "jeweled-gold-crown",
+        "proficient": null,
+        "properties": [],
+        "description": {
+          "chat": "",
+          "value": "<div class=\"rd__b  rd__b--2\"></div>"
+        },
+        "unidentified": {
+          "description": ""
+        }
+      },
+      "effects": []
+    },
+    "created_at": "2025-11-25T09:52:05.435118+00:00",
+    "updated_at": "2025-11-25T09:52:05.435118+00:00",
+    "favorites": [],
+    "favorites_count": 0
+  }
+]

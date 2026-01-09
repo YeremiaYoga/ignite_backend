@@ -25,7 +25,11 @@ export async function getTokenBorderById(id) {
 }
 
 export async function createTokenBorder(payload) {
-  return supabase.from("token_borders").insert(payload).select().single();
+  return supabase
+    .from("token_borders")
+    .insert(payload)
+    .select()
+    .single();
 }
 
 export async function updateTokenBorder(id, payload) {
@@ -36,6 +40,7 @@ export async function updateTokenBorder(id, payload) {
     .select()
     .single();
 }
+
 
 export async function deleteTokenBorder(id) {
   const { error } = await supabase.from(TABLE).delete().eq("id", id);

@@ -1,0 +1,166 @@
+[
+  {
+    "id": "c1df1ee9-0f37-4de8-bf42-7e924e4a9d8a",
+    "name": "Bag of Holding",
+    "type": "container",
+    "properties": "[\"mgc\",\"weightlessContents\"]",
+    "weight": 5,
+    "rarity": "uncommon",
+    "price": 40000,
+    "compendium_source": null,
+    "source_book": "DMG 2024",
+    "raw_data": {
+      "img": "icons/containers/bags/pack-engraved-leather-tan.webp",
+      "name": "Bag of Holding",
+      "type": "container",
+      "flags": {
+        "plutonium": {
+          "hash": "bag%20of%20holding_xdmg",
+          "page": "items.html",
+          "source": "XDMG",
+          "propDroppable": "item"
+        }
+      },
+      "_stats": {
+        "systemId": "dnd5e",
+        "coreVersion": "13.351",
+        "createdTime": 1763854026074,
+        "exportSource": {
+          "uuid": "Item.zwW50K9isCSrEBpZ",
+          "worldId": "ignite",
+          "systemId": "dnd5e",
+          "coreVersion": "13.351",
+          "systemVersion": "5.1.10"
+        },
+        "modifiedTime": 1763854026074,
+        "systemVersion": "5.1.10",
+        "lastModifiedBy": "0ETuiPKn7myc5Yj6",
+        "duplicateSource": null,
+        "compendiumSource": null
+      },
+      "folder": "2iDLYeAJG1V5czA7",
+      "system": {
+        "price": {
+          "value": 400,
+          "denomination": "gp"
+        },
+        "rarity": "uncommon",
+        "source": {
+          "book": "DMG 2024",
+          "page": "234",
+          "rules": "2024",
+          "custom": "",
+          "license": "",
+          "revision": 1
+        },
+        "weight": {
+          "units": "lb",
+          "value": 5
+        },
+        "attuned": false,
+        "capacity": {
+          "volume": {
+            "units": "cubicFoot"
+          },
+          "weight": {
+            "units": "lb",
+            "value": 500
+          }
+        },
+        "currency": {
+          "cp": 0,
+          "ep": 0,
+          "gp": 0,
+          "pp": 0,
+          "sp": 0
+        },
+        "equipped": true,
+        "quantity": 1,
+        "container": null,
+        "attunement": "",
+        "identified": true,
+        "identifier": "bag-of-holding",
+        "properties": [
+          "mgc",
+          "weightlessContents"
+        ],
+        "description": {
+          "chat": "",
+          "value": "<div class=\"rd__b  rd__b--2\"><p>This bag has an interior space considerably larger than its outside dimensions—roughly 2 feet square and 4 feet deep on the inside. The bag can hold up to 500 pounds, not exceeding a volume of 64 cubic feet. The bag weighs 5 pounds, regardless of its contents. Retrieving an item from the bag requires a @action[Utilize|XPHB] action.</p><p>If the bag is overloaded, pierced, or torn, it is destroyed, and its contents are scattered in the Astral Plane. If the bag is turned inside out, its contents spill forth unharmed, but the bag must be put right before it can be used again. The bag holds enough air for 10 minutes of breathing, divided by the number of breathing creatures inside.</p><p>Placing a <i>Bag of Holding</i> inside an extradimensional space created by a @item[Heward's Handy Haversack|XDMG], Portable Hole, or similar item instantly destroys both items and opens a gate to the Astral Plane. The gate originates where the one item was placed inside the other. Any creature within a 10-foot-radius @variantrule[Sphere [Area of Effect]|XPHB|Sphere] centered on the gate is sucked through it to a random location on the Astral Plane. The gate then closes. The gate is one-way and can't be reopened.</p></div>"
+        },
+        "unidentified": {
+          "description": ""
+        }
+      },
+      "effects": [],
+      "ownership": {
+        "default": 0
+      }
+    },
+    "format_data": {
+      "img": "icons/containers/bags/pack-engraved-leather-tan.webp",
+      "name": "Bag of Holding",
+      "type": "container",
+      "system": {
+        "price": {
+          "value": 400,
+          "denomination": "gp"
+        },
+        "rarity": "uncommon",
+        "source": {
+          "book": "DMG 2024",
+          "page": "234",
+          "rules": "2024",
+          "custom": "",
+          "license": "",
+          "revision": 1
+        },
+        "weight": {
+          "units": "lb",
+          "value": 5
+        },
+        "attuned": false,
+        "capacity": {
+          "volume": {
+            "units": "cubicFoot"
+          },
+          "weight": {
+            "units": "lb",
+            "value": 500
+          }
+        },
+        "currency": {
+          "cp": 0,
+          "ep": 0,
+          "gp": 0,
+          "pp": 0,
+          "sp": 0
+        },
+        "equipped": true,
+        "quantity": 1,
+        "container": null,
+        "attunement": "",
+        "identified": true,
+        "identifier": "bag-of-holding",
+        "properties": [
+          "mgc",
+          "weightlessContents"
+        ],
+        "description": {
+          "chat": "",
+          "value": "<div class=\"rd__b  rd__b--2\"><p>This bag has an interior space considerably larger than its outside dimensions—roughly 2 feet square and 4 feet deep on the inside. The bag can hold up to 500 pounds, not exceeding a volume of 64 cubic feet. The bag weighs 5 pounds, regardless of its contents. Retrieving an item from the bag requires a @action[Utilize|XPHB] action.</p><p>If the bag is overloaded, pierced, or torn, it is destroyed, and its contents are scattered in the Astral Plane. If the bag is turned inside out, its contents spill forth unharmed, but the bag must be put right before it can be used again. The bag holds enough air for 10 minutes of breathing, divided by the number of breathing creatures inside.</p><p>Placing a <i>Bag of Holding</i> inside an extradimensional space created by a @item[Heward's Handy Haversack|XDMG], Portable Hole, or similar item instantly destroys both items and opens a gate to the Astral Plane. The gate originates where the one item was placed inside the other. Any creature within a 10-foot-radius @variantrule[Sphere [Area of Effect]|XPHB|Sphere] centered on the gate is sucked through it to a random location on the Astral Plane. The gate then closes. The gate is one-way and can't be reopened.</p></div>"
+        },
+        "unidentified": {
+          "description": ""
+        }
+      },
+      "effects": []
+    },
+    "created_at": "2025-11-24T09:50:26.260658+00:00",
+    "updated_at": "2025-11-24T09:50:26.260658+00:00",
+    "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/containers/bags/pack-engraved-leather-tan.webp",
+    "attunement": "",
+    "favorites": [],
+    "favorites_count": 0
+  }
+]

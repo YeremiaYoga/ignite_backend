@@ -1,6 +1,5 @@
 import supabase from "../utils/db.js";
 
-
 export const createCharacter = async (characterData) => {
   try {
     const { data, error } = await supabase
@@ -22,12 +21,9 @@ export const createCharacter = async (characterData) => {
   }
 };
 
-
-
 export const getAllCharacters = async () => {
   return await supabase.from("characters").select("*");
 };
-
 
 export const getAllCharactersByUserId = async (userId) => {
   try {
@@ -38,7 +34,10 @@ export const getAllCharactersByUserId = async (userId) => {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("❌ Supabase getAllCharactersByUserId error:", error.message);
+      console.error(
+        "❌ Supabase getAllCharactersByUserId error:",
+        error.message
+      );
       return { data: null, error };
     }
 
@@ -49,7 +48,6 @@ export const getAllCharactersByUserId = async (userId) => {
     return { data: null, error: err };
   }
 };
-
 
 export const getCharactersByUserId = async (userId) => {
   return await supabase
@@ -71,7 +69,6 @@ export const getCharacterById = async (id) => {
   return await supabase.from("characters").select("*").eq("id", id).single();
 };
 
-
 export const updateCharacter = async (id, updateData) => {
   return await supabase
     .from("characters")
@@ -79,7 +76,6 @@ export const updateCharacter = async (id, updateData) => {
     .eq("id", id)
     .select();
 };
-
 
 export const deleteCharacter = async (id) => {
   return await supabase.from("characters").delete().eq("id", id);
@@ -115,7 +111,6 @@ export const markExpiredTrashCharactersAsDeleted = async (userId) => {
     return { data: null, error: err };
   }
 };
-
 
 export const getCharacterByPublicId = async (publicId) => {
   try {
@@ -169,8 +164,6 @@ export const getCharacterByPublicId = async (publicId) => {
   }
 };
 
-
-
 export const getCharacterByPrivateId = async (privateId) => {
   try {
     const { data: character, error } = await supabase
@@ -180,7 +173,10 @@ export const getCharacterByPrivateId = async (privateId) => {
       .maybeSingle();
 
     if (error) {
-      console.error("❌ Supabase getCharacterByPrivateId error:", error.message);
+      console.error(
+        "❌ Supabase getCharacterByPrivateId error:",
+        error.message
+      );
       return { data: null, error };
     }
 
@@ -206,7 +202,7 @@ export const getCharacterByPrivateId = async (privateId) => {
 
     const merged = {
       ...character,
-      incumbency, 
+      incumbency,
     };
 
     console.log(
