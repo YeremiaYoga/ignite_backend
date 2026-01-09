@@ -64,6 +64,7 @@ export const getTokenBorderAdmin = async (req, res) => {
 };
 
 // ================== CREATE ==================
+// ================== CREATE ==================
 export const addTokenBorderAdmin = async (req, res) => {
   try {
     console.log("🧩 [addTokenBorderAdmin] raw body:", req.body);
@@ -87,22 +88,35 @@ export const addTokenBorderAdmin = async (req, res) => {
       req.headers.authorization?.split(" ")[1] ||
       null;
 
-    // 1 file gambar: "image"
+    const MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
+
     const imageUrl = await uploadToMedia({
       file: req.files?.["image"]?.[0],
       path: "token-borders",
       folderName,
       token,
+      mediaUrl: MEDIA_URL,
     });
 
     const isPaid = parseIsPaid(parsed.is_paid, false);
 
-    const allowedFields = ["name", "description", "image_url", "is_paid"];
+    // parse release date
+    const releaseDate = parsed.release_date || null;
+
+    const allowedFields = [
+      "name",
+      "description",
+      "image_url",
+      "is_paid",
+      "release_date",
+    ];
 
     const baseData = {
-      ...parsed,
-      image_url: imageUrl || parsed.image_url || null,
+      name: parsed.name,
+      description: parsed.description || null,
+      image_url: imageUrl || null,
       is_paid: isPaid,
+      release_date: releaseDate,
     };
 
     const cleanData = Object.fromEntries(
@@ -121,6 +135,7 @@ export const addTokenBorderAdmin = async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 };
+
 
 // ================== UPDATE ==================
 export const editTokenBorderAdmin = async (req, res) => {
@@ -195,12 +210,15 @@ export const editTokenBorderAdmin = async (req, res) => {
     const forbiddenFields = ["id", "created_at", "updated_at"];
     forbiddenFields.forEach((f) => delete parsed[f]);
 
-    const updatedPayload = {
-      name: parsed.name ?? existing.name,
-      description: parsed.description ?? existing.description,
-      image_url: imagePath ?? parsed.image_url ?? existing.image_url ?? null,
-      is_paid: isPaid,
-    };
+ const updatedPayload = {
+  name: parsed.name ?? existing.name,
+  description: parsed.description ?? existing.description,
+  image_url: imagePath ?? parsed.image_url ?? existing.image_url ?? null,
+  is_paid: isPaid,
+  release_date:
+    parsed.release_date ?? existing.release_date ?? null,
+};
+
 
     const result = await updateTokenBorder(id, updatedPayload);
 

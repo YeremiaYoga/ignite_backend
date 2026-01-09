@@ -25,47 +25,16 @@ export async function getTokenBorderById(id) {
 }
 
 export async function createTokenBorder(payload) {
-  const insertData = {
-    name: payload.name,
-    description: payload.description ?? null,
-    image_url: payload.image_url ?? null,
-    is_paid: payload.is_paid ?? false,
-  };
-
-  const { data, error } = await supabase
-    .from(TABLE)
-    .insert(insertData)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  return supabase.from("token_borders").insert(payload).select().single();
 }
 
 export async function updateTokenBorder(id, payload) {
-  const updateData = {
-    name: payload.name,
-    description: payload.description,
-    image_url: payload.image_url,
-    is_paid: payload.is_paid,
-  };
-
-  // buang undefined biar nggak nulis field aneh
-  Object.keys(updateData).forEach((key) => {
-    if (typeof updateData[key] === "undefined") {
-      delete updateData[key];
-    }
-  });
-
-  const { data, error } = await supabase
-    .from(TABLE)
-    .update(updateData)
+  return supabase
+    .from("token_borders")
+    .update(payload)
     .eq("id", id)
     .select()
     .single();
-
-  if (error) throw error;
-  return data;
 }
 
 export async function deleteTokenBorder(id) {
