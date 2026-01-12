@@ -1,18 +1,34 @@
 import jwt from "jsonwebtoken";
 import supabase from "../utils/db.js";
 
+function getTokenFromReq(req) {
+  // 1) Cookie (utama)
+  const cookieToken = req.cookies?.ignite_access_token;
+  if (cookieToken) return cookieToken;
+
+  // 2) Authorization header
+  const auth = req.headers.authorization || req.headers.Authorization;
+  if (!auth) return null;
+
+  // Support: "Bearer xxx" atau "xxx"
+  const parts = String(auth).trim().split(" ");
+  if (parts.length === 1) return parts[0];
+  if (parts.length === 2 && /^bearer$/i.test(parts[0])) return parts[1];
+
+  return null;
+}
+
 export const verifyUserIgnite = async (req, res, next) => {
   try {
     console.log("🧩 [Auth] Starting verifyUserIgnite...");
 
-    const token =
-      req.cookies?.ignite_access_token ||
-      req.headers.authorization?.split(" ")[1];
+    const token = getTokenFromReq(req);
 
     if (!token) {
-      console.warn("⚠️ [Auth] Missing ignite_access_token.");
+      console.warn("⚠️ [Auth] Missing token (cookie or Authorization).");
       return res.status(401).json({ error: "Missing access token" });
     }
+
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET_USER);

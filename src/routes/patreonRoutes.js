@@ -275,15 +275,12 @@ router.get("/callback", async (req, res) => {
       tierName,
     });
 
-    // 5️⃣ Pastikan user punya friend_code
     const friendCode = await ensureFriendCode(finalUser.id);
 
-    // 6️⃣ Sinkron limit user dari tier (table `tiers`)
     await syncUserLimitsFromTier(finalUser.id);
 
     const linkedUserId = userIdFromState || finalUser?.id || null;
 
-    // 7️⃣ Upsert ke table user_patreon
     const { data: existingPatreon } = await supabase
       .from("user_patreon")
       .select("id, user_id")
@@ -366,26 +363,12 @@ router.get("/callback", async (req, res) => {
       { expiresIn: "9h" }
     );
 
-    const userAgent = req.get("User-Agent") || "";
-    const isFirefox = /firefox/i.test(userAgent);
-
-    if (isFirefox) {
-      res.cookie("ignite_access_token", accessTokenJWT, {
-        httpOnly: true,
-        secure: isProd,
-        sameSite: isProd ? "none" : "lax",
-        path: "/",
-        maxAge: 9 * 60 * 60 * 1000,
-      });
-    } else {
-      console.log("🌐 Setting cookie untuk non-Firefox");
-      res.cookie("ignite_access_token", accessTokenJWT, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        maxAge: 9 * 60 * 60 * 1000,
-      });
-    }
+    res.cookie("ignite_access_token", accessTokenJWT, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 9 * 60 * 60 * 1000,
+    });
 
     res.redirect(`${process.env.REDIRECT_PATREON_DOMAIN}/patreon-success`);
   } catch (err) {

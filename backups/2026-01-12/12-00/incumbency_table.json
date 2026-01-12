@@ -1,0 +1,549 @@
+[
+  {
+    "id": "23c6084b-8c6e-4ab2-a39d-a0b6e71d929a",
+    "name": "Gray Wolves - Pugilist",
+    "version": 1,
+    "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/skills/melee/unarmed-punch-fist-blue.webp",
+    "alignment_good": false,
+    "alignment_neutral": false,
+    "alignment_evil": true,
+    "alignment_unknown": true,
+    "role": "damage dealer",
+    "hp_scale": 8,
+    "cv_minimum": 12,
+    "cv_flat_cost": 4,
+    "cv_percent_cost": 0,
+    "ac_calc": "10+Dexterity Modifier +Wisdom Modifier",
+    "initiative_bonus": 1,
+    "description": "",
+    "abilities": [
+      {
+        "cost": "Action",
+        "name": "Bloody Punch Strike",
+        "type": "Basic",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/skills/melee/unarmed-punch-fist-yellow-red.webp",
+        "visibility": true,
+        "description": "Melee Weapon Attack. Reach 5 ft. One target. \n<span style=\"font-weight: bolder;\">Attack :</span> (Dex or Str + Prof) to hit\n<span style=\"font-weight: bolder;\">Hit :</span> (<span style=\"font-size: inherit;\">Martial Arts Die</span>)+Mod bludgeoning damage plus (<span style=\"font-size: inherit;\">Martial Arts Die)</span> necrotic damage.",
+        "type_ability": [
+          "Damage"
+        ],
+        "additional_cost": "Necrotic damage equal proficiency bonus"
+      },
+      {
+        "cost": "Passive",
+        "name": "Ichor Flow",
+        "type": "Passive",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/skills/wounds/blood-drip-droplet-red.webp",
+        "visibility": true,
+        "description": "<ul data-start=\"117\" data-end=\"465\"><li data-start=\"117\" data-end=\"222\"><p data-start=\"119\" data-end=\"222\"><strong data-start=\"119\" data-end=\"136\">Agile Motion.</strong> Your movement speed increases by an amount equal to <strong data-start=\"189\" data-end=\"219\">5 × your proficiency bonus, </strong><span data-start=\"189\" data-end=\"219\">Alongside your climb speed is equal to your movement speed.</span></p></li><li data-start=\"224\" data-end=\"385\"><p data-start=\"226\" data-end=\"385\"><strong data-start=\"226\" data-end=\"247\">Vital Resurgence.</strong> At the start of your turn, you regain hit points equal to <strong data-start=\"306\" data-end=\"342\">twice your Challenge Rating (CR)</strong>, provided you have at least 1 hit point. Whenever you are hit with a critical, you are unable to regenerate until the end of your next turn.</p></li><li data-start=\"387\" data-end=\"465\"><p data-start=\"389\" data-end=\"465\"><strong data-start=\"389\" data-end=\"408\">Resilient Form.</strong> You have <span data-start=\"418\" data-end=\"462\" style=\"font-weight: bold;\">resistance to poison and necrotic damage</span><b>.\n</b></p><h3 data-start=\"624\" data-end=\"650\"><strong data-start=\"628\" data-end=\"648\">Martial Arts Die.</strong></h3><p data-start=\"651\" data-end=\"784\">Your unarmed strikes and certain abilities use a <strong data-start=\"700\" data-end=\"720\">Martial Arts die</strong>, which scales with your Challenge Rating</p><i>CR 1–4 (2d4), CR 5–8 (2d6), CR 9–12 (2d8), CR 13–16 (2d10), CR 17–20 (2d12), CR 21+ (4d8).<br></i></li></ul>",
+        "type_ability": [
+          "Buff",
+          "Information",
+          "Movement"
+        ],
+        "additional_cost": ""
+      },
+      {
+        "cost": "Reaction",
+        "name": "Deflecting Attack",
+        "type": "Technique",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/skills/movement/ball-spinning-blue.webp",
+        "visibility": true,
+        "description": "<p data-start=\"330\" data-end=\"552\">When you are hit by a melee or ranged weapon attack that deals bludgeoning, piercing, or slashing damage, you can use your Reaction to reduce the damage by <strong data-start=\"486\" data-end=\"549\">1d10 + your Dexterity modifier + your Challenge Rating (CR)</strong>.</p>\n<p data-start=\"554\" data-end=\"1038\">If the damage is reduced to 0, you can redirect the attack’s force toward another creature. Choose one creature you can see within <strong data-start=\"685\" data-end=\"695\">5 feet</strong> of you (if the triggering attack was melee) or within <strong data-start=\"750\" data-end=\"761\">60 feet</strong> (if the attack was ranged and the target isn’t behind total cover). The chosen creature must succeed on a <strong data-start=\"868\" data-end=\"894\">Dexterity saving throw</strong> or take damage equal to <strong data-start=\"919\" data-end=\"983\">two rolls of your Martial Arts die + your Dexterity modifier</strong>. The damage type is the same as the triggering attack.</p>",
+        "type_ability": [
+          "Damage Reduction",
+          "Saving Throw"
+        ],
+        "additional_cost": ""
+      },
+      {
+        "cost": "Passive",
+        "name": "Multiattack",
+        "type": "Talent",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/skills/melee/strike-weapons-orange.webp",
+        "visibility": true,
+        "description": "<p data-pm-slice=\"1 1 [&quot;div&quot;,{&quot;_preserve&quot;:{&quot;class&quot;:&quot;rd__b  rd__b--3&quot;}}]\">You makes equal to Proficiency Bonus of Bloody Punch Strike attacks as a part of your Action. \nAlongside additional Bloody Punch Strike attacks equal to Proficiency Bonus negative one, as a part of your Bonus Action.</p>",
+        "type_ability": [],
+        "additional_cost": ""
+      }
+    ],
+    "created_at": "2025-10-23T09:28:55.264+00:00",
+    "updated_at": "2025-12-11T04:03:19.974+00:00",
+    "key": "gray_wolves_-_pugilist"
+  },
+  {
+    "id": "66bf900f-39d7-4c75-90d7-541cb9ba96d6",
+    "name": "Exploit of The Rune of Destruction",
+    "version": 1,
+    "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/creatures/fish/fish-fangtooth-skeletal-green.webp",
+    "alignment_good": true,
+    "alignment_neutral": true,
+    "alignment_evil": false,
+    "alignment_unknown": true,
+    "role": "debuffer",
+    "hp_scale": 5,
+    "cv_minimum": 5,
+    "cv_flat_cost": 5,
+    "cv_percent_cost": 0,
+    "ac_calc": "10 (Studded Leather Armor) + Dexterity Modifier",
+    "initiative_bonus": 0,
+    "description": "A precision-based debuffer who excels at breaking down enemy defenses and exploiting elemental weaknesses. The Exploit of the Rune of Destruction focuses on spreading poison and empowering attacks with corrupted runes, reducing enemy resistances and leaving them vulnerable to follow-up damage. They thrive in prolonged combat, layering multiple debuffs and punishing foes that rely on resistances or durability. \n\n Their combat rhythm revolves around striking quickly, applying conditions, and manipulating damage types to dismantle stronger enemies piece by piece. Though not built for raw burst power, their sustained pressure and weakening effects turn every ally’s attack into a finishing blow.",
+    "abilities": [
+      {
+        "cost": "Action",
+        "name": "Poison Blade",
+        "type": "Basic",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/weapons/swords/greatsword-crossguard-flanged.webp",
+        "visibility": true,
+        "description": "Melee or Ranged Weapon Attack. Reach 5 ft, or range 60 ft. One target. \n<b>Attack :</b> (Dex or Str + Prof) to hit\n<b>Hit :</b> 1d4+Mod piercing damage plus 1d10 poison damage.",
+        "type_ability": [
+          "Damage"
+        ],
+        "additional_cost": ""
+      },
+      {
+        "cost": "Passive",
+        "name": "Multiattack",
+        "type": "Talent",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/skills/melee/strike-weapons-orange.webp",
+        "visibility": true,
+        "description": "You can make a number of Poison Blade attacks equal to your Proficiency Bonus – 1, or the same number of simple weapon attacks as part of your action.",
+        "type_ability": [],
+        "additional_cost": ""
+      },
+      {
+        "cost": "Passive",
+        "name": "Rune of Destruction",
+        "type": "Technique",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/creatures/fish/fish-fangtooth-skeletal-green.webp",
+        "visibility": true,
+        "description": "Whenever this creature hits with a melee simple weapon attack that deals piercing damage, it can also apply the effect of Rune of Destruction to the target. This effect lasts until the start of the creature’s next turn.\n\nBefore making the attack roll, the creature must choose one damage type — fire, necrotic, or poison — to empower the rune. A creature affected by this rune loses resistance to the chosen damage type for the duration.\n\nThis effect can be applied multiple times with different damage types. However, if multiple effects of the same damage type are applied, they all end at the start of the creature’s next turn as normal.",
+        "type_ability": [
+          "Debuff"
+        ],
+        "additional_cost": ""
+      }
+    ],
+    "created_at": "2025-10-23T05:42:14.443+00:00",
+    "updated_at": "2025-10-23T05:42:14.444+00:00",
+    "key": "exploit_of_the_rune_of_destruction"
+  },
+  {
+    "id": "a85f772c-9a84-4533-82ed-efbd991505b6",
+    "name": "Exploit of The Rune of Destruction",
+    "version": 2,
+    "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/creatures/fish/fish-fangtooth-skeletal-green.webp",
+    "alignment_good": true,
+    "alignment_neutral": true,
+    "alignment_evil": false,
+    "alignment_unknown": true,
+    "role": "debuffer",
+    "hp_scale": 5,
+    "cv_minimum": 10,
+    "cv_flat_cost": 3,
+    "cv_percent_cost": 0,
+    "ac_calc": "10 (Studded Leather Armor) + Dexterity Modifier",
+    "initiative_bonus": 0,
+    "description": "A precision-based debuffer who excels at breaking down enemy defenses and exploiting elemental weaknesses. The Exploit of the Rune of Destruction focuses on spreading poison and empowering attacks with corrupted runes, reducing enemy resistances and leaving them vulnerable to follow-up damage. They thrive in prolonged combat, layering multiple debuffs and punishing foes that rely on resistances or durability. \n\n Their combat rhythm revolves around striking quickly, applying conditions, and manipulating damage types to dismantle stronger enemies piece by piece. Though not built for raw burst power, their sustained pressure and weakening effects turn every ally’s attack into a finishing blow.",
+    "abilities": [
+      {
+        "cost": "Action",
+        "name": "Poison Blade",
+        "type": "Basic",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/weapons/swords/greatsword-crossguard-flanged.webp",
+        "visibility": true,
+        "description": "Melee or Ranged Weapon Attack. Reach 5 ft, or range 60 ft. One target. \n<b>Attack :</b> (Dex or Str + Prof) to hit\n<b>Hit :</b> 1d4+Mod piercing damage",
+        "type_ability": [
+          "Damage"
+        ],
+        "additional_cost": ""
+      },
+      {
+        "cost": "Passive",
+        "name": "Multiattack",
+        "type": "Talent",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/skills/melee/strike-weapons-orange.webp",
+        "visibility": true,
+        "description": "You can make a number of Poison Blade attacks equal to your Proficiency Bonus – 1, or the same number of simple weapon attacks as part of your action.",
+        "type_ability": [],
+        "additional_cost": ""
+      },
+      {
+        "cost": "Passive",
+        "name": "Rune of Destruction",
+        "type": "Technique",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/creatures/fish/fish-fangtooth-skeletal-green.webp",
+        "visibility": true,
+        "description": "Whenever this creature hits with a melee simple weapon attack that deals piercing damage, it can also apply the effect of Rune of Destruction to the target. This effect lasts until the start of the creature’s next turn.\n\nBefore making the attack roll, the creature must choose one damage type — fire, necrotic, psychic or poison — to empower the rune. A creature affected by this rune loses resistance to the chosen damage type for the duration.\n\nThis effect can be applied multiple times with different damage types. However, if multiple effects of the same damage type are applied, they all end at the start of the creature’s next turn as normal.",
+        "type_ability": [
+          "Debuff"
+        ],
+        "additional_cost": ""
+      }
+    ],
+    "created_at": "2025-10-23T05:42:14.443+00:00",
+    "updated_at": "2025-10-23T10:42:00.124+00:00",
+    "key": "exploit_of_the_rune_of_destruction"
+  },
+  {
+    "id": "8b2e455f-816b-410f-85aa-a8483bd7569e",
+    "name": "Life Within Short Dream",
+    "version": 1,
+    "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/magic/nature/leaf-glow-triple-teal.webp",
+    "alignment_good": true,
+    "alignment_neutral": true,
+    "alignment_evil": false,
+    "alignment_unknown": true,
+    "role": "sustain",
+    "hp_scale": 6,
+    "cv_minimum": 10,
+    "cv_flat_cost": 2,
+    "cv_percent_cost": 0,
+    "ac_calc": "16 (Chain Mail)",
+    "initiative_bonus": 0,
+    "description": "",
+    "abilities": [
+      {
+        "cost": "Action",
+        "name": "Rapier",
+        "type": "Basic",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt//weapons/swords/greatsword-crossguard-steel.webp",
+        "visibility": true,
+        "description": "Melee Weapon Attack. Reach 5 ft. One target. \n<span style=\"font-weight: bolder;\">Attack :</span> (Dex or Str + Prof) to hit\n<span style=\"font-weight: bolder;\">Hit :</span> 1d8+Mod Piercing damage",
+        "type_ability": [
+          "Damage"
+        ],
+        "additional_cost": ""
+      },
+      {
+        "cost": "Passive",
+        "name": "Healer",
+        "type": "Passive",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/magic/life/cross-flared-green.webp",
+        "visibility": true,
+        "description": "<div class=\"rd__b  rd__b--3\" data-pm-slice=\"3 3 [&quot;div&quot;,{&quot;_preserve&quot;:{}},&quot;div&quot;,{&quot;_preserve&quot;:{}}]\"><div data-roll-name-ancestor=\"Battle Medic\" class=\"rd__b  rd__b--3\"><p><b><span class=\"entry-title-inner\">Battle Medic.</span> </b>If you have a Healer's Kit, you can expend one use of it and tend to a creature within 5 feet of yourself as a Action. That creature can expend one of its Hit Point Dice, and you then roll that die. The creature regains a number of Hit Points equal to the roll plus your Proficiency Bonus.</p><p><b><span class=\"entry-title-inner\"><br></span></b></p><p><b><span class=\"entry-title-inner\">Healing Rerolls.</span> </b>Whenever you roll a die to determine the number of Hit Points you restore with a spell or with this feat's Battle Medic benefit, you can reroll the die if it rolls a 1, and you must use the new roll.</p></div></div>",
+        "type_ability": [
+          "Feat",
+          "Sustain"
+        ],
+        "additional_cost": ""
+      },
+      {
+        "cost": "Action",
+        "name": "The Curator of Life",
+        "type": "Skill",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/magic/life/heart-cross-strong-purple-orange.webp",
+        "visibility": true,
+        "description": "<div><b><i>Cantrip :</i></b></div><div><b style=\"font-style: italic;\">Toll the Dead </b>(Cantrip)</div><div>━━━━━━━━━━</div><b><i>Spellcasting : </i></b><div><b><i>Cure Wounds</i></b> (Level equal to Proficiency Bonus) / (Usage equal to Combat Value per long Rest)<div><b><i>Healing Word </i></b>(Level equal to Proficiency Bonus) / (Usage equal to 1.5 times Combat Value per long Rest)</div></div>",
+        "type_ability": [
+          "Healing"
+        ],
+        "additional_cost": ""
+      }
+    ],
+    "created_at": "2025-11-05T00:47:15.983+00:00",
+    "updated_at": "2025-12-02T04:43:36.445+00:00",
+    "key": "life_within_firefly_short_dream"
+  },
+  {
+    "id": "f195be07-cb04-4b70-b231-fce2b36bc386",
+    "name": "Eileithyia of Hopes & Dream",
+    "version": 1,
+    "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/skills/trades/academics-astronomy-navigation-purple.webp",
+    "alignment_good": true,
+    "alignment_neutral": true,
+    "alignment_evil": false,
+    "alignment_unknown": true,
+    "role": "sustain",
+    "hp_scale": 4,
+    "cv_minimum": 22,
+    "cv_flat_cost": 10,
+    "cv_percent_cost": 0,
+    "ac_calc": "10 + Dexterity Modifier",
+    "initiative_bonus": 0,
+    "description": "",
+    "abilities": [
+      {
+        "cost": "Action",
+        "name": "Elysium Gate",
+        "type": "Basic",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/magic/control/buff-flight-wings-runes-blue.webp",
+        "visibility": true,
+        "description": "<p data-pm-slice=\"1 1 []\">As a magic action, they are able to apply Weakness Break Efficiency 25% towards that they can see within ft, a creature as a magical light would summon forward. They can only do this as long as they are able to speak and move their hand. (Not restrain, or silence)</p>",
+        "type_ability": [],
+        "additional_cost": ""
+      },
+      {
+        "cost": "Bonus Action",
+        "name": "Starlight Step",
+        "type": "Talent",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt//magic/light/orbs-smoke-pink.webp",
+        "visibility": true,
+        "description": "<p data-pm-slice=\"1 1 [&quot;div&quot;,{&quot;_preserve&quot;:{&quot;class&quot;:&quot;ddb&quot;}}]\">They are able to magically teleports up to 30 feet, along with anything it is wearing or carrying, to an unoccupied space it can see. This actions can only be done equal to Proficiency Bonus per long rest.</p>",
+        "type_ability": [],
+        "additional_cost": ""
+      },
+      {
+        "cost": "Action",
+        "name": "Hopes & Dream Within Elysium",
+        "type": "Skill",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/skills/wounds/blood-cells-vessel-blue.webp",
+        "visibility": true,
+        "description": "<div><i style=\"font-weight: bolder;\">Spellcasting : </i></div><div><span style=\"font-weight: bolder;\"><i>Cure Wounds</i></span> (Level 8) / 3 per Long Rest<br><div><b><i>Hold Person</i></b><span style=\"font-weight: bolder;\"><i> </i></span>(Level 2) / 2 per Long Rest</div></div><div><div><b><i>Sending</i></b><span style=\"font-weight: bolder;\"><i> </i></span>(Level 3) / 1 per Long Rest</div></div>",
+        "type_ability": [],
+        "additional_cost": ""
+      }
+    ],
+    "created_at": "2025-11-09T02:08:12.481+00:00",
+    "updated_at": "2025-12-02T04:43:30.763+00:00",
+    "key": "eileithyia_of_hopes_&_dream"
+  },
+  {
+    "id": "089b1d7b-c391-43b3-9dbc-f2fdb4b4cb3f",
+    "name": "The World Bearer of Specter",
+    "version": 1,
+    "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/magic/lightning/projectile-orb-blue.webp",
+    "alignment_good": true,
+    "alignment_neutral": true,
+    "alignment_evil": false,
+    "alignment_unknown": true,
+    "role": "bruiser",
+    "hp_scale": 0,
+    "cv_minimum": 16,
+    "cv_flat_cost": 0,
+    "cv_percent_cost": 10,
+    "ac_calc": "17 (Splint)",
+    "initiative_bonus": 0,
+    "description": "",
+    "abilities": [
+      {
+        "cost": "Action",
+        "name": "Greatsword",
+        "type": "Basic",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt//weapons/swords/greatsword-guard-gold-worn.webp",
+        "visibility": true,
+        "description": "Melee Weapon Attack. Reach 5 ft. One target. \n<span style=\"font-weight: bolder;\">Attack :</span> (Str + Prof) to hit\n<span style=\"font-weight: bolder;\">Hit :</span> 2d6+Mod Slashing damage",
+        "type_ability": [
+          "Damage"
+        ],
+        "additional_cost": ""
+      },
+      {
+        "cost": "Action",
+        "name": "Multiattack",
+        "type": "Skill",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/skills/melee/strike-weapons-orange.webp",
+        "visibility": true,
+        "description": "You can make a number of Greatsword attacks equal to your Proficiency Bonus – 1, or the same number of simple weapon attacks as part of your action.",
+        "type_ability": [],
+        "additional_cost": ""
+      },
+      {
+        "cost": "Passive",
+        "name": "The World Bearer",
+        "type": "Talent",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/magic/lightning/projectile-orb-blue.webp",
+        "visibility": true,
+        "description": "<b>The World Bearer. </b>At the start of combat, you are able to choose to gain <i><u>Memosprite Buffer</u></i> condition, although you and any allies of your choosing that is within the same combat can gain the <b>The Blessing of World Bearer</b> effect for the combat or outside of combat.<div>Any creature with The Blessing of World Bearer gain a +1 towards your Proficiency Bonus.</div><div><br></div><div><b>Memosprite Buffer. </b>Memosprite Buffer are not a a part of combat, and are unable to help/influence or damage through combat. If all of their allies hit 0 hit point or dead. They will also hit 0 hit point.</div>",
+        "type_ability": [
+          "Memosprite Buffer"
+        ],
+        "additional_cost": ""
+      }
+    ],
+    "created_at": "2025-11-06T04:11:17.624+00:00",
+    "updated_at": "2025-12-02T04:57:09.179+00:00",
+    "key": "the_world_bearer_of_specter"
+  },
+  {
+    "id": "9b332fdd-d6f6-4112-be32-52868b655308",
+    "name": "Essence of Wisdom",
+    "version": 1,
+    "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/magic/movement/trail-streak-zigzag-teal.webp",
+    "alignment_good": true,
+    "alignment_neutral": false,
+    "alignment_evil": false,
+    "alignment_unknown": false,
+    "role": "sustain",
+    "hp_scale": 4,
+    "cv_minimum": 6,
+    "cv_flat_cost": 0,
+    "cv_percent_cost": 0,
+    "ac_calc": "",
+    "initiative_bonus": null,
+    "description": "",
+    "abilities": [
+      {
+        "cost": "Action",
+        "name": "Poison Spray",
+        "type": "Basic",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/magic/acid/projectile-needles-salvo-green.webp",
+        "visibility": true,
+        "description": "<div><b>Attack : </b>(Wisdom + Proficiency Bonus) to hit\n<b>Hit : 1d12 Poison Damage </b><i>(Scale : CV 10 = 2d12, CV 22 = 3d12, 34 = 4d12)</i></div><div><i>----</i></div>You spray toxic mist at a creature within range. Make a ranged spell attack against the target. On a hit, the target takes 1d12 Poison damage.\n<b>Cantrip Upgrade. </b>The damage increases by 1d12 when you reach levels 5 (2d12), 11 (3d12), and 17 (4d12).",
+        "type_ability": [
+          "Damage"
+        ],
+        "additional_cost": ""
+      },
+      {
+        "cost": "Bonus Action",
+        "name": "Starry Form: Chalice",
+        "type": "Ultimate",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/magic/defensive/barrier-shield-dome-deflect-teal.webp",
+        "visibility": true,
+        "description": "<p data-pm-slice=\"1 1 [&quot;div&quot;,{&quot;_preserve&quot;:{&quot;class&quot;:&quot;ddb&quot;}}]\">(While in Starry Form, with the Chalice constellation selected) Whenever you cast a spell using a spell slot that restores hit points to a creature, you or another creature within 30 ft. of you can regain 1d8 + Wisdom Modifier hit points.</p>",
+        "type_ability": [
+          "Buff"
+        ],
+        "additional_cost": ""
+      },
+      {
+        "cost": "Special",
+        "name": "Essence of Wisdom",
+        "type": "Skill",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/magic/movement/trail-streak-zigzag-teal.webp",
+        "visibility": true,
+        "description": "<b>Spellcasting :</b><div><b><u>1st Level Spells (Gain at CR 1/CV 6)</u></b>\n<b>Cure Wound (1st Level)</b> / Proficiency Bonus per Long Rest</div><div><b>Healing Word (1st Level)</b> / Proficiency Bonus per Long Rest</div><div><br></div><div><b><u>2nd Level Spells (Gain at CR 3/ CV 6)</u></b></div><div><b>Cure Wound (2nd Level) </b>/ Half Proficiency Bonus (Round Down) per Long Rest</div><div><br></div><div><div><span style=\"font-weight: bolder;\"><u>3rd Level Spells (Gain at CR 5/ CV 10)</u></span></div><div><span style=\"font-weight: bolder;\">Mass Healing Word (3rd Level) </span>/ Half Proficiency Bonus (Round Down) per Long Rest</div></div><div><br></div><div><div><span style=\"font-weight: bolder;\"><u>4th Level Spells (Gain at CR 7/ CV 14)</u></span></div><div><b>Blight </b><span style=\"font-weight: bolder;\"> (4th Level) </span>/ Half Proficiency Bonus (Round Down) per Long Rest</div></div><div><br></div><div><div><div><span style=\"font-weight: bolder;\"><u>5th Level Spells (Gain at CR 9/ CV 18)</u></span></div><div><span style=\"font-weight: bolder;\">Cure Wound (5th Level) </span>/ Half Proficiency (Round Down) Bonus per Long Rest</div></div><div><br></div><div><div><span style=\"font-weight: bolder;\"><u>6th Level Spells (Gain at CR 11/ CV 22)</u></span></div><div><b>Heal </b><span style=\"font-weight: bolder;\">(6th Level) </span>/ Half Proficiency Bonus (Round Down) per Long Rest</div></div></div>",
+        "type_ability": [],
+        "additional_cost": ""
+      }
+    ],
+    "created_at": "2025-12-02T05:12:35.959+00:00",
+    "updated_at": "2025-12-02T05:44:26.232+00:00",
+    "key": "essence_of_wisdom"
+  },
+  {
+    "id": "5486af67-ca99-4ff0-a9da-e56e4d9c8e05",
+    "name": "Archer of Hollowing Sky",
+    "version": 1,
+    "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/skills/ranged/arrows-flying-salvo-gray.webp",
+    "alignment_good": true,
+    "alignment_neutral": true,
+    "alignment_evil": true,
+    "alignment_unknown": true,
+    "role": "bruiser",
+    "hp_scale": 5,
+    "cv_minimum": 3,
+    "cv_flat_cost": 0,
+    "cv_percent_cost": 0,
+    "ac_calc": "11 (Leather Armor) + Dexterity Modifier",
+    "initiative_bonus": 0,
+    "description": "",
+    "abilities": [
+      {
+        "cost": "Action",
+        "name": "Longbow",
+        "type": "Basic",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/weapons/bows/longbow-leather-green.webp",
+        "visibility": true,
+        "description": "Range Weapon Attack. Range 150/600 ft. One target. \n<span style=\"font-weight: bolder;\">Attack :</span> (Dex + Prof) to hit\n<span style=\"font-weight: bolder;\">Hit :</span> 1d8 + @mod piercing damage.",
+        "type_ability": [
+          "Damage"
+        ],
+        "additional_cost": ""
+      },
+      {
+        "cost": "Action",
+        "name": "Multiattack",
+        "type": "Technique",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/skills/melee/strike-weapons-orange.webp",
+        "visibility": true,
+        "description": "You can make a number of Longbow attacks equal to your Proficiency Bonus – 1, or the same number of simple weapon attacks as part of your action.",
+        "type_ability": [],
+        "additional_cost": ""
+      }
+    ],
+    "created_at": "2025-10-30T04:22:06.639+00:00",
+    "updated_at": "2025-12-02T04:46:31.967+00:00",
+    "key": "archer_of_hollowing_sky"
+  },
+  {
+    "id": "e3ef21d1-fd95-4201-bfff-d946645a10e4",
+    "name": "White Devil",
+    "version": 1,
+    "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/environment/wilderness/terrain-forest-gray.webp",
+    "alignment_good": true,
+    "alignment_neutral": true,
+    "alignment_evil": false,
+    "alignment_unknown": false,
+    "role": "debuffer",
+    "hp_scale": 0,
+    "cv_minimum": 0,
+    "cv_flat_cost": 0,
+    "cv_percent_cost": 0,
+    "ac_calc": "",
+    "initiative_bonus": null,
+    "description": "",
+    "abilities": [],
+    "created_at": "2025-12-02T05:53:27.256+00:00",
+    "updated_at": "2025-12-02T05:53:27.256+00:00",
+    "key": "white_devil"
+  },
+  {
+    "id": "038e725c-4731-42ce-b1cf-2603c3d41ae7",
+    "name": "As You Remember I~",
+    "version": 1,
+    "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/skills/social/diplomacy-peace-alliance.webp",
+    "alignment_good": true,
+    "alignment_neutral": false,
+    "alignment_evil": false,
+    "alignment_unknown": true,
+    "role": "support",
+    "hp_scale": 5,
+    "cv_minimum": 12,
+    "cv_flat_cost": 0,
+    "cv_percent_cost": 0,
+    "ac_calc": "10 + Dexterity Modifier",
+    "initiative_bonus": null,
+    "description": "",
+    "abilities": [
+      {
+        "cost": "Action",
+        "name": "Vicious Mockery",
+        "type": "Basic",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/magic/control/fear-fright-white.webp",
+        "visibility": true,
+        "description": "You unleash a string of insults laced with subtle enchantments at one creature you can see or hear within range. The target must succeed on a Wisdom Saving Throw or take 1d6 Psychic damage and have Disadvantage on the next attack roll it makes before the end of its next turn.\n<b>Cantrip Upgrade. </b>The damage increases by 1d6 when you reach levels 5 (2d6), 11 (3d6), and 17 (4d6).",
+        "type_ability": [
+          "Damage",
+          "Saving Throw",
+          "Wisdom"
+        ],
+        "additional_cost": ""
+      },
+      {
+        "cost": "Bonus Action",
+        "name": "As You Remember I",
+        "type": "Ultimate",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/skills/social/diplomacy-peace-alliance.webp",
+        "visibility": true,
+        "description": "As a bonus action, you chooses up to six other creatures within range to gain the effect of <b>As You Remember I</b> for 1 minute. A creature can be affected by only one instance of this effect at a time.\n\nWhile under the effect of <b>As You Remember I</b>, whenever the creature makes an attack roll with a weapon or a spell, its chance to score a critical hit is reduced by 1.\n\nThis effect is always activate as long as you are with these six other creature.",
+        "type_ability": [],
+        "additional_cost": ""
+      },
+      {
+        "cost": "Action",
+        "name": "Cure Wounds (2nd-Level)",
+        "type": "Skill",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/magic/life/heart-cross-strong-green.webp",
+        "visibility": true,
+        "description": "<div class=\"ddb\" data-pm-slice=\"2 2 []\"><p>A creature you touch regains a number of Hit Points equal to 4d8+2d4 plus your spellcasting ability modifier.</p></div>",
+        "type_ability": [],
+        "additional_cost": ""
+      },
+      {
+        "cost": "Action",
+        "name": "Vortex Warp",
+        "type": "Talent",
+        "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/magic/water/vortex-water-whirlpool-blue.webp",
+        "visibility": true,
+        "description": "<div class=\"ddb\" data-pm-slice=\"2 2 []\"><p>You magically twist space around another creature you can see within range. The target must succeed on a Constitution Saving Throw (the target can choose to fail), or the target is teleported to an unoccupied space of your choice that you can see within range. The chosen space must be on a surface or in a liquid that can support the target without the target having to squeeze.</p></div>",
+        "type_ability": [],
+        "additional_cost": ""
+      }
+    ],
+    "created_at": "2025-12-11T04:35:38.041+00:00",
+    "updated_at": "2025-12-11T07:12:52.394+00:00",
+    "key": "tale_of_memories_&_ego~"
+  }
+]

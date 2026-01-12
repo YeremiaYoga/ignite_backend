@@ -1,0 +1,312 @@
+[
+  {
+    "id": "d85e87de-a48f-49e3-b962-0d6734048f36",
+    "name": "Potion of Healing",
+    "type": "consumable",
+    "type_value": "potion",
+    "subtype": "",
+    "weight": 0.5,
+    "properties": "[\"mgc\"]",
+    "rarity": "common",
+    "price": 5000,
+    "compendium_source": null,
+    "source_book": "DMG 2024",
+    "raw_data": {
+      "img": "icons/consumables/potions/potion-tube-corked-red.webp",
+      "name": "Potion of Healing",
+      "type": "consumable",
+      "flags": {
+        "plutonium": {
+          "hash": "potion%20of%20healing_xdmg",
+          "page": "items.html",
+          "source": "XDMG",
+          "propDroppable": "item"
+        }
+      },
+      "_stats": {
+        "systemId": "dnd5e",
+        "coreVersion": "13.351",
+        "createdTime": 1763851631243,
+        "exportSource": {
+          "uuid": "Item.9FrDMMmw6W9GXIgP",
+          "worldId": "ignite",
+          "systemId": "dnd5e",
+          "coreVersion": "13.351",
+          "systemVersion": "5.1.10"
+        },
+        "modifiedTime": 1763851631243,
+        "systemVersion": "5.1.10",
+        "lastModifiedBy": "0ETuiPKn7myc5Yj6",
+        "duplicateSource": null,
+        "compendiumSource": null
+      },
+      "folder": "HuljcYk6LNWo2AW5",
+      "system": {
+        "type": {
+          "value": "potion",
+          "subtype": ""
+        },
+        "uses": {
+          "max": "1",
+          "spent": 0,
+          "recovery": [],
+          "autoDestroy": true
+        },
+        "price": {
+          "value": 50,
+          "denomination": "gp"
+        },
+        "damage": {
+          "base": {
+            "types": [],
+            "custom": {
+              "enabled": false
+            },
+            "scaling": {
+              "number": 1
+            }
+          },
+          "replace": false
+        },
+        "rarity": "common",
+        "source": {
+          "book": "DMG 2024",
+          "page": "288",
+          "rules": "2024",
+          "custom": "",
+          "license": "",
+          "revision": 1
+        },
+        "weight": {
+          "units": "lb",
+          "value": 0.5
+        },
+        "attuned": false,
+        "equipped": false,
+        "quantity": 1,
+        "container": null,
+        "activities": {
+          "dnd5eactivity000": {
+            "_id": "dnd5eactivity000",
+            "name": "Consume",
+            "sort": 0,
+            "type": "heal",
+            "uses": {
+              "spent": 0,
+              "recovery": []
+            },
+            "range": {
+              "units": "self",
+              "override": false
+            },
+            "target": {
+              "prompt": true,
+              "affects": {
+                "type": "creature",
+                "choice": false
+              },
+              "override": false,
+              "template": {
+                "units": "ft",
+                "contiguous": false
+              }
+            },
+            "effects": [],
+            "healing": {
+              "bonus": "2",
+              "types": [
+                "healing"
+              ],
+              "custom": {
+                "enabled": false
+              },
+              "number": 2,
+              "scaling": {
+                "number": 1
+              },
+              "denomination": 4
+            },
+            "duration": {
+              "units": "inst",
+              "override": false,
+              "concentration": false
+            },
+            "activation": {
+              "type": "bonus",
+              "override": false
+            },
+            "consumption": {
+              "scaling": {
+                "allowed": false
+              },
+              "targets": [
+                {
+                  "type": "itemUses",
+                  "value": "1",
+                  "scaling": {}
+                }
+              ],
+              "spellSlot": true
+            },
+            "description": {}
+          }
+        },
+        "attunement": "",
+        "identified": true,
+        "identifier": "potion-of-healing",
+        "properties": [
+          "mgc"
+        ],
+        "description": {
+          "chat": "",
+          "value": "<div class=\"rd__b  rd__b--2\"><p>This potion is a magic item. As a @variantrule[Bonus Action|XPHB], you can drink it or administer it to another creature within 5 feet of yourself. The creature that drinks the magical red fluid in this vial regains [[/r 2d4 + 2]] @variantrule[Hit Points|XPHB]. The potion's red liquid glimmers when agitated.</p></div>"
+        },
+        "magicalBonus": 0,
+        "unidentified": {
+          "description": ""
+        }
+      },
+      "effects": [],
+      "ownership": {
+        "default": 0
+      }
+    },
+    "format_data": {
+      "img": "icons/consumables/potions/potion-tube-corked-red.webp",
+      "name": "Potion of Healing",
+      "type": "consumable",
+      "system": {
+        "type": {
+          "value": "potion",
+          "subtype": ""
+        },
+        "uses": {
+          "max": "1",
+          "spent": 0,
+          "recovery": [],
+          "autoDestroy": true
+        },
+        "price": {
+          "value": 50,
+          "denomination": "gp"
+        },
+        "damage": {
+          "base": {
+            "types": [],
+            "custom": {
+              "enabled": false
+            },
+            "scaling": {
+              "number": 1
+            }
+          },
+          "replace": false
+        },
+        "rarity": "common",
+        "source": {
+          "book": "DMG 2024",
+          "page": "288",
+          "rules": "2024",
+          "custom": "",
+          "license": "",
+          "revision": 1
+        },
+        "weight": {
+          "units": "lb",
+          "value": 0.5
+        },
+        "attuned": false,
+        "equipped": false,
+        "quantity": 1,
+        "container": null,
+        "activities": {
+          "dnd5eactivity000": {
+            "_id": "dnd5eactivity000",
+            "name": "Consume",
+            "sort": 0,
+            "type": "heal",
+            "uses": {
+              "spent": 0,
+              "recovery": []
+            },
+            "range": {
+              "units": "self",
+              "override": false
+            },
+            "target": {
+              "prompt": true,
+              "affects": {
+                "type": "creature",
+                "choice": false
+              },
+              "override": false,
+              "template": {
+                "units": "ft",
+                "contiguous": false
+              }
+            },
+            "effects": [],
+            "healing": {
+              "bonus": "2",
+              "types": [
+                "healing"
+              ],
+              "custom": {
+                "enabled": false
+              },
+              "number": 2,
+              "scaling": {
+                "number": 1
+              },
+              "denomination": 4
+            },
+            "duration": {
+              "units": "inst",
+              "override": false,
+              "concentration": false
+            },
+            "activation": {
+              "type": "bonus",
+              "override": false
+            },
+            "consumption": {
+              "scaling": {
+                "allowed": false
+              },
+              "targets": [
+                {
+                  "type": "itemUses",
+                  "value": "1",
+                  "scaling": {}
+                }
+              ],
+              "spellSlot": true
+            },
+            "description": {}
+          }
+        },
+        "attunement": "",
+        "identified": true,
+        "identifier": "potion-of-healing",
+        "properties": [
+          "mgc"
+        ],
+        "description": {
+          "chat": "",
+          "value": "<div class=\"rd__b  rd__b--2\"><p>This potion is a magic item. As a @variantrule[Bonus Action|XPHB], you can drink it or administer it to another creature within 5 feet of yourself. The creature that drinks the magical red fluid in this vial regains [[/r 2d4 + 2]] @variantrule[Hit Points|XPHB]. The potion's red liquid glimmers when agitated.</p></div>"
+        },
+        "magicalBonus": 0,
+        "unidentified": {
+          "description": ""
+        }
+      },
+      "effects": []
+    },
+    "created_at": "2025-11-24T09:49:27.136245+00:00",
+    "updated_at": "2025-11-24T09:49:27.136245+00:00",
+    "image": "https://019a0f6bb5a27dc5b6ab32a19a8ad5d6.phanneldeliver.my.id/foundryvtt/consumables/potions/potion-tube-corked-red.webp",
+    "attunement": "",
+    "favorites": [],
+    "favorites_count": 0
+  }
+]
