@@ -9,16 +9,16 @@ function todayISODate() {
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, "0");
   const d = String(now.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`; // YYYY-MM-DD
+  return `${y}-${m}-${d}`;
 }
 
 function isVisibleByDate(releaseDate, today) {
-  if (releaseDate === null || releaseDate === undefined) return false; // null tidak tampil
+  if (!releaseDate) return false;
+
   const s = String(releaseDate).trim();
   if (!s) return false;
 
-  // release_date >= today -> tampil
-  return s >= today;
+  return s <= today;
 }
 
 export const listIgniteTokenBordersHandler = async (req, res) => {
