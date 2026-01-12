@@ -53,9 +53,7 @@ async function ensureFriendCode(userId) {
     throw updateErr;
   }
 
-  console.log(
-    `✅ Friend code generated for user ${userId}: ${updated.friend_code}`
-  );
+
   return updated.friend_code;
 }
 

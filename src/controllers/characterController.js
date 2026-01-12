@@ -99,7 +99,7 @@ export const createCharacterHandler = async (req, res) => {
 
 export const saveCharacterHandler = async (req, res) => {
   try {
-    console.log("📥 [IGNITE] SaveCharacter invoked (cookie-based)");
+   
 
     const parsed =
       typeof req.body.data === "string" ? JSON.parse(req.body.data) : req.body;
@@ -157,9 +157,7 @@ export const saveCharacterHandler = async (req, res) => {
       return res.status(500).json({ error: "Failed to check character count" });
     }
 
-    console.log(
-      `👤 User ${userId} has ${count} / ${user.character_limit} characters`
-    );
+ 
 
     if (count >= user.character_limit) {
       return res.status(403).json({
@@ -201,7 +199,7 @@ export const saveCharacterHandler = async (req, res) => {
           result.data?.fullUrl ||
           result.url ||
           result.data?.url;
-        console.log(`✅ ${type} uploaded:`, fileUrl);
+        
         return fileUrl;
       } catch (err) {
         console.error(`💥 Upload ${type} error:`, err);
@@ -572,16 +570,14 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       main_theme_ogg: mainThemePath,
       combat_theme_ogg: combatThemePath,
 
-      // 🔹 pakai username terbaru
       creator_name: creatorName,
 
       updated_at: new Date().toISOString(),
     };
 
-    // ✅ hard guard (biar nggak mungkin lolos)
     delete updatedData.incumbency;
 
-    console.log("🧼 update payload keys:", Object.keys(updatedData));
+
 
     const { data, error } = await updateCharacterByPrivateId(
       privateId,
