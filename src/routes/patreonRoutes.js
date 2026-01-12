@@ -370,7 +370,14 @@ router.get("/callback", async (req, res) => {
       maxAge: 9 * 60 * 60 * 1000,
     });
 
-    res.redirect(`${process.env.REDIRECT_PATREON_DOMAIN}/patreon-success`);
+    const redirectBase = String(
+      process.env.REDIRECT_PATREON_DOMAIN || ""
+    ).replace(/\/$/, "");
+    const emailSafe = encodeURIComponent(finalUser.email || "");
+
+    res.redirect(
+      `${redirectBase}/patreon-success?linked=true&email=${emailSafe}#token=${accessTokenJWT}`
+    );
   } catch (err) {
     console.error("❌ Patreon callback error (details):");
     if (err.response) {
