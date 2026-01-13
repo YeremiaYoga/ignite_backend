@@ -547,7 +547,6 @@ export const updateCharacterByPrivateIdHandler = async (req, res) => {
       }
     }
 
-    // ✅ bersihkan parsed (request payload) dari field non-kolom
     const parsedClean = stripJoinFields(parsed);
 
     if (!parsedClean.name || parsedClean.name.trim() === "") {

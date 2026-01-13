@@ -14,11 +14,14 @@ function todayISODate() {
 
 function isVisibleByDate(releaseDate, today) {
   if (!releaseDate) return false;
-
   const s = String(releaseDate).trim();
   if (!s) return false;
-
   return s <= today;
+}
+
+// 🔍 helper search
+function normalize(v) {
+  return String(v || "").toLowerCase().trim();
 }
 
 export const listIgniteTokenBordersHandler = async (req, res) => {
@@ -26,9 +29,28 @@ export const listIgniteTokenBordersHandler = async (req, res) => {
     const items = await getTokenBorders();
     const today = todayISODate();
 
-    const filtered = (Array.isArray(items) ? items : []).filter((it) =>
+    const q = normalize(req.query?.q); // <-- keyword search
+
+    let filtered = (Array.isArray(items) ? items : []).filter((it) =>
       isVisibleByDate(it?.release_date, today)
     );
+
+    // ✅ hanya tambah SEARCH
+    if (q) {
+      filtered = filtered.filter((it) => {
+        const text = [
+          it?.name,
+          it?.code,
+          it?.slug,
+          it?.rarity,
+          it?.category,
+        ]
+          .map(normalize)
+          .join(" ");
+
+        return text.includes(q);
+      });
+    }
 
     return res.json({ success: true, items: filtered });
   } catch (err) {
