@@ -1,25 +1,28 @@
 import express from "express";
 import {
-  loginUser,
   getUser,
   updateUser,
   logoutUserIgnite,
-  getUserMe 
+  getUserMe,
+  listCampaignGenres,
+  listGameSystems,
 } from "../controllers/userController.js";
 import {
   loginAdminJWT,
   verifyAccessToken,
-  logoutUser,
 } from "../controllers/userJwtController.js";
 import { verifyUserIgnite } from "../middlewares/verifyUserIgnite.js";
+
 const router = express.Router();
 
-// === CLERK AUTH ===
+// ✅ META (dropdown options)
+router.get("/campaign-genres", verifyUserIgnite, listCampaignGenres);
+router.get("/game-systems", verifyUserIgnite, listGameSystems);
 
-router.post("/login", loginUser); 
+// === CLERK AUTH ===
 router.get("/me", verifyUserIgnite, getUserMe);
-router.get("/:clerkId", getUser); 
-router.patch("/:id", verifyUserIgnite, updateUser); 
+router.get("/:clerkId", getUser);
+router.patch("/:id", verifyUserIgnite, updateUser);
 router.post("/logout", logoutUserIgnite);
 
 // === JWT AUTH ===

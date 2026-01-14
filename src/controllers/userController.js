@@ -1,10 +1,4 @@
-import {
-  upsertUser,
-  getUserByClerkId,
-  updateUserById,
-} from "../models/userModel.js";
-import jwt from "jsonwebtoken";
-
+import { getUserByClerkId, updateUserById } from "../models/userModel.js";
 import supabase from "../utils/db.js";
 
 /* 🔹 Helper: generate friend code dengan format PI-1234-5678-9012 */
@@ -16,7 +10,6 @@ function generateFriendCode() {
 
 /* 🔹 Helper: pastikan user punya friend_code yang unik */
 async function ensureFriendCode(userId) {
-  // cek dulu: kalau sudah punya, langsung pakai
   const { data: existing, error: existingErr } = await supabase
     .from("users")
     .select("friend_code")
@@ -28,11 +21,8 @@ async function ensureFriendCode(userId) {
     throw existingErr;
   }
 
-  if (existing?.friend_code) {
-    return existing.friend_code;
-  }
+  if (existing?.friend_code) return existing.friend_code;
 
-  // belum ada → generate + update, handle kemungkinan duplicate
   let attempt = 0;
   const maxAttempts = 10;
 
@@ -48,15 +38,13 @@ async function ensureFriendCode(userId) {
       .single();
 
     if (!error && data?.friend_code) {
-      console.log(
-        `✅ Friend code generated for user ${userId}: ${data.friend_code}`
-      );
+      console.log(`✅ Friend code generated for user ${userId}: ${data.friend_code}`);
       return data.friend_code;
     }
 
     const isDuplicate =
       error &&
-      (error.code === "23505" || // Postgres unique_violation
+      (error.code === "23505" ||
         (typeof error.message === "string" &&
           error.message.includes("duplicate key value")));
 
@@ -71,140 +59,40 @@ async function ensureFriendCode(userId) {
     throw error;
   }
 
-  throw new Error(
-    "Failed to generate unique friend code after several attempts"
-  );
+  throw new Error("Failed to generate unique friend code after several attempts");
 }
 
-export const loginUser = async (req, res) => {
+export const listCampaignGenres = async (req, res) => {
   try {
-    const { clerkId, email, username } = req.body;
-    if (!clerkId || !email || !username) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
+    const { data, error } = await supabase
+      .from("campaign_genres")
+      .select("id, name")
+      .order("name", { ascending: true });
 
-    const PUBLIC_MEDIA_URL = process.env.PUBLIC_MEDIA_URL;
-    const DEFAULT_PROFILE = `${PUBLIC_MEDIA_URL}/profile_picture/Candle.webp`;
-
-    const { data: freeTier, error: freeError } = await supabase
-      .from("tiers")
-      .select("id, name, character_limit")
-      .eq("slug", "free")
-      .maybeSingle();
-
-    if (freeError || !freeTier) {
-      console.error("❌ Failed to fetch free tier:", freeError?.message);
-      return res.status(500).json({ error: "Free tier not found" });
-    }
-
-    let user = await getUserByClerkId(clerkId);
-
-    if (!user) {
-      console.log("🆕 New user detected, creating...");
-
-      const { data, error: upsertError } = await supabase
-        .from("users")
-        .upsert(
-          [
-            {
-              clerk_id: clerkId,
-              email,
-              name: username,
-              username,
-              role: "user",
-              tier_id: freeTier.id,
-              tier: freeTier.name,
-              character_limit: freeTier.character_limit,
-              tier_expired_at: null,
-              profile_picture: DEFAULT_PROFILE, // 🖼️ default Candle.webp
-            },
-          ],
-          { onConflict: "clerk_id" }
-        )
-        .select()
-        .maybeSingle();
-
-      if (upsertError) {
-        console.error("❌ upsertUser error:", upsertError.message);
-        return res.status(500).json({ error: upsertError.message });
-      }
-
-      user = data;
-    } else {
-      console.log("⚡ Existing user found:", user.email);
-
-      // 🧩 Jika belum punya tier, pastikan terhubung ke Free
-      if (!user.tier_id) {
-        await supabase
-          .from("users")
-          .update({
-            tier_id: freeTier.id,
-            tier: freeTier.name,
-            character_limit: freeTier.character_limit,
-            tier_expired_at: null,
-          })
-          .eq("id", user.id);
-        user.tier_id = freeTier.id;
-        user.tier = freeTier.name;
-        user.character_limit = freeTier.character_limit;
-      }
-
-      // 🧩 Jika user belum punya foto profil → isi default
-      if (!user.profile_picture) {
-        await supabase
-          .from("users")
-          .update({ profile_picture: DEFAULT_PROFILE })
-          .eq("id", user.id);
-        user.profile_picture = DEFAULT_PROFILE;
-      }
-    }
-
-    // 🔹 Pastikan user punya friend_code (unik, format PI-XXXX-XXXX-XXXX)
-    const friendCode = await ensureFriendCode(user.id);
-    user.friend_code = friendCode;
-
-    // 🔐 Buat JWT
-    const accessToken = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        username: user.name,
-        role: user.role,
-        app: "ignite",
-        friend_code: user.friend_code, // optional, kalau mau di pakai di client
-      },
-      process.env.JWT_SECRET_USER,
-      { expiresIn: "9h" }
-    );
-
-    // 🍪 Kirim cookie
-    res.cookie("ignite_access_token", accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 9 * 60 * 60 * 1000, // 9 jam
-    });
-
-    // 🎯 Respon ke frontend
-    return res.json({
-      success: true,
-      message: "Login successful",
-      user: {
-        id: user.id,
-        email: user.email,
-        username: user.name,
-        role: user.role,
-        tier_id: user.tier_id,
-        tier: user.tier,
-        character_limit: user.character_limit,
-        tier_expired_at: user.tier_expired_at,
-        profile_picture: user.profile_picture,
-        friend_code: user.friend_code, // 🔹 kirim ke frontend
-      },
-    });
+    if (error) throw error;
+    return res.json({ success: true, data: data || [] });
   } catch (err) {
-    console.error("💥 loginUser error:", err);
-    return res.status(500).json({ error: err.message });
+    console.error("❌ listCampaignGenres:", err.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to load genres" });
+  }
+};
+
+export const listGameSystems = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("game_systems")
+      .select("id, name")
+      .order("name", { ascending: true });
+
+    if (error) throw error;
+    return res.json({ success: true, data: data || [] });
+  } catch (err) {
+    console.error("❌ listGameSystems:", err.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to load game systems" });
   }
 };
 
@@ -244,11 +132,8 @@ export const getUser = async (req, res) => {
     const { clerkId } = req.params;
     const user = await getUserByClerkId(clerkId);
 
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    if (!user) return res.status(404).json({ error: "User not found" });
 
-    // user di sini sudah termasuk friend_code kalau ada di kolom users
     return res.json({ user });
   } catch (err) {
     console.error("❌ getUser:", err.message);
@@ -259,28 +144,61 @@ export const getUser = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { username, profile_picture } = req.body;
 
-    console.log("🟢 PATCH /users:", { id, username, profile_picture });
+    const {
+      username,
+      profile_picture,
 
-    // 🔐 Pastikan user hanya bisa ubah dirinya sendiri, kecuali admin
+      about_me,
+      gender,
+      favorite_genre_id,
+      favorite_system_id,
+    } = req.body;
+
     if (req.user.role !== "admin" && req.user.id !== id) {
       return res
         .status(403)
         .json({ error: "Forbidden: You cannot edit this user" });
     }
 
-    // 🧩 Siapkan data yang akan di-update
     const updateData = {};
-    if (username) updateData.username = username.trim();
-    if (profile_picture) updateData.profile_picture = profile_picture;
 
-    // 🚧 Validasi jika tidak ada field dikirim
+    // username (kalau dikirim)
+    if (username !== undefined) updateData.username = String(username || "").trim();
+
+    // profile picture (kalau dikirim)
+    if (profile_picture !== undefined)
+      updateData.profile_picture = profile_picture || null;
+
+    // about_me (max 600, plain text)
+    if (about_me !== undefined) {
+      const v = String(about_me || "");
+      if (v.length > 600) {
+        return res.status(400).json({ error: "about_me max 600 characters" });
+      }
+      updateData.about_me = v;
+    }
+
+    // gender enum
+    if (gender !== undefined) {
+      const g = String(gender || "").trim().toLowerCase();
+      const allowed = ["male", "female", "other", "rather_not_say"];
+      if (!allowed.includes(g)) {
+        return res.status(400).json({ error: "Invalid gender" });
+      }
+      updateData.gender = g;
+    }
+
+    // favorites (uuid/null)
+    if (favorite_genre_id !== undefined)
+      updateData.favorite_genre_id = favorite_genre_id || null;
+    if (favorite_system_id !== undefined)
+      updateData.favorite_system_id = favorite_system_id || null;
+
     if (Object.keys(updateData).length === 0) {
       return res.status(400).json({ error: "No fields to update" });
     }
 
-    // 🪄 Jalankan update ke Supabase
     const { data, error } = await updateUserById(id, updateData);
 
     if (error) {
@@ -308,6 +226,12 @@ export const getUserMe = async (req, res) => {
       .single();
 
     if (error) throw error;
+
+    // default gender safety
+    if (data && !data.gender) data.gender = "rather_not_say";
+
+    // (optional) kalau kamu mau pastiin friend_code ada setiap getMe
+    // await ensureFriendCode(userId);
 
     res.json({ user: data });
   } catch (err) {

@@ -14,7 +14,6 @@ function normalize(body) {
   };
 }
 
-/* THEME CONTROLLERS */
 export const adminListThemes = async (req, res) => {
   try {
     const data = await listThemes();

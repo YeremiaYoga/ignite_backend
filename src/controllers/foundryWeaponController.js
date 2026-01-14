@@ -55,7 +55,6 @@ function buildDamage(system) {
   const number = base.number;
   const denomination = base.denomination;
 
-  // if missing -> "kosongkan" (damage null)
   if (number === "" || number == null) return null;
   if (denomination === "" || denomination == null) return null;
 

@@ -1,9 +1,6 @@
 // models/foundryWeaponModel.js
 import supabase from "../utils/db.js";
 
-/**
- * Insert 1 foundry weapon
- */
 export async function insertFoundryWeapon(payload) {
   const {
     name,
@@ -69,7 +66,6 @@ export async function insertFoundryWeapon(payload) {
   return data;
 }
 
-
 export async function bulkInsertFoundryWeapons(items) {
   if (!items?.length) return [];
 
@@ -111,7 +107,6 @@ export async function bulkInsertFoundryWeapons(items) {
   return data || [];
 }
 
-
 export async function listFoundryWeapons({ limit = 50, offset = 0 } = {}) {
   const from = offset;
   const to = offset + limit - 1;
@@ -130,7 +125,6 @@ export async function listFoundryWeapons({ limit = 50, offset = 0 } = {}) {
   return data || [];
 }
 
-
 export async function getFoundryWeaponById(id) {
   const { data, error } = await supabase
     .from("foundry_weapons")
@@ -145,7 +139,6 @@ export async function getFoundryWeaponById(id) {
 
   return data;
 }
-
 
 export async function updateFoundryWeapon(id, payload) {
   const { data, error } = await supabase
@@ -166,9 +159,11 @@ export async function updateFoundryWeapon(id, payload) {
   return data;
 }
 
-
 export async function deleteFoundryWeapon(id) {
-  const { error } = await supabase.from("foundry_weapons").delete().eq("id", id);
+  const { error } = await supabase
+    .from("foundry_weapons")
+    .delete()
+    .eq("id", id);
 
   if (error) {
     console.error("❌ deleteFoundryWeapon error:", error.message);

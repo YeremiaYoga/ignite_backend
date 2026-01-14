@@ -5,12 +5,20 @@ export async function insertFoundryFeature(payload) {
   const {
     name,
     type,
+
     image,
-    compendium_source,
-    source_book,
     description,
+
     raw_data,
     format_data,
+
+    favorites,
+    favorites_count,
+
+    prerequisites,
+    properties,
+    requirements,
+    uses,
   } = payload;
 
   const { data, error } = await supabase
@@ -18,12 +26,19 @@ export async function insertFoundryFeature(payload) {
     .insert({
       name,
       type,
-      image,
-      compendium_source,
-      source_book,
-      description,
+      image: image ?? null,
+      description: description ?? null,
+
       raw_data: raw_data ?? {},
       format_data: format_data ?? {},
+
+      favorites: favorites ?? [],
+      favorites_count: typeof favorites_count === "number" ? favorites_count : 0,
+
+      prerequisites: prerequisites ?? {},
+      properties: properties ?? [],
+      requirements: requirements ?? null,
+      uses: uses ?? {},
     })
     .select()
     .single();
@@ -39,20 +54,28 @@ export async function insertFoundryFeature(payload) {
 export async function bulkInsertFoundryFeatures(items) {
   if (!items?.length) return [];
 
-  const rows = items.map((it) => ({
+  const mapped = items.map((it) => ({
     name: it.name,
     type: it.type,
+
     image: it.image ?? null,
-    compendium_source: it.compendium_source ?? null,
-    source_book: it.source_book ?? null,
     description: it.description ?? null,
+
     raw_data: it.raw_data ?? {},
     format_data: it.format_data ?? {},
+
+    favorites: it.favorites ?? [],
+    favorites_count: typeof it.favorites_count === "number" ? it.favorites_count : 0,
+
+    prerequisites: it.prerequisites ?? {},
+    properties: it.properties ?? [],
+    requirements: it.requirements ?? null,
+    uses: it.uses ?? {},
   }));
 
   const { data, error } = await supabase
     .from("foundry_features")
-    .insert(rows)
+    .insert(mapped)
     .select();
 
   if (error) {
@@ -60,22 +83,25 @@ export async function bulkInsertFoundryFeatures(items) {
     throw error;
   }
 
-  return data;
+  return data || [];
 }
 
 export async function listFoundryFeatures({ limit = 50, offset = 0 } = {}) {
+  const from = offset;
+  const to = offset + limit - 1;
+
   const { data, error } = await supabase
     .from("foundry_features")
     .select("*")
     .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
+    .range(from, to);
 
   if (error) {
     console.error("❌ listFoundryFeatures error:", error.message);
     throw error;
   }
 
-  return data;
+  return data || [];
 }
 
 export async function getFoundryFeatureById(id) {
@@ -96,7 +122,10 @@ export async function getFoundryFeatureById(id) {
 export async function updateFoundryFeature(id, payload) {
   const { data, error } = await supabase
     .from("foundry_features")
-    .update(payload)
+    .update({
+      ...payload,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", id)
     .select()
     .single();
@@ -119,4 +148,6 @@ export async function deleteFoundryFeature(id) {
     console.error("❌ deleteFoundryFeature error:", error.message);
     throw error;
   }
+
+  return true;
 }

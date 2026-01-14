@@ -60,6 +60,7 @@ import adminHomebrewRoutes from "./routes/adminHomebrewSourceRoutes.js";
 import igniteHomebrewRoutes from "./routes/igniteHomebrewRoutes.js";
 import igniteJournalRoutes from "./routes/igniteJournalRoutes.js";
 import igniteCharacterUsageRoutes from "./routes/igniteCharacterUsageRoutes.js";
+
 import path from "path";
 const app = express();
 
@@ -159,4 +160,5 @@ app.use("/ignite/calendars", igniteCalendarRoutes);
 app.use("/ignite/calendar-event", igniteCalendarEventRoutes);
 app.use("/ignite/journals", igniteJournalRoutes);
 app.use("/ignite/character-limit", igniteCharacterUsageRoutes);
+app.use("/foundry/features", foundryFeatureRoutes);
 export default app;
