@@ -7,8 +7,6 @@ import {
   deleteHomebrewSource,
 } from "../../models/homebrewSourceModel.js";
 
-// ambil user id dari auth kamu (silakan sesuaikan)
-// - kalau kamu sudah punya middleware auth, biasanya ada req.user.id
 function getUserId(req) {
   return req.user?.id || req.user?.userId || req.headers["x-user-id"] || null;
 }
@@ -19,7 +17,6 @@ function isOwner(row, userId) {
   return String(row.created_by) === String(userId);
 }
 
-// ✅ GET LIST
 export async function getHomebrewSources(req, res) {
   try {
     const { q, sort, order, page, limit, created_by, private: privateStr } =
@@ -45,7 +42,6 @@ export async function getHomebrewSources(req, res) {
       return res.status(400).json({ success: false, message: result.error.message });
     }
 
-    // 🔒 jika ada record private, boleh disaring supaya hanya owner yg lihat
     const userId = getUserId(req);
     const filtered = (result.data || []).filter((row) => {
       if (row.private === true) return userId && isOwner(row, userId);
@@ -59,7 +55,6 @@ export async function getHomebrewSources(req, res) {
   }
 }
 
-// ✅ GET BY ID
 export async function getHomebrewSource(req, res) {
   try {
     const { id } = req.params;
@@ -69,7 +64,6 @@ export async function getHomebrewSource(req, res) {
       return res.status(404).json({ success: false, message: error.message });
     }
 
-    // 🔒 private hanya owner
     const userId = getUserId(req);
     if (data?.private === true && !isOwner(data, userId)) {
       return res.status(403).json({ success: false, message: "Forbidden" });
@@ -82,7 +76,6 @@ export async function getHomebrewSource(req, res) {
   }
 }
 
-// ✅ GET BY SHARE_ID
 export async function getHomebrewSourceByShare(req, res) {
   try {
     const { shareId } = req.params;
@@ -92,7 +85,6 @@ export async function getHomebrewSourceByShare(req, res) {
       return res.status(404).json({ success: false, message: error.message });
     }
 
-    // 🔒 kalau private, share link juga tetap butuh owner (kalau kamu mau share tetap bisa, hapus check ini)
     const userId = getUserId(req);
     if (data?.private === true && !isOwner(data, userId)) {
       return res.status(403).json({ success: false, message: "Forbidden" });
@@ -105,7 +97,6 @@ export async function getHomebrewSourceByShare(req, res) {
   }
 }
 
-// ✅ CREATE
 export async function postHomebrewSource(req, res) {
   try {
     const userId = getUserId(req);
@@ -141,7 +132,6 @@ export async function postHomebrewSource(req, res) {
   }
 }
 
-// ✅ UPDATE
 export async function patchHomebrewSource(req, res) {
   try {
     const userId = getUserId(req);
@@ -151,7 +141,6 @@ export async function patchHomebrewSource(req, res) {
 
     const { id } = req.params;
 
-    // cek data dulu
     const { data: existing, error: getErr } = await getHomebrewSourceById(id);
     if (getErr) {
       return res.status(404).json({ success: false, message: getErr.message });
@@ -182,7 +171,6 @@ export async function patchHomebrewSource(req, res) {
   }
 }
 
-// ✅ DELETE
 export async function removeHomebrewSource(req, res) {
   try {
     const userId = getUserId(req);

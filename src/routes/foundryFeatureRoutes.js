@@ -15,7 +15,7 @@ import {
 import { verifyUserFullAuth } from "../middlewares/verifyUserFullAuth.js";
 
 const router = express.Router();
-const upload = multer(); // memory storage
+const upload = multer(); 
 
 router.use(verifyUserFullAuth);
 
@@ -31,7 +31,6 @@ router.get("/", listFoundryFeaturesHandler);
 
 router.get("/:id", getFoundryFeatureHandler);
 
-// update bebas (misal edit favorites, requirements, dll)
 router.put("/:id", updateFoundryFeatureHandler);
 
 router.delete("/:id", deleteFoundryFeatureHandler);

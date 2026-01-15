@@ -37,7 +37,7 @@ function stripHtmlToText(html) {
 }
 
 function getDescription(raw) {
-  // Foundry: raw.system.description.value
+
   const html = raw?.system?.description?.value ?? "";
   const txt = stripHtmlToText(html);
   return txt || null;
@@ -47,11 +47,9 @@ function normalizeRecoveryPeriod(period) {
   const p = String(period || "").trim().toLowerCase();
   if (!p) return null;
 
-  // common foundry abbreviations
   if (p === "lr" || p === "longrest" || p === "long rest") return "Long Rest";
   if (p === "sr" || p === "shortrest" || p === "short rest") return "Short Rest";
 
-  // already full-ish
   return period;
 }
 
@@ -62,7 +60,6 @@ function normalizeRecoveryType(type) {
   if (t === "recoverall") return "Recovery All Uses";
   if (t === "loseall") return "Lose All Uses";
 
-  // allow custom
   return type;
 }
 
@@ -114,7 +111,6 @@ function buildFeaturePayloads(rawItems) {
       const image = resolveFeatureImage(raw?.img, img);
       const description = getDescription(raw);
 
-      // extracted fields based on your request
       const prerequisites = system?.prerequisites ?? {};
       const properties = Array.isArray(system?.properties) ? system.properties : [];
       const requirements = system?.requirements ?? raw?.system?.requirements ?? raw?.requirements ?? null;

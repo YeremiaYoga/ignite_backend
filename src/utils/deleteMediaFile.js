@@ -1,28 +1,18 @@
 
 
-/**
- * Delete media file on MEDIA server
- * Accepts either:
- *  - fullUrl → "http://localhost:5100/characters/.../file.png"
- *  - urlPath → "/characters/.../file.png"
- *  - raw path → "characters/.../file.png"
- */
+
 export const deleteMediaFile = async (fileUrl, MEDIA_URL, token = null) => {
   try {
     if (!fileUrl) return;
 
-    // 1️⃣ Normalize → extract relative path
     let filePath = fileUrl;
 
-    // If full URL → extract pathname
     if (fileUrl.startsWith("http://") || fileUrl.startsWith("https://")) {
-      filePath = new URL(fileUrl).pathname; // "/characters/x/y.png"
+      filePath = new URL(fileUrl).pathname; 
     }
 
-    // Remove leading "/"
     filePath = filePath.replace(/^\//, "");
 
-    // 2️⃣ Call media delete API
     const resp = await fetch(`${MEDIA_URL}/upload/file`, {
       method: "DELETE",
       headers: {

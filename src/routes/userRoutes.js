@@ -15,7 +15,6 @@ import { verifyUserIgnite } from "../middlewares/verifyUserIgnite.js";
 
 const router = express.Router();
 
-// ✅ META (dropdown options)
 router.get("/campaign-genres", verifyUserIgnite, listCampaignGenres);
 router.get("/game-systems", verifyUserIgnite, listGameSystems);
 

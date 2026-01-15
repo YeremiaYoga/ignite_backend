@@ -3,12 +3,12 @@
 /**
  * 🔄 Upload file ke Ignite-Media
  * @param {Object} params
- * @param {Object} params.file - File dari multer (req.files["img"][0])
- * @param {string} params.path - Path utama (misal: "species" / "characters")
- * @param {string} params.folderName - Nama folder (misal: nama species / publicId)
- * @param {string} [params.token] - Bearer token optional
- * @param {string} [params.mediaUrl] - Override PUBLIC_MEDIA_URL env
- * @returns {Promise<string|null>} URL file yang diupload atau null jika gagal
+ * @param {Object} params.file 
+ * @param {string} params.path 
+ * @param {string} params.folderName -
+ * @param {string} [params.token] 
+ * @param {string} [params.mediaUrl] 
+ * @returns {Promise<string|null>} 
  */
 export async function uploadToMedia({
   file,
